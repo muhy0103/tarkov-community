@@ -16,6 +16,10 @@ export function updateMyProfile(data) {
   return request.put('/users/me/profile', data).then((response) => response?.data)
 }
 
+export function updateMyPassword(data) {
+  return request.put('/users/me/password', data).then((response) => response?.data)
+}
+
 export function fetchMyPosts(params = {}) {
   return request
     .get('/users/me/posts', {

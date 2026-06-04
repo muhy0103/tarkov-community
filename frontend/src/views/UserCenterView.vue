@@ -6,6 +6,7 @@ import {
   ChatLineRound,
   Collection,
   EditPen,
+  Lock,
   Refresh,
   Star,
   User,
@@ -15,6 +16,7 @@ import {
   fetchMyFavorites,
   fetchMyPosts,
   fetchUserCenterSummary,
+  updateMyPassword,
   updateMyProfile,
 } from '../api/userCenterApi'
 import { useUserStore } from '../stores/userStore'
@@ -29,10 +31,18 @@ const activeTab = ref('posts')
 const profileDialogVisible = ref(false)
 const profileSaving = ref(false)
 const profileFormRef = ref(null)
+const passwordDialogVisible = ref(false)
+const passwordSaving = ref(false)
+const passwordFormRef = ref(null)
 const profileForm = ref({
   nickname: '',
   email: '',
   avatar: '',
+})
+const passwordForm = ref({
+  currentPassword: '',
+  newPassword: '',
+  confirmPassword: '',
 })
 const summary = ref({
   id: null,
@@ -67,6 +77,30 @@ const profileRules = {
   ],
   avatar: [
     { max: 500, message: '头像链接不能超过 500 个字符', trigger: 'blur' },
+  ],
+}
+
+const passwordRules = {
+  currentPassword: [
+    { required: true, message: '请填写当前密码', trigger: 'blur' },
+    { min: 6, max: 50, message: '当前密码需要在 6 到 50 位之间', trigger: 'blur' },
+  ],
+  newPassword: [
+    { required: true, message: '请填写新密码', trigger: 'blur' },
+    { min: 6, max: 50, message: '新密码需要在 6 到 50 位之间', trigger: 'blur' },
+  ],
+  confirmPassword: [
+    { required: true, message: '请再次填写新密码', trigger: 'blur' },
+    {
+      validator: (rule, value, callback) => {
+        if (value !== passwordForm.value.newPassword) {
+          callback(new Error('两次新密码不一致'))
+          return
+        }
+        callback()
+      },
+      trigger: 'blur',
+    },
   ],
 }
 
@@ -262,6 +296,45 @@ async function submitProfile() {
   }
 }
 
+function openPasswordDialog() {
+  passwordForm.value = {
+    currentPassword: '',
+    newPassword: '',
+    confirmPassword: '',
+  }
+  passwordDialogVisible.value = true
+}
+
+async function submitPassword() {
+  const valid = await passwordFormRef.value?.validate().catch(() => false)
+
+  if (!valid) {
+    return
+  }
+
+  passwordSaving.value = true
+  try {
+    await updateMyPassword({
+      currentPassword: passwordForm.value.currentPassword,
+      newPassword: passwordForm.value.newPassword,
+    })
+
+    ElMessage.success('密码已更新，请重新登录')
+    passwordDialogVisible.value = false
+    userStore.clearAuth()
+    router.push({
+      name: 'login',
+      query: {
+        redirect: '/me',
+      },
+    })
+  } catch (error) {
+    ElMessage.error(resolveError(error, '密码暂时无法修改'))
+  } finally {
+    passwordSaving.value = false
+  }
+}
+
 function goCreatePost() {
   router.push({ name: 'post-create' })
 }
@@ -286,6 +359,9 @@ onMounted(loadAll)
       <div class="user-center-actions">
         <el-button :icon="User" @click="openProfileDialog">
           编辑资料
+        </el-button>
+        <el-button :icon="Lock" @click="openPasswordDialog">
+          修改密码
         </el-button>
         <el-button :icon="Refresh" :loading="loading" @click="loadAll">
           刷新
@@ -506,6 +582,59 @@ onMounted(loadAll)
           </el-button>
           <el-button type="primary" :loading="profileSaving" @click="submitProfile">
             保存资料
+          </el-button>
+        </div>
+      </template>
+    </el-dialog>
+
+    <el-dialog
+      v-model="passwordDialogVisible"
+      title="修改密码"
+      width="460px"
+      class="profile-edit-dialog"
+    >
+      <el-form
+        ref="passwordFormRef"
+        :model="passwordForm"
+        :rules="passwordRules"
+        label-position="top"
+      >
+        <el-form-item label="当前密码" prop="currentPassword">
+          <el-input
+            v-model="passwordForm.currentPassword"
+            type="password"
+            show-password
+            maxlength="50"
+            autocomplete="current-password"
+          />
+        </el-form-item>
+        <el-form-item label="新密码" prop="newPassword">
+          <el-input
+            v-model="passwordForm.newPassword"
+            type="password"
+            show-password
+            maxlength="50"
+            autocomplete="new-password"
+          />
+        </el-form-item>
+        <el-form-item label="确认新密码" prop="confirmPassword">
+          <el-input
+            v-model="passwordForm.confirmPassword"
+            type="password"
+            show-password
+            maxlength="50"
+            autocomplete="new-password"
+          />
+        </el-form-item>
+      </el-form>
+
+      <template #footer>
+        <div class="profile-dialog-footer">
+          <el-button @click="passwordDialogVisible = false">
+            取消
+          </el-button>
+          <el-button type="primary" :loading="passwordSaving" @click="submitPassword">
+            保存密码
           </el-button>
         </div>
       </template>

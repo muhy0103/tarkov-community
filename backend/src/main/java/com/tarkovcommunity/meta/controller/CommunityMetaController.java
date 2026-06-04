@@ -1,0 +1,30 @@
+package com.tarkovcommunity.meta.controller;
+
+import com.tarkovcommunity.common.ApiResponse;
+import com.tarkovcommunity.meta.dto.CategoryResponse;
+import com.tarkovcommunity.meta.dto.TagResponse;
+import com.tarkovcommunity.meta.service.CommunityMetaService;
+import lombok.RequiredArgsConstructor;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+import java.util.List;
+
+@RestController
+@RequestMapping("/api")
+@RequiredArgsConstructor
+public class CommunityMetaController {
+
+    private final CommunityMetaService communityMetaService;
+
+    @GetMapping("/categories")
+    public ApiResponse<List<CategoryResponse>> listCategories() {
+        return ApiResponse.success(communityMetaService.listCategories());
+    }
+
+    @GetMapping("/tags")
+    public ApiResponse<List<TagResponse>> listTags() {
+        return ApiResponse.success(communityMetaService.listTags());
+    }
+}

@@ -1,6 +1,10 @@
 package com.tarkovcommunity.config;
 
 import com.baomidou.mybatisplus.extension.plugins.MybatisPlusInterceptor;
+import com.tarkovcommunity.meta.service.CommunityMetaService;
+import com.tarkovcommunity.meta.service.impl.CommunityMetaServiceImpl;
+import com.tarkovcommunity.tarkov.service.TarkovCatalogService;
+import com.tarkovcommunity.tarkov.service.impl.TarkovCatalogServiceImpl;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -16,5 +20,17 @@ class MybatisPlusConfigTests {
     @Test
     void registersMybatisPlusInterceptor() {
         assertThat(mybatisPlusInterceptor).isNotNull();
+    }
+
+    @Autowired
+    private CommunityMetaService communityMetaService;
+
+    @Autowired
+    private TarkovCatalogService tarkovCatalogService;
+
+    @Test
+    void mapperScanDoesNotRegisterServiceInterfacesAsMappers() {
+        assertThat(communityMetaService).isInstanceOf(CommunityMetaServiceImpl.class);
+        assertThat(tarkovCatalogService).isInstanceOf(TarkovCatalogServiceImpl.class);
     }
 }

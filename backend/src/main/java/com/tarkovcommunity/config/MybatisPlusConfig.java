@@ -8,7 +8,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 @Configuration
-@MapperScan("com.tarkovcommunity.**.mapper")
+@MapperScan({"com.tarkovcommunity.meta.mapper", "com.tarkovcommunity.tarkov.mapper"})
 public class MybatisPlusConfig {
 
     @Bean

@@ -213,13 +213,24 @@ onMounted(loadCatalog)
                 <span>{{ post.authorNickname }}</span>
                 <span>{{ post.postType }}</span>
               </div>
-              <h4>{{ post.title }}</h4>
+              <RouterLink
+                class="post-title-link"
+                :to="{ name: 'post-detail', params: { id: post.id } }"
+              >
+                <h4>{{ post.title }}</h4>
+              </RouterLink>
               <p>{{ post.summary }}</p>
               <div class="post-counts">
                 <span>浏览 {{ post.viewCount }}</span>
                 <span>点赞 {{ post.likeCount }}</span>
                 <span>评论 {{ post.commentCount }}</span>
               </div>
+              <RouterLink
+                class="post-discuss-link"
+                :to="{ name: 'post-detail', params: { id: post.id } }"
+              >
+                进入讨论
+              </RouterLink>
             </div>
           </article>
         </div>

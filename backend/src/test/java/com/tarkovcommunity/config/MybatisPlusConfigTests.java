@@ -1,6 +1,8 @@
 package com.tarkovcommunity.config;
 
 import com.baomidou.mybatisplus.extension.plugins.MybatisPlusInterceptor;
+import com.tarkovcommunity.forum.service.ForumCommentService;
+import com.tarkovcommunity.forum.service.impl.ForumCommentServiceImpl;
 import com.tarkovcommunity.forum.service.ForumPostService;
 import com.tarkovcommunity.forum.service.impl.ForumPostServiceImpl;
 import com.tarkovcommunity.meta.service.CommunityMetaService;
@@ -33,10 +35,14 @@ class MybatisPlusConfigTests {
     @Autowired
     private ForumPostService forumPostService;
 
+    @Autowired
+    private ForumCommentService forumCommentService;
+
     @Test
     void mapperScanDoesNotRegisterServiceInterfacesAsMappers() {
         assertThat(communityMetaService).isInstanceOf(CommunityMetaServiceImpl.class);
         assertThat(tarkovCatalogService).isInstanceOf(TarkovCatalogServiceImpl.class);
         assertThat(forumPostService).isInstanceOf(ForumPostServiceImpl.class);
+        assertThat(forumCommentService).isInstanceOf(ForumCommentServiceImpl.class);
     }
 }

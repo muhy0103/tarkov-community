@@ -83,6 +83,19 @@ a {
   background: #ecfeff;
 }
 
+.user-chip {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 6px 4px 12px;
+  color: #0f766e;
+  font-size: 14px;
+  font-weight: 700;
+  border: 1px solid #99f6e4;
+  border-radius: 8px;
+  background: #ecfeff;
+}
+
 .app-main {
   width: min(1180px, calc(100% - 40px));
   margin: 0 auto;
@@ -93,6 +106,50 @@ a {
 .home-view {
   display: grid;
   gap: 28px;
+}
+
+.auth-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(340px, 420px);
+  gap: 24px;
+  align-items: start;
+}
+
+.auth-copy {
+  padding: 32px;
+  border: 1px solid #d6e4e2;
+  border-radius: 8px;
+  background: #ffffff;
+}
+
+.auth-copy h2 {
+  margin: 0;
+  color: #111827;
+  font-size: clamp(28px, 4vw, 42px);
+  line-height: 1.15;
+}
+
+.auth-copy p {
+  margin: 18px 0 0;
+  color: #51616f;
+  font-size: 16px;
+  line-height: 1.8;
+}
+
+.auth-panel {
+  padding: 22px;
+  border: 1px solid #dbe7e6;
+  border-radius: 8px;
+  background: #ffffff;
+  box-shadow: 0 14px 36px rgba(15, 118, 110, 0.08);
+}
+
+.auth-panel .el-button {
+  width: 100%;
+}
+
+.auth-alert {
+  margin-top: 16px;
 }
 
 .home-hero {
@@ -387,6 +444,7 @@ a {
   }
 
   .home-hero,
+  .auth-layout,
   .hero-summary,
   .category-grid,
   .catalog-columns {

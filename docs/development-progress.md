@@ -53,6 +53,9 @@
   - 登录
   - BCrypt 密码加密
   - 返回前端演示 token 和用户信息
+- 后台管理起点：
+  - 后台概览统计接口
+  - 可统计用户数、帖子数、评论数、分区数和塔科夫资料数量
 
 ### 前端
 
@@ -103,6 +106,9 @@
   - 评论发布和评论数更新
   - 首页进入发布页
   - 发布帖子后跳转详情页
+- 后台概览接口实库验证通过：
+  - `GET /api/admin/dashboard/summary`
+  - 已返回用户、帖子、分区、地图、Boss 等统计数量
 - 所有临时测试用户、测试帖子、测试评论、点赞收藏数据均已清理
 
 已推送到 GitHub 的近期提交：
@@ -110,6 +116,7 @@
 - `feat: add frontend auth flow`
 - `feat: add post detail interactions`
 - `feat: add frontend post creation`
+- `feat: add post board search page`
 
 ## 下一阶段建议
 

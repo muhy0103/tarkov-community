@@ -1,11 +1,13 @@
 <script setup>
 import { computed, onMounted, ref } from 'vue'
+import { useRouter } from 'vue-router'
 import {
   Aim,
   ChatLineRound,
   Collection,
   Connection,
   DataAnalysis,
+  EditPen,
   MapLocation,
   Notebook,
   OfficeBuilding,
@@ -18,7 +20,10 @@ import {
 } from '@element-plus/icons-vue'
 import { fetchHomeCatalog } from '../api/catalogApi'
 import { fetchPosts } from '../api/postApi'
+import { useUserStore } from '../stores/userStore'
 
+const router = useRouter()
+const userStore = useUserStore()
 const loading = ref(false)
 const errorMessage = ref('')
 const catalogSection = ref(null)
@@ -154,6 +159,10 @@ function scrollToCatalog() {
   catalogSection.value?.scrollIntoView({ behavior: 'smooth', block: 'start' })
 }
 
+function goCreatePost() {
+  router.push(userStore.isLoggedIn ? { name: 'post-create' } : { name: 'login' })
+}
+
 onMounted(loadCatalog)
 </script>
 
@@ -172,6 +181,9 @@ onMounted(loadCatalog)
           </el-button>
           <el-button :icon="Refresh" :loading="loading" @click="loadCatalog">
             刷新数据
+          </el-button>
+          <el-button type="success" :icon="EditPen" @click="goCreatePost">
+            发布情报
           </el-button>
         </div>
       </div>

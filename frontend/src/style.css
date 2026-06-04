@@ -507,6 +507,79 @@ a {
   line-height: 1.7;
 }
 
+.post-create-view {
+  display: grid;
+  gap: 18px;
+}
+
+.create-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 300px;
+  gap: 18px;
+  align-items: start;
+}
+
+.create-card {
+  display: grid;
+  gap: 18px;
+}
+
+.create-heading h2 {
+  margin: 0;
+  color: #111827;
+  font-size: 28px;
+}
+
+.create-heading p {
+  max-width: 720px;
+  margin: 8px 0 0;
+  color: #667483;
+  font-size: 14px;
+  line-height: 1.7;
+}
+
+.create-form {
+  display: grid;
+  gap: 10px;
+}
+
+.create-form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.create-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  padding-top: 6px;
+}
+
+.create-side {
+  padding: 22px;
+  border: 1px solid #dbe7e6;
+  border-radius: 8px;
+  background: #f8fbfb;
+}
+
+.create-side h3 {
+  margin: 0 0 14px;
+  color: #111827;
+  font-size: 18px;
+}
+
+.create-side ul {
+  display: grid;
+  gap: 12px;
+  padding: 0;
+  margin: 0;
+  color: #52616d;
+  font-size: 14px;
+  line-height: 1.65;
+  list-style-position: inside;
+}
+
 .category-card {
   display: grid;
   grid-template-columns: 38px minmax(0, 1fr);
@@ -617,6 +690,8 @@ a {
 
   .home-hero,
   .auth-layout,
+  .create-layout,
+  .create-form-grid,
   .hero-summary,
   .category-grid,
   .catalog-columns {

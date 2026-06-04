@@ -18,6 +18,10 @@ export function fetchPostDetail(id) {
   return request.get(`/posts/${id}`).then(unwrapData)
 }
 
+export function createPost(payload) {
+  return request.post('/posts', payload).then(unwrapData)
+}
+
 export function fetchPostComments(id, params = {}) {
   return request
     .get(`/posts/${id}/comments`, {

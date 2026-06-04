@@ -2,6 +2,7 @@
 import { computed, onMounted, ref } from 'vue'
 import {
   Aim,
+  ChatLineRound,
   Collection,
   Connection,
   DataAnalysis,
@@ -16,10 +17,18 @@ import {
   Warning,
 } from '@element-plus/icons-vue'
 import { fetchHomeCatalog } from '../api/catalogApi'
+import { fetchPosts } from '../api/postApi'
 
 const loading = ref(false)
 const errorMessage = ref('')
 const catalogSection = ref(null)
+const postsPage = ref({
+  page: 1,
+  size: 5,
+  total: 0,
+  pages: 0,
+  records: [],
+})
 
 const catalog = ref({
   categories: [],
@@ -63,7 +72,7 @@ const stats = computed(() => [
   {
     label: '任务样本',
     value: catalog.value.quests.length,
-    hint: '后续可扩展为玩家攻略沉淀',
+    hint: `已有 ${postsPage.value.total} 条社区帖子可继续沉淀`,
   },
 ])
 
@@ -125,7 +134,12 @@ async function loadCatalog() {
   errorMessage.value = ''
 
   try {
-    catalog.value = await fetchHomeCatalog()
+    const [catalogData, postData] = await Promise.all([
+      fetchHomeCatalog(),
+      fetchPosts({ page: 1, size: 5 }),
+    ])
+    catalog.value = catalogData
+    postsPage.value = postData
   } catch (error) {
     errorMessage.value =
       error?.response?.data?.message ||
@@ -182,6 +196,43 @@ onMounted(loadCatalog)
     <el-skeleton v-if="loading" :rows="6" animated class="home-skeleton" />
 
     <template v-else>
+      <section class="section-block">
+        <div class="section-heading">
+          <h3>社区帖子</h3>
+          <p>首页先展示最新情报帖，后续可以继续扩展筛选、发帖表单和帖子详情页。</p>
+        </div>
+
+        <div v-if="postsPage.records.length" class="post-list">
+          <article v-for="post in postsPage.records" :key="post.id" class="post-item">
+            <div class="post-icon">
+              <ChatLineRound />
+            </div>
+            <div class="post-body">
+              <div class="post-meta">
+                <el-tag size="small" effect="plain">{{ post.categoryName }}</el-tag>
+                <span>{{ post.authorNickname }}</span>
+                <span>{{ post.postType }}</span>
+              </div>
+              <h4>{{ post.title }}</h4>
+              <p>{{ post.summary }}</p>
+              <div class="post-counts">
+                <span>浏览 {{ post.viewCount }}</span>
+                <span>点赞 {{ post.likeCount }}</span>
+                <span>评论 {{ post.commentCount }}</span>
+              </div>
+            </div>
+          </article>
+        </div>
+
+        <div v-else class="post-empty">
+          <ChatLineRound />
+          <div>
+            <h4>等待玩家发布第一条情报</h4>
+            <p>后端帖子接口已接入，当前数据库暂无帖子。后续做发帖功能后，这里会直接展示真实社区内容。</p>
+          </div>
+        </div>
+      </section>
+
       <section ref="catalogSection" class="section-block">
         <div class="section-heading">
           <h3>社区分区</h3>

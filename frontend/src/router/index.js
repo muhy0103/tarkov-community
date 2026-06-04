@@ -10,6 +10,7 @@ import LoginView from '../views/LoginView.vue'
 import PostBoardView from '../views/PostBoardView.vue'
 import PostCreateView from '../views/PostCreateView.vue'
 import PostDetailView from '../views/PostDetailView.vue'
+import UserCenterView from '../views/UserCenterView.vue'
 
 const routes = [
   {
@@ -34,6 +35,15 @@ const routes = [
     component: AccessDeniedView,
     meta: {
       title: '无权限访问',
+    },
+  },
+  {
+    path: '/me',
+    name: 'user-center',
+    component: UserCenterView,
+    meta: {
+      title: '用户中心',
+      requiresAuth: true,
     },
   },
   {

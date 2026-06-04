@@ -5,6 +5,7 @@ import HomeView from '../views/HomeView.vue'
 import AdminDashboardView from '../views/AdminDashboardView.vue'
 import AdminCategoryManagementView from '../views/AdminCategoryManagementView.vue'
 import AdminCommentReviewView from '../views/AdminCommentReviewView.vue'
+import AdminItemManagementView from '../views/AdminItemManagementView.vue'
 import AdminMapManagementView from '../views/AdminMapManagementView.vue'
 import AdminPostReviewView from '../views/AdminPostReviewView.vue'
 import AdminQuestManagementView from '../views/AdminQuestManagementView.vue'
@@ -126,6 +127,16 @@ const routes = [
     component: AdminQuestManagementView,
     meta: {
       title: '任务管理',
+      requiresAuth: true,
+      requiresAdmin: true,
+    },
+  },
+  {
+    path: '/admin/items',
+    name: 'admin-items',
+    component: AdminItemManagementView,
+    meta: {
+      title: '物品管理',
       requiresAuth: true,
       requiresAdmin: true,
     },

@@ -810,6 +810,13 @@ a {
   align-items: center;
 }
 
+.admin-item-cell {
+  display: grid;
+  grid-template-columns: 34px minmax(0, 1fr);
+  gap: 10px;
+  align-items: center;
+}
+
 .admin-user-cell {
   display: grid;
   grid-template-columns: 34px minmax(0, 1fr);
@@ -821,7 +828,8 @@ a {
 .admin-category-cell > svg,
 .admin-map-cell > svg,
 .admin-trader-cell > svg,
-.admin-quest-cell > svg {
+.admin-quest-cell > svg,
+.admin-item-cell > svg {
   width: 34px;
   height: 34px;
   padding: 8px;

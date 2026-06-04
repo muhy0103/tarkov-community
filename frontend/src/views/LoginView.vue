@@ -1,10 +1,11 @@
 <script setup>
 import { reactive, ref } from 'vue'
-import { useRouter } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import { login, register } from '../api/authApi'
 import { useUserStore } from '../stores/userStore'
 
 const router = useRouter()
+const route = useRoute()
 const userStore = useUserStore()
 const activeTab = ref('login')
 const loading = ref(false)
@@ -37,7 +38,7 @@ async function submitAuth(action) {
   try {
     const auth = await action()
     userStore.setAuth(auth.token, auth.user)
-    router.push('/')
+    router.push(resolveRedirect())
   } catch (error) {
     errorMessage.value =
       error?.response?.data?.message ||
@@ -46,6 +47,16 @@ async function submitAuth(action) {
   } finally {
     loading.value = false
   }
+}
+
+function resolveRedirect() {
+  const redirect = route.query.redirect
+
+  if (typeof redirect === 'string' && redirect.startsWith('/')) {
+    return redirect
+  }
+
+  return '/'
 }
 </script>
 

@@ -1,4 +1,6 @@
 import { createRouter, createWebHistory } from 'vue-router'
+import { useUserStore } from '../stores/userStore'
+import AccessDeniedView from '../views/AccessDeniedView.vue'
 import HomeView from '../views/HomeView.vue'
 import AdminDashboardView from '../views/AdminDashboardView.vue'
 import AdminCommentReviewView from '../views/AdminCommentReviewView.vue'
@@ -27,11 +29,21 @@ const routes = [
     },
   },
   {
+    path: '/access-denied',
+    name: 'access-denied',
+    component: AccessDeniedView,
+    meta: {
+      title: '无权限访问',
+    },
+  },
+  {
     path: '/admin/dashboard',
     name: 'admin-dashboard',
     component: AdminDashboardView,
     meta: {
       title: '后台概览',
+      requiresAuth: true,
+      requiresAdmin: true,
     },
   },
   {
@@ -40,6 +52,8 @@ const routes = [
     component: AdminPostReviewView,
     meta: {
       title: '帖子审核',
+      requiresAuth: true,
+      requiresAdmin: true,
     },
   },
   {
@@ -48,6 +62,8 @@ const routes = [
     component: AdminUserManagementView,
     meta: {
       title: '用户管理',
+      requiresAuth: true,
+      requiresAdmin: true,
     },
   },
   {
@@ -56,6 +72,8 @@ const routes = [
     component: AdminCommentReviewView,
     meta: {
       title: '评论审核',
+      requiresAuth: true,
+      requiresAdmin: true,
     },
   },
   {
@@ -93,6 +111,26 @@ router.beforeEach((to) => {
   document.title = to.meta.title
     ? `${to.meta.title} - 逃离塔科夫玩家情报社区`
     : '逃离塔科夫玩家情报社区'
+
+  const userStore = useUserStore()
+
+  if (to.meta.requiresAuth && !userStore.isLoggedIn) {
+    return {
+      name: 'login',
+      query: {
+        redirect: to.fullPath,
+      },
+    }
+  }
+
+  if (to.meta.requiresAdmin && !userStore.isAdmin) {
+    return {
+      name: 'access-denied',
+      query: {
+        from: to.fullPath,
+      },
+    }
+  }
 })
 
 export default router

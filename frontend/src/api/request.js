@@ -1,4 +1,5 @@
 import axios from 'axios'
+import { useUserStore } from '../stores/userStore'
 
 const request = axios.create({
   baseURL: import.meta.env.VITE_API_BASE_URL || '/api',
@@ -17,7 +18,14 @@ request.interceptors.request.use((config) => {
 
 request.interceptors.response.use(
   (response) => response.data,
-  (error) => Promise.reject(error),
+  (error) => {
+    if (error?.response?.status === 401) {
+      const userStore = useUserStore()
+      userStore.clearAuth()
+    }
+
+    return Promise.reject(error)
+  },
 )
 
 export default request

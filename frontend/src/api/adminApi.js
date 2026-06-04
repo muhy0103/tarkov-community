@@ -99,3 +99,19 @@ export function fetchAdminTraders(params = {}) {
 export function updateAdminTrader(id, payload) {
   return request.put(`/admin/traders/${id}`, payload).then((response) => response?.data)
 }
+
+export function fetchAdminQuests(params = {}) {
+  return request
+    .get('/admin/quests', {
+      params: {
+        page: 1,
+        size: 10,
+        ...params,
+      },
+    })
+    .then((response) => response?.data ?? { page: 1, size: 10, total: 0, pages: 0, records: [] })
+}
+
+export function updateAdminQuest(id, payload) {
+  return request.put(`/admin/quests/${id}`, payload).then((response) => response?.data)
+}

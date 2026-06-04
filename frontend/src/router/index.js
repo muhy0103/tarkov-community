@@ -7,6 +7,7 @@ import AdminCategoryManagementView from '../views/AdminCategoryManagementView.vu
 import AdminCommentReviewView from '../views/AdminCommentReviewView.vue'
 import AdminMapManagementView from '../views/AdminMapManagementView.vue'
 import AdminPostReviewView from '../views/AdminPostReviewView.vue'
+import AdminQuestManagementView from '../views/AdminQuestManagementView.vue'
 import AdminTraderManagementView from '../views/AdminTraderManagementView.vue'
 import AdminUserManagementView from '../views/AdminUserManagementView.vue'
 import LoginView from '../views/LoginView.vue'
@@ -115,6 +116,16 @@ const routes = [
     component: AdminTraderManagementView,
     meta: {
       title: '商人管理',
+      requiresAuth: true,
+      requiresAdmin: true,
+    },
+  },
+  {
+    path: '/admin/quests',
+    name: 'admin-quests',
+    component: AdminQuestManagementView,
+    meta: {
+      title: '任务管理',
       requiresAuth: true,
       requiresAdmin: true,
     },

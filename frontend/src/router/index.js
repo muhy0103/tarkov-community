@@ -11,6 +11,7 @@ import AdminPostReviewView from '../views/AdminPostReviewView.vue'
 import AdminQuestManagementView from '../views/AdminQuestManagementView.vue'
 import AdminTraderManagementView from '../views/AdminTraderManagementView.vue'
 import AdminUserManagementView from '../views/AdminUserManagementView.vue'
+import AdminWeaponManagementView from '../views/AdminWeaponManagementView.vue'
 import LoginView from '../views/LoginView.vue'
 import PostBoardView from '../views/PostBoardView.vue'
 import PostCreateView from '../views/PostCreateView.vue'
@@ -137,6 +138,16 @@ const routes = [
     component: AdminItemManagementView,
     meta: {
       title: '物品管理',
+      requiresAuth: true,
+      requiresAdmin: true,
+    },
+  },
+  {
+    path: '/admin/weapons',
+    name: 'admin-weapons',
+    component: AdminWeaponManagementView,
+    meta: {
+      title: '武器管理',
       requiresAuth: true,
       requiresAdmin: true,
     },

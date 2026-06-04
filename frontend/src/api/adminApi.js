@@ -131,3 +131,19 @@ export function fetchAdminItems(params = {}) {
 export function updateAdminItem(id, payload) {
   return request.put(`/admin/items/${id}`, payload).then((response) => response?.data)
 }
+
+export function fetchAdminWeapons(params = {}) {
+  return request
+    .get('/admin/weapons', {
+      params: {
+        page: 1,
+        size: 10,
+        ...params,
+      },
+    })
+    .then((response) => response?.data ?? { page: 1, size: 10, total: 0, pages: 0, records: [] })
+}
+
+export function updateAdminWeapon(id, payload) {
+  return request.put(`/admin/weapons/${id}`, payload).then((response) => response?.data)
+}

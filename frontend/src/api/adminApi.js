@@ -83,3 +83,19 @@ export function fetchAdminMaps(params = {}) {
 export function updateAdminMap(id, payload) {
   return request.put(`/admin/maps/${id}`, payload).then((response) => response?.data)
 }
+
+export function fetchAdminTraders(params = {}) {
+  return request
+    .get('/admin/traders', {
+      params: {
+        page: 1,
+        size: 10,
+        ...params,
+      },
+    })
+    .then((response) => response?.data ?? { page: 1, size: 10, total: 0, pages: 0, records: [] })
+}
+
+export function updateAdminTrader(id, payload) {
+  return request.put(`/admin/traders/${id}`, payload).then((response) => response?.data)
+}

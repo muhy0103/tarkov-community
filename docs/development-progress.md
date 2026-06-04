@@ -42,6 +42,7 @@
   - Boss 情报
 - 论坛接口：
   - 帖子列表
+  - 帖子列表支持最新、热度、评论最多和点赞最多排序
   - 帖子详情
   - 创建帖子
   - 评论列表
@@ -218,6 +219,12 @@
   - 发帖、评论、点赞和收藏请求体不传 `userId` 时，可按 token 用户正确写入数据
   - 未登录访问发帖接口返回 401
   - 临时测试用户、帖子、评论、点赞和收藏数据已清理
+- 帖子列表排序接口实库验证通过：
+  - `GET /api/posts?sort=LATEST`
+  - `GET /api/posts?sort=HOT`
+  - `GET /api/posts?sort=MOST_COMMENTED`
+  - `GET /api/posts?sort=MOST_LIKED`
+  - 临时测试用户和测试帖子数据已清理
 - 前端后台路由权限验证：
   - 未登录访问后台页面跳转登录页并携带 redirect
   - 普通用户访问后台页面进入无权限页
@@ -262,13 +269,14 @@
 - `feat: add frontend profile editor`
 - `feat: add user password update API`
 - `feat: add frontend password editor`
+- `feat: add post list sort API`
 
 ## 下一阶段建议
 
 优先级从高到低：
 
 1. 资料维护模块：地图、商人、任务、装备、弹药、Boss、藏身处的后台维护页面
-2. 搜索筛选增强：帖子关键词、分区、类型、推荐、热度和时间排序
+2. 前端帖子排序：在情报广场接入最新、热度、评论最多和点赞最多排序
 3. 搜索筛选增强：帖子关键词、分区、类型、推荐、热度和时间排序
 4. 课程报告材料：系统架构图、数据库 ER 图、接口说明、功能截图
 

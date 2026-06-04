@@ -64,7 +64,7 @@ class ForumPostControllerTests {
                 LocalDateTime.of(2026, 6, 4, 18, 0)
         );
 
-        given(forumPostService.listPosts("quests", "海关", "QUEST_GUIDE", true, 1, 10))
+        given(forumPostService.listPosts("quests", "海关", "QUEST_GUIDE", true, "HOT", 1, 10))
                 .willReturn(PageResponse.of(1, 10, 1, List.of(summary)));
 
         mockMvc.perform(get("/api/posts")
@@ -72,6 +72,7 @@ class ForumPostControllerTests {
                         .param("keyword", "海关")
                         .param("postType", "QUEST_GUIDE")
                         .param("recommended", "true")
+                        .param("sort", "HOT")
                         .param("page", "1")
                         .param("size", "10"))
                 .andExpect(status().isOk())

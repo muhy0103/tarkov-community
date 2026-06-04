@@ -43,6 +43,7 @@ public class ForumPostServiceImpl implements ForumPostService {
             String keyword,
             String postType,
             Boolean recommended,
+            String sort,
             int page,
             int size
     ) {
@@ -50,10 +51,7 @@ public class ForumPostServiceImpl implements ForumPostService {
         int safeSize = Math.max(1, Math.min(size, MAX_PAGE_SIZE));
 
         LambdaQueryWrapper<Post> query = new LambdaQueryWrapper<Post>()
-                .eq(Post::getStatus, "NORMAL")
-                .orderByDesc(Post::getPinned)
-                .orderByDesc(Post::getRecommended)
-                .orderByDesc(Post::getCreatedAt);
+                .eq(Post::getStatus, "NORMAL");
 
         if (StringUtils.hasText(categoryCode)) {
             Category category = categoryMapper.selectOne(new LambdaQueryWrapper<Category>()
@@ -79,6 +77,8 @@ public class ForumPostServiceImpl implements ForumPostService {
         if (recommended != null) {
             query.eq(Post::getRecommended, recommended ? 1 : 0);
         }
+
+        applySort(query, sort);
 
         Page<Post> postPage = postMapper.selectPage(new Page<>(safePage, safeSize), query);
         List<PostSummaryResponse> records = toSummaries(postPage.getRecords());
@@ -197,6 +197,26 @@ public class ForumPostServiceImpl implements ForumPostService {
         }
         String normalized = content.replaceAll("\\s+", " ").trim();
         return normalized.length() > 90 ? normalized.substring(0, 90) + "..." : normalized;
+    }
+
+    private static void applySort(LambdaQueryWrapper<Post> query, String sort) {
+        query.orderByDesc(Post::getPinned)
+                .orderByDesc(Post::getRecommended);
+
+        String normalized = StringUtils.hasText(sort) ? sort.trim().toUpperCase() : "LATEST";
+        switch (normalized) {
+            case "HOT" -> query.orderByDesc(Post::getViewCount)
+                    .orderByDesc(Post::getLikeCount)
+                    .orderByDesc(Post::getCommentCount)
+                    .orderByDesc(Post::getCreatedAt);
+            case "MOST_COMMENTED" -> query.orderByDesc(Post::getCommentCount)
+                    .orderByDesc(Post::getLikeCount)
+                    .orderByDesc(Post::getCreatedAt);
+            case "MOST_LIKED" -> query.orderByDesc(Post::getLikeCount)
+                    .orderByDesc(Post::getCommentCount)
+                    .orderByDesc(Post::getCreatedAt);
+            default -> query.orderByDesc(Post::getCreatedAt);
+        }
     }
 
     private static String categoryName(Category category) {

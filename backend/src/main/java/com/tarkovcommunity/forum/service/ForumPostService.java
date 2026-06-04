@@ -14,6 +14,7 @@ public interface ForumPostService {
             String keyword,
             String postType,
             Boolean recommended,
+            String sort,
             int page,
             int size
     );

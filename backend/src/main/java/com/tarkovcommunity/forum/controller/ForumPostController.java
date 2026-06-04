@@ -37,6 +37,7 @@ public class ForumPostController {
             @RequestParam(required = false) String keyword,
             @RequestParam(required = false) String postType,
             @RequestParam(required = false) Boolean recommended,
+            @RequestParam(defaultValue = "LATEST") String sort,
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "10") int size
     ) {
@@ -45,6 +46,7 @@ public class ForumPostController {
                 keyword,
                 postType,
                 recommended,
+                sort,
                 page,
                 size
         ));

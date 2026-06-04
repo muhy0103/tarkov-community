@@ -12,6 +12,10 @@ export function fetchUserCenterSummary() {
   return request.get('/users/me/summary').then((response) => response?.data)
 }
 
+export function updateMyProfile(data) {
+  return request.put('/users/me/profile', data).then((response) => response?.data)
+}
+
 export function fetchMyPosts(params = {}) {
   return request
     .get('/users/me/posts', {

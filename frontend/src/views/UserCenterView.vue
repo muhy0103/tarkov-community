@@ -1,5 +1,6 @@
 <script setup>
 import { computed, onMounted, ref } from 'vue'
+import { ElMessage } from 'element-plus'
 import { useRouter } from 'vue-router'
 import {
   ChatLineRound,
@@ -14,6 +15,7 @@ import {
   fetchMyFavorites,
   fetchMyPosts,
   fetchUserCenterSummary,
+  updateMyProfile,
 } from '../api/userCenterApi'
 import { useUserStore } from '../stores/userStore'
 
@@ -24,6 +26,14 @@ const loading = ref(false)
 const sectionLoading = ref('')
 const errorMessage = ref('')
 const activeTab = ref('posts')
+const profileDialogVisible = ref(false)
+const profileSaving = ref(false)
+const profileFormRef = ref(null)
+const profileForm = ref({
+  nickname: '',
+  email: '',
+  avatar: '',
+})
 const summary = ref({
   id: null,
   username: '',
@@ -43,7 +53,22 @@ const commentsPage = ref(pageState())
 const favoritesPage = ref(pageState())
 
 const playerName = computed(() => summary.value.nickname || userStore.userInfo?.nickname || '塔科夫玩家')
+const playerAvatar = computed(() => summary.value.avatar || userStore.userInfo?.avatar || '')
 const userInitial = computed(() => playerName.value.slice(0, 1).toUpperCase())
+
+const profileRules = {
+  nickname: [
+    { required: true, message: '请填写玩家昵称', trigger: 'blur' },
+    { max: 50, message: '昵称不能超过 50 个字符', trigger: 'blur' },
+  ],
+  email: [
+    { type: 'email', message: '邮箱格式不正确', trigger: 'blur' },
+    { max: 120, message: '邮箱不能超过 120 个字符', trigger: 'blur' },
+  ],
+  avatar: [
+    { max: 500, message: '头像链接不能超过 500 个字符', trigger: 'blur' },
+  ],
+}
 
 const summaryStats = computed(() => [
   { label: '贡献值', value: summary.value.contribution || 0, icon: User },
@@ -87,7 +112,10 @@ function syncUserInfo(summaryData) {
     id: summaryData.id,
     username: summaryData.username,
     nickname: summaryData.nickname,
+    email: summaryData.email,
+    avatar: summaryData.avatar,
     role: summaryData.role,
+    status: summaryData.status,
     contribution: summaryData.contribution,
   })
 }
@@ -196,6 +224,44 @@ async function loadFavorites(page = favoritesPage.value.page) {
   }
 }
 
+function openProfileDialog() {
+  profileForm.value = {
+    nickname: summary.value.nickname || userStore.userInfo?.nickname || '',
+    email: summary.value.email || userStore.userInfo?.email || '',
+    avatar: summary.value.avatar || userStore.userInfo?.avatar || '',
+  }
+  profileDialogVisible.value = true
+}
+
+async function submitProfile() {
+  const valid = await profileFormRef.value?.validate().catch(() => false)
+
+  if (!valid) {
+    return
+  }
+
+  profileSaving.value = true
+  try {
+    const updatedSummary = await updateMyProfile({
+      nickname: profileForm.value.nickname.trim(),
+      email: profileForm.value.email.trim(),
+      avatar: profileForm.value.avatar.trim(),
+    })
+
+    summary.value = {
+      ...summary.value,
+      ...updatedSummary,
+    }
+    syncUserInfo(updatedSummary)
+    ElMessage.success('个人资料已更新')
+    profileDialogVisible.value = false
+  } catch (error) {
+    ElMessage.error(resolveError(error, '个人资料暂时无法保存'))
+  } finally {
+    profileSaving.value = false
+  }
+}
+
 function goCreatePost() {
   router.push({ name: 'post-create' })
 }
@@ -207,7 +273,10 @@ onMounted(loadAll)
   <div class="user-center-view">
     <section class="user-center-hero">
       <div class="user-profile-main">
-        <div class="user-avatar">{{ userInitial }}</div>
+        <div class="user-avatar">
+          <img v-if="playerAvatar" :src="playerAvatar" alt="玩家头像" />
+          <span v-else>{{ userInitial }}</span>
+        </div>
         <div>
           <h2>{{ playerName }}</h2>
           <p>{{ summary.username || userStore.userInfo?.username }} · {{ summary.email || '未填写邮箱' }}</p>
@@ -215,6 +284,9 @@ onMounted(loadAll)
         </div>
       </div>
       <div class="user-center-actions">
+        <el-button :icon="User" @click="openProfileDialog">
+          编辑资料
+        </el-button>
         <el-button :icon="Refresh" :loading="loading" @click="loadAll">
           刷新
         </el-button>
@@ -390,5 +462,53 @@ onMounted(loadAll)
         </el-tabs>
       </section>
     </template>
+
+    <el-dialog
+      v-model="profileDialogVisible"
+      title="编辑个人资料"
+      width="460px"
+      class="profile-edit-dialog"
+    >
+      <el-form
+        ref="profileFormRef"
+        :model="profileForm"
+        :rules="profileRules"
+        label-position="top"
+      >
+        <el-form-item label="玩家昵称" prop="nickname">
+          <el-input
+            v-model="profileForm.nickname"
+            maxlength="50"
+            show-word-limit
+            placeholder="例如：海岸线侦察员"
+          />
+        </el-form-item>
+        <el-form-item label="邮箱" prop="email">
+          <el-input
+            v-model="profileForm.email"
+            maxlength="120"
+            placeholder="用于展示或后续通知，可留空"
+          />
+        </el-form-item>
+        <el-form-item label="头像链接" prop="avatar">
+          <el-input
+            v-model="profileForm.avatar"
+            maxlength="500"
+            placeholder="可填写图片 URL，也可以暂时留空"
+          />
+        </el-form-item>
+      </el-form>
+
+      <template #footer>
+        <div class="profile-dialog-footer">
+          <el-button @click="profileDialogVisible = false">
+            取消
+          </el-button>
+          <el-button type="primary" :loading="profileSaving" @click="submitProfile">
+            保存资料
+          </el-button>
+        </div>
+      </template>
+    </el-dialog>
   </div>
 </template>

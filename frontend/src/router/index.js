@@ -3,6 +3,7 @@ import { useUserStore } from '../stores/userStore'
 import AccessDeniedView from '../views/AccessDeniedView.vue'
 import HomeView from '../views/HomeView.vue'
 import AdminDashboardView from '../views/AdminDashboardView.vue'
+import AdminCategoryManagementView from '../views/AdminCategoryManagementView.vue'
 import AdminCommentReviewView from '../views/AdminCommentReviewView.vue'
 import AdminPostReviewView from '../views/AdminPostReviewView.vue'
 import AdminUserManagementView from '../views/AdminUserManagementView.vue'
@@ -82,6 +83,16 @@ const routes = [
     component: AdminCommentReviewView,
     meta: {
       title: '评论审核',
+      requiresAuth: true,
+      requiresAdmin: true,
+    },
+  },
+  {
+    path: '/admin/categories',
+    name: 'admin-categories',
+    component: AdminCategoryManagementView,
+    meta: {
+      title: '分区管理',
       requiresAuth: true,
       requiresAdmin: true,
     },

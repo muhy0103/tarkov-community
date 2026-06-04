@@ -6,6 +6,7 @@ import com.tarkovcommunity.auth.dto.AuthUserResponse;
 import com.tarkovcommunity.auth.dto.LoginRequest;
 import com.tarkovcommunity.auth.dto.RegisterRequest;
 import com.tarkovcommunity.auth.service.AuthService;
+import com.tarkovcommunity.auth.service.AuthTokenService;
 import com.tarkovcommunity.user.entity.SysUser;
 import com.tarkovcommunity.user.mapper.SysUserMapper;
 import lombok.RequiredArgsConstructor;
@@ -15,15 +16,12 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 import org.springframework.web.server.ResponseStatusException;
 
-import java.nio.charset.StandardCharsets;
-import java.time.Instant;
-import java.util.Base64;
-
 @Service
 @RequiredArgsConstructor
 public class AuthServiceImpl implements AuthService {
 
     private final SysUserMapper sysUserMapper;
+    private final AuthTokenService authTokenService;
     private final BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
 
     @Override
@@ -63,7 +61,7 @@ public class AuthServiceImpl implements AuthService {
 
     private AuthResponse toAuthResponse(SysUser user) {
         return new AuthResponse(
-                createDemoToken(user),
+                authTokenService.createToken(user),
                 new AuthUserResponse(
                         user.getId(),
                         user.getUsername(),
@@ -72,12 +70,5 @@ public class AuthServiceImpl implements AuthService {
                         user.getContribution()
                 )
         );
-    }
-
-    private static String createDemoToken(SysUser user) {
-        String payload = user.getId() + ":" + user.getUsername() + ":" + Instant.now();
-        return Base64.getUrlEncoder()
-                .withoutPadding()
-                .encodeToString(payload.getBytes(StandardCharsets.UTF_8));
     }
 }

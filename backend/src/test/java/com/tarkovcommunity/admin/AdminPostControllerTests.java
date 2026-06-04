@@ -4,16 +4,20 @@ import com.tarkovcommunity.admin.controller.AdminPostController;
 import com.tarkovcommunity.admin.dto.AdminPostReviewRequest;
 import com.tarkovcommunity.admin.dto.AdminPostResponse;
 import com.tarkovcommunity.admin.service.AdminPostService;
+import com.tarkovcommunity.auth.service.AuthTokenService;
 import com.tarkovcommunity.common.PageResponse;
+import com.tarkovcommunity.user.entity.SysUser;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
@@ -32,8 +36,12 @@ class AdminPostControllerTests {
     @MockitoBean
     private AdminPostService adminPostService;
 
+    @MockitoBean
+    private AuthTokenService authTokenService;
+
     @Test
     void listsPostsForReview() throws Exception {
+        given(authTokenService.resolveUser(eq("Bearer admin-token"))).willReturn(Optional.of(adminUser()));
         given(adminPostService.listPosts(eq("NORMAL"), eq("maps"), eq("woods"), eq(1), eq(10)))
                 .willReturn(PageResponse.of(1, 10, 1, List.of(new AdminPostResponse(
                         1L,
@@ -53,6 +61,7 @@ class AdminPostControllerTests {
                 ))));
 
         mockMvc.perform(get("/api/admin/posts")
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer admin-token")
                         .param("status", "NORMAL")
                         .param("categoryCode", "maps")
                         .param("keyword", "woods"))
@@ -67,6 +76,7 @@ class AdminPostControllerTests {
 
     @Test
     void reviewsPost() throws Exception {
+        given(authTokenService.resolveUser(eq("Bearer admin-token"))).willReturn(Optional.of(adminUser()));
         given(adminPostService.reviewPost(eq(1L), any(AdminPostReviewRequest.class)))
                 .willReturn(new AdminPostResponse(
                         1L,
@@ -86,6 +96,7 @@ class AdminPostControllerTests {
                 ));
 
         mockMvc.perform(put("/api/admin/posts/1/review")
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer admin-token")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {
@@ -100,5 +111,12 @@ class AdminPostControllerTests {
                 .andExpect(jsonPath("$.data.status").value("HIDDEN"))
                 .andExpect(jsonPath("$.data.recommended").value(false))
                 .andExpect(jsonPath("$.data.pinned").value(true));
+    }
+
+    private static SysUser adminUser() {
+        SysUser user = new SysUser();
+        user.setRole("ADMIN");
+        user.setStatus("NORMAL");
+        return user;
     }
 }

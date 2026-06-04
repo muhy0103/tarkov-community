@@ -5,6 +5,7 @@ import HomeView from '../views/HomeView.vue'
 import AdminDashboardView from '../views/AdminDashboardView.vue'
 import AdminCategoryManagementView from '../views/AdminCategoryManagementView.vue'
 import AdminCommentReviewView from '../views/AdminCommentReviewView.vue'
+import AdminMapManagementView from '../views/AdminMapManagementView.vue'
 import AdminPostReviewView from '../views/AdminPostReviewView.vue'
 import AdminUserManagementView from '../views/AdminUserManagementView.vue'
 import LoginView from '../views/LoginView.vue'
@@ -93,6 +94,16 @@ const routes = [
     component: AdminCategoryManagementView,
     meta: {
       title: '分区管理',
+      requiresAuth: true,
+      requiresAdmin: true,
+    },
+  },
+  {
+    path: '/admin/maps',
+    name: 'admin-maps',
+    component: AdminMapManagementView,
+    meta: {
+      title: '地图管理',
       requiresAuth: true,
       requiresAdmin: true,
     },

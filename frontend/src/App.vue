@@ -28,6 +28,7 @@ function logout() {
         <RouterLink v-if="userStore.isAdmin" to="/admin/users">用户管理</RouterLink>
         <RouterLink v-if="userStore.isAdmin" to="/admin/comments">评论审核</RouterLink>
         <RouterLink v-if="userStore.isAdmin" to="/admin/categories">分区管理</RouterLink>
+        <RouterLink v-if="userStore.isAdmin" to="/admin/maps">地图管理</RouterLink>
         <RouterLink v-if="!userStore.isLoggedIn" to="/login">登录注册</RouterLink>
         <div v-else class="user-chip">
           <span>{{ userStore.userInfo?.nickname }}</span>

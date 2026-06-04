@@ -1,17 +1,48 @@
 # 逃离塔科夫玩家情报社区管理系统
 
-基于 Vue3、Spring Boot 和 MySQL 的前后端分离项目。
+这是一个面向课程期末考核的前后端分离项目，主题为“逃离塔科夫玩家社区论坛管理系统”。项目采用 Vue 3 前端、Spring Boot 后端和 MySQL 数据库，目标不是做传统 wiki，而是做一个清爽、功能分明、偏玩家社区建设的情报论坛。
 
-项目采用“重型架构，轻量数据录入”的建设策略：社区功能完整实现，塔科夫资料库结构预留完整，初期只录入少量演示数据，后续可通过后台逐步维护地图、任务、商人、物品、武器、弹药、藏身处和 Boss 等资料。
+## 当前进度
 
-## 当前阶段
+- 已完成项目需求与构建计划文档：`tarkov-community-requirements-plan.md`
+- 已完成 Vue 3 前端基础工程，使用 JavaScript、Vue Router、Pinia、Axios、Element Plus
+- 已完成 Spring Boot 后端基础工程，接入 MySQL、MyBatis-Plus、统一响应和统一异常处理
+- 已完成 32 张业务表的 MySQL 建表脚本和少量演示种子数据
+- 已完成塔科夫资料接口：分区、标签、地图、商人、任务、物品、武器、弹药、藏身处、Boss
+- 已完成论坛核心接口：帖子列表、帖子详情、发帖、评论、点赞、收藏
+- 已完成注册登录接口和前端登录态保存
+- 已完成前端首页、登录注册页、帖子详情互动页、发布情报帖页面
 
-项目初始化阶段。
+更详细的阶段记录见：`docs/development-progress.md`
 
-已整理完整需求与构建计划，详见：
+## 本地运行
 
-- `tarkov-community-requirements-plan.md`
+后端服务：
+
+```powershell
+cd C:\Users\muhy\Desktop\Study\tarkov-community\backend
+.\mvnw spring-boot:run
+```
+
+前端服务：
+
+```powershell
+cd C:\Users\muhy\Desktop\Study\tarkov-community\frontend
+npm run dev
+```
+
+常用访问地址：
+
+- 前端页面：http://127.0.0.1:5173/
+- 后端健康检查：http://127.0.0.1:8080/api/health
+
+## 技术栈
+
+- 前端：Vue 3、Vite、JavaScript、Vue Router、Pinia、Axios、Element Plus
+- 后端：Spring Boot、MyBatis-Plus、Spring Security Crypto、MySQL
+- 数据库：MySQL，建表脚本位于 `database/schema.sql`
+- 版本管理：Git + GitHub
 
 ## 开发节奏
 
-本项目按阶段推进。每完成一个小功能模块后，先提交到 GitHub，并等待确认后再继续下一步开发。
+项目按“小模块开发、小模块验证、小模块提交推送”的方式推进。当前优先级是先把社区核心闭环跑通，再逐步补后台管理、权限控制、资料维护和课程报告素材。

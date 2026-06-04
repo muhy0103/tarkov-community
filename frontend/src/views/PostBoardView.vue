@@ -21,6 +21,7 @@ const filters = ref({
   keyword: '',
   categoryCode: '',
   postType: '',
+  sort: 'LATEST',
   recommended: false,
 })
 const postsPage = ref({
@@ -39,12 +40,20 @@ const postTypeOptions = [
   { label: '组队招募', value: 'TEAM_UP' },
 ]
 
+const sortOptions = [
+  { label: '最新发布', value: 'LATEST' },
+  { label: '热度优先', value: 'HOT' },
+  { label: '评论最多', value: 'MOST_COMMENTED' },
+  { label: '点赞最多', value: 'MOST_LIKED' },
+]
+
 const queryParams = computed(() => ({
   page: postsPage.value.page,
   size: postsPage.value.size,
   keyword: filters.value.keyword.trim() || undefined,
   categoryCode: filters.value.categoryCode || undefined,
   postType: filters.value.postType || undefined,
+  sort: filters.value.sort || 'LATEST',
   recommended: filters.value.recommended ? true : undefined,
 }))
 
@@ -76,6 +85,7 @@ function resetFilters() {
     keyword: '',
     categoryCode: '',
     postType: '',
+    sort: 'LATEST',
     recommended: false,
   }
   loadBoard(1)
@@ -121,6 +131,15 @@ onMounted(() => loadBoard(1))
         <el-select v-model="filters.postType" placeholder="全部类型" clearable>
           <el-option
             v-for="option in postTypeOptions"
+            :key="option.value"
+            :label="option.label"
+            :value="option.value"
+          />
+        </el-select>
+
+        <el-select v-model="filters.sort" placeholder="排序方式" @change="loadBoard(1)">
+          <el-option
+            v-for="option in sortOptions"
             :key="option.value"
             :label="option.label"
             :value="option.value"

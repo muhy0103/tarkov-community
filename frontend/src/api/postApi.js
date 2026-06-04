@@ -38,10 +38,10 @@ export function createPostComment(id, payload) {
   return request.post(`/posts/${id}/comments`, payload).then(unwrapData)
 }
 
-export function togglePostLike(id, userId) {
-  return request.post(`/posts/${id}/likes/toggle`, { userId }).then(unwrapData)
+export function togglePostLike(id) {
+  return request.post(`/posts/${id}/likes/toggle`).then(unwrapData)
 }
 
-export function togglePostFavorite(id, userId) {
-  return request.post(`/posts/${id}/favorites/toggle`, { userId }).then(unwrapData)
+export function togglePostFavorite(id) {
+  return request.post(`/posts/${id}/favorites/toggle`).then(unwrapData)
 }

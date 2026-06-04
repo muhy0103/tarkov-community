@@ -73,7 +73,6 @@ async function submitPost() {
 
   try {
     const result = await createPost({
-      userId: userStore.userInfo.id,
       categoryId: form.value.categoryId,
       title: form.value.title.trim(),
       content: form.value.content.trim(),

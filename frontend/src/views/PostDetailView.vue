@@ -113,7 +113,6 @@ async function submitComment() {
 
   try {
     await createPostComment(postId.value, {
-      userId: currentUserId.value,
       content,
       parentId: null,
       replyToUserId: null,
@@ -136,7 +135,7 @@ async function handleLike() {
   actionLoading.value = 'like'
 
   try {
-    const result = await togglePostLike(postId.value, currentUserId.value)
+    const result = await togglePostLike(postId.value)
     likeActive.value = result.active
     post.value.likeCount = result.count
   } catch (error) {
@@ -154,7 +153,7 @@ async function handleFavorite() {
   actionLoading.value = 'favorite'
 
   try {
-    const result = await togglePostFavorite(postId.value, currentUserId.value)
+    const result = await togglePostFavorite(postId.value)
     favoriteActive.value = result.active
     favoriteCount.value = result.count
   } catch (error) {

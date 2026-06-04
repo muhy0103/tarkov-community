@@ -1,21 +1,25 @@
 package com.tarkovcommunity.admin;
 
 import com.tarkovcommunity.admin.controller.AdminPostController;
+import com.tarkovcommunity.admin.dto.AdminPostReviewRequest;
 import com.tarkovcommunity.admin.dto.AdminPostResponse;
 import com.tarkovcommunity.admin.service.AdminPostService;
 import com.tarkovcommunity.common.PageResponse;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.time.LocalDateTime;
 import java.util.List;
 
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -59,5 +63,42 @@ class AdminPostControllerTests {
                 .andExpect(jsonPath("$.data.records[0].status").value("NORMAL"))
                 .andExpect(jsonPath("$.data.records[0].recommended").value(true))
                 .andExpect(jsonPath("$.data.records[0].pinned").value(false));
+    }
+
+    @Test
+    void reviewsPost() throws Exception {
+        given(adminPostService.reviewPost(eq(1L), any(AdminPostReviewRequest.class)))
+                .willReturn(new AdminPostResponse(
+                        1L,
+                        "Woods route review",
+                        "GUIDE",
+                        "战区地图",
+                        "maps",
+                        "社区管理员",
+                        "HIDDEN",
+                        false,
+                        true,
+                        12,
+                        6,
+                        2,
+                        LocalDateTime.of(2026, 6, 4, 20, 10),
+                        LocalDateTime.of(2026, 6, 4, 20, 20)
+                ));
+
+        mockMvc.perform(put("/api/admin/posts/1/review")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "status": "HIDDEN",
+                                  "recommended": false,
+                                  "pinned": true
+                                }
+                                """))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.code").value(200))
+                .andExpect(jsonPath("$.data.id").value(1))
+                .andExpect(jsonPath("$.data.status").value("HIDDEN"))
+                .andExpect(jsonPath("$.data.recommended").value(false))
+                .andExpect(jsonPath("$.data.pinned").value(true));
     }
 }

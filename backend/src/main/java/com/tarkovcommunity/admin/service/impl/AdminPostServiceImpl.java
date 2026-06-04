@@ -3,6 +3,7 @@ package com.tarkovcommunity.admin.service.impl;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.tarkovcommunity.admin.dto.AdminPostResponse;
+import com.tarkovcommunity.admin.dto.AdminPostReviewRequest;
 import com.tarkovcommunity.admin.service.AdminPostService;
 import com.tarkovcommunity.common.PageResponse;
 import com.tarkovcommunity.forum.entity.Post;
@@ -12,13 +13,16 @@ import com.tarkovcommunity.meta.mapper.CategoryMapper;
 import com.tarkovcommunity.user.entity.SysUser;
 import com.tarkovcommunity.user.mapper.SysUserMapper;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -27,6 +31,7 @@ import java.util.stream.Collectors;
 public class AdminPostServiceImpl implements AdminPostService {
 
     private static final int MAX_PAGE_SIZE = 50;
+    private static final Set<String> ALLOWED_STATUSES = Set.of("NORMAL", "HIDDEN", "PENDING", "DELETED");
 
     private final PostMapper postMapper;
     private final CategoryMapper categoryMapper;
@@ -70,6 +75,32 @@ public class AdminPostServiceImpl implements AdminPostService {
 
         Page<Post> postPage = postMapper.selectPage(new Page<>(safePage, safeSize), query);
         return PageResponse.of(safePage, safeSize, postPage.getTotal(), toResponses(postPage.getRecords()));
+    }
+
+    @Override
+    public AdminPostResponse reviewPost(Long id, AdminPostReviewRequest request) {
+        Post post = postMapper.selectById(id);
+        if (post == null) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "帖子不存在");
+        }
+
+        if (StringUtils.hasText(request.status())) {
+            if (!ALLOWED_STATUSES.contains(request.status())) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "帖子状态不正确");
+            }
+            post.setStatus(request.status());
+        }
+
+        if (request.recommended() != null) {
+            post.setRecommended(request.recommended() ? 1 : 0);
+        }
+
+        if (request.pinned() != null) {
+            post.setPinned(request.pinned() ? 1 : 0);
+        }
+
+        postMapper.updateById(post);
+        return toResponses(List.of(postMapper.selectById(id))).get(0);
     }
 
     private List<AdminPostResponse> toResponses(List<Post> posts) {

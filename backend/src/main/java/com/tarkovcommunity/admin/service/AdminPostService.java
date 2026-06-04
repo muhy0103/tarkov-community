@@ -1,6 +1,7 @@
 package com.tarkovcommunity.admin.service;
 
 import com.tarkovcommunity.admin.dto.AdminPostResponse;
+import com.tarkovcommunity.admin.dto.AdminPostReviewRequest;
 import com.tarkovcommunity.common.PageResponse;
 
 public interface AdminPostService {
@@ -12,4 +13,6 @@ public interface AdminPostService {
             int page,
             int size
     );
+
+    AdminPostResponse reviewPost(Long id, AdminPostReviewRequest request);
 }

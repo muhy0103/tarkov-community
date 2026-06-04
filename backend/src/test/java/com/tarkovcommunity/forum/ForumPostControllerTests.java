@@ -19,12 +19,13 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.server.ResponseStatusException;
 
 @WebMvcTest(ForumPostController.class)
 class ForumPostControllerTests {
@@ -98,6 +99,17 @@ class ForumPostControllerTests {
     }
 
     @Test
+    void returnsUnifiedNotFoundResponse() throws Exception {
+        given(forumPostService.getPost(404L))
+                .willThrow(new ResponseStatusException(HttpStatus.NOT_FOUND, "帖子不存在"));
+
+        mockMvc.perform(get("/api/posts/404"))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.code").value(404))
+                .andExpect(jsonPath("$.message").value("帖子不存在"));
+    }
+
+    @Test
     void createsPost() throws Exception {
         PostCreateRequest request = new PostCreateRequest(
                 1L,
@@ -133,6 +145,8 @@ class ForumPostControllerTests {
         mockMvc.perform(post("/api/posts")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
-                .andExpect(status().isBadRequest());
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value(400))
+                .andExpect(jsonPath("$.message").exists());
     }
 }

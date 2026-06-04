@@ -72,6 +72,9 @@
   - 后台评论审核列表接口
   - 可按状态、关键词分页查询评论
   - 可更新评论状态，并同步维护帖子评论数
+  - 后台分区管理列表接口
+  - 可按状态、关键词分页查询社区分区
+  - 可更新分区名称、说明、图标、排序和启用状态
 - 用户中心接口：
   - 当前登录用户个人统计接口
   - 我的帖子分页接口
@@ -189,6 +192,9 @@
 - 后台评论审核接口测试覆盖：
   - `GET /api/admin/comments`
   - `PUT /api/admin/comments/{id}/review`
+- 后台分区管理接口测试覆盖：
+  - `GET /api/admin/categories`
+  - `PUT /api/admin/categories/{id}`
 - 后台接口权限测试覆盖：
   - 缺少 token 访问后台接口返回 401
   - 普通用户 token 访问后台接口返回 403
@@ -226,6 +232,12 @@
   - `GET /api/posts?sort=MOST_COMMENTED`
   - `GET /api/posts?sort=MOST_LIKED`
   - 临时测试用户和测试帖子数据已清理
+- 后台分区管理接口实库验证通过：
+  - 管理员 token 可访问 `GET /api/admin/categories`
+  - 管理员 token 可访问 `PUT /api/admin/categories/{id}`
+  - 已验证分区说明、图标和排序更新
+  - 已验证关键词查询可返回更新后的分区
+  - 测试后已恢复原分区数据并清理临时管理员用户
 - 前端后台路由权限验证：
   - 未登录访问后台页面跳转登录页并携带 redirect
   - 普通用户访问后台页面进入无权限页
@@ -279,6 +291,7 @@
 - `feat: add frontend password editor`
 - `feat: add post list sort API`
 - `feat: add frontend post sorting`
+- `feat: add admin category API`
 
 ## 下一阶段建议
 

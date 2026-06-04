@@ -1,0 +1,63 @@
+package com.tarkovcommunity.admin;
+
+import com.tarkovcommunity.admin.controller.AdminPostController;
+import com.tarkovcommunity.admin.dto.AdminPostResponse;
+import com.tarkovcommunity.admin.service.AdminPostService;
+import com.tarkovcommunity.common.PageResponse;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import org.springframework.test.web.servlet.MockMvc;
+
+import java.time.LocalDateTime;
+import java.util.List;
+
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.BDDMockito.given;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
+@WebMvcTest(AdminPostController.class)
+class AdminPostControllerTests {
+
+    @Autowired
+    private MockMvc mockMvc;
+
+    @MockitoBean
+    private AdminPostService adminPostService;
+
+    @Test
+    void listsPostsForReview() throws Exception {
+        given(adminPostService.listPosts(eq("NORMAL"), eq("maps"), eq("woods"), eq(1), eq(10)))
+                .willReturn(PageResponse.of(1, 10, 1, List.of(new AdminPostResponse(
+                        1L,
+                        "Woods route review",
+                        "GUIDE",
+                        "战区地图",
+                        "maps",
+                        "社区管理员",
+                        "NORMAL",
+                        true,
+                        false,
+                        12,
+                        6,
+                        2,
+                        LocalDateTime.of(2026, 6, 4, 20, 10),
+                        LocalDateTime.of(2026, 6, 4, 20, 15)
+                ))));
+
+        mockMvc.perform(get("/api/admin/posts")
+                        .param("status", "NORMAL")
+                        .param("categoryCode", "maps")
+                        .param("keyword", "woods"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.code").value(200))
+                .andExpect(jsonPath("$.data.total").value(1))
+                .andExpect(jsonPath("$.data.records[0].title").value("Woods route review"))
+                .andExpect(jsonPath("$.data.records[0].status").value("NORMAL"))
+                .andExpect(jsonPath("$.data.records[0].recommended").value(true))
+                .andExpect(jsonPath("$.data.records[0].pinned").value(false));
+    }
+}

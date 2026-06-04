@@ -2,6 +2,7 @@ import { createRouter, createWebHistory } from 'vue-router'
 import HomeView from '../views/HomeView.vue'
 import AdminDashboardView from '../views/AdminDashboardView.vue'
 import AdminPostReviewView from '../views/AdminPostReviewView.vue'
+import AdminUserManagementView from '../views/AdminUserManagementView.vue'
 import LoginView from '../views/LoginView.vue'
 import PostBoardView from '../views/PostBoardView.vue'
 import PostCreateView from '../views/PostCreateView.vue'
@@ -38,6 +39,14 @@ const routes = [
     component: AdminPostReviewView,
     meta: {
       title: '帖子审核',
+    },
+  },
+  {
+    path: '/admin/users',
+    name: 'admin-users',
+    component: AdminUserManagementView,
+    meta: {
+      title: '用户管理',
     },
   },
   {

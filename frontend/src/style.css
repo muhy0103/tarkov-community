@@ -551,7 +551,23 @@ a {
   align-items: center;
 }
 
+.admin-user-cell {
+  display: grid;
+  grid-template-columns: 34px minmax(0, 1fr);
+  gap: 10px;
+  align-items: center;
+}
+
 .admin-post-cell > svg {
+  width: 34px;
+  height: 34px;
+  padding: 8px;
+  color: #0f766e;
+  border-radius: 8px;
+  background: #ecfeff;
+}
+
+.admin-user-cell > svg {
   width: 34px;
   height: 34px;
   padding: 8px;
@@ -569,8 +585,28 @@ a {
   white-space: nowrap;
 }
 
+.admin-user-cell strong {
+  display: block;
+  overflow: hidden;
+  color: #111827;
+  font-size: 14px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .admin-post-cell span,
+.admin-user-cell span,
 .admin-table-muted {
+  color: #667483;
+  font-size: 12px;
+}
+
+.admin-time-stack {
+  display: grid;
+  gap: 4px;
+}
+
+.admin-time-stack span {
   color: #667483;
   font-size: 12px;
 }

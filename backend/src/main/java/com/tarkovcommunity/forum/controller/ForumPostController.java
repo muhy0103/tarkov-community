@@ -1,5 +1,6 @@
 package com.tarkovcommunity.forum.controller;
 
+import com.tarkovcommunity.auth.service.AuthTokenService;
 import com.tarkovcommunity.common.ApiResponse;
 import com.tarkovcommunity.common.PageResponse;
 import com.tarkovcommunity.forum.dto.PostCreateRequest;
@@ -7,15 +8,20 @@ import com.tarkovcommunity.forum.dto.PostCreatedResponse;
 import com.tarkovcommunity.forum.dto.PostDetailResponse;
 import com.tarkovcommunity.forum.dto.PostSummaryResponse;
 import com.tarkovcommunity.forum.service.ForumPostService;
+import com.tarkovcommunity.user.entity.SysUser;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.server.ResponseStatusException;
 
 @RestController
 @RequiredArgsConstructor
@@ -23,6 +29,7 @@ import org.springframework.web.bind.annotation.RestController;
 public class ForumPostController {
 
     private final ForumPostService forumPostService;
+    private final AuthTokenService authTokenService;
 
     @GetMapping
     public ApiResponse<PageResponse<PostSummaryResponse>> listPosts(
@@ -49,7 +56,15 @@ public class ForumPostController {
     }
 
     @PostMapping
-    public ApiResponse<PostCreatedResponse> createPost(@Valid @RequestBody PostCreateRequest request) {
-        return ApiResponse.success(forumPostService.createPost(request));
+    public ApiResponse<PostCreatedResponse> createPost(
+            @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authorization,
+            @Valid @RequestBody PostCreateRequest request
+    ) {
+        return ApiResponse.success(forumPostService.createPost(request, requireUser(authorization)));
+    }
+
+    private SysUser requireUser(String authorization) {
+        return authTokenService.resolveUser(authorization)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Please login first"));
     }
 }

@@ -1,11 +1,9 @@
 package com.tarkovcommunity.forum.dto;
 
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 
 public record CommentCreateRequest(
-        @NotNull(message = "用户不能为空")
         Long userId,
 
         @NotBlank(message = "评论内容不能为空")

@@ -59,12 +59,8 @@ public class ForumCommentServiceImpl implements ForumCommentService {
     }
 
     @Override
-    public CommentCreatedResponse createComment(Long postId, CommentCreateRequest request) {
+    public CommentCreatedResponse createComment(Long postId, CommentCreateRequest request, SysUser author) {
         Post post = requireNormalPost(postId);
-
-        if (sysUserMapper.selectById(request.userId()) == null) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "用户不存在");
-        }
 
         if (request.replyToUserId() != null && sysUserMapper.selectById(request.replyToUserId()) == null) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "回复用户不存在");
@@ -79,7 +75,7 @@ public class ForumCommentServiceImpl implements ForumCommentService {
 
         PostComment comment = new PostComment();
         comment.setPostId(postId);
-        comment.setUserId(request.userId());
+        comment.setUserId(author.getId());
         comment.setParentId(request.parentId());
         comment.setReplyToUserId(request.replyToUserId());
         comment.setContent(request.content());

@@ -5,7 +5,6 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 
 public record PostCreateRequest(
-        @NotNull(message = "用户不能为空")
         Long userId,
 
         @NotNull(message = "分区不能为空")

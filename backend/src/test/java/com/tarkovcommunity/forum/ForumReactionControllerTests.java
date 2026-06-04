@@ -1,17 +1,23 @@
 package com.tarkovcommunity.forum;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.tarkovcommunity.auth.service.AuthTokenService;
 import com.tarkovcommunity.forum.controller.ForumReactionController;
-import com.tarkovcommunity.forum.dto.PostActionResponse;
 import com.tarkovcommunity.forum.dto.PostActionRequest;
+import com.tarkovcommunity.forum.dto.PostActionResponse;
 import com.tarkovcommunity.forum.service.ForumReactionService;
+import com.tarkovcommunity.user.entity.SysUser;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
+import java.util.Optional;
+
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -29,14 +35,19 @@ class ForumReactionControllerTests {
     @MockitoBean
     private ForumReactionService forumReactionService;
 
+    @MockitoBean
+    private AuthTokenService authTokenService;
+
     @Test
     void togglesPostLike() throws Exception {
         PostActionRequest request = new PostActionRequest(2L);
 
-        given(forumReactionService.toggleLike(9L, 2L))
-                .willReturn(new PostActionResponse(9L, 2L, true, 6));
+        given(authTokenService.resolveUser(eq("Bearer user-token"))).willReturn(Optional.of(normalUser()));
+        given(forumReactionService.toggleLike(9L, 7L))
+                .willReturn(new PostActionResponse(9L, 7L, true, 6));
 
         mockMvc.perform(post("/api/posts/9/likes/toggle")
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer user-token")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
@@ -49,10 +60,12 @@ class ForumReactionControllerTests {
     void togglesPostFavorite() throws Exception {
         PostActionRequest request = new PostActionRequest(2L);
 
-        given(forumReactionService.toggleFavorite(9L, 2L))
-                .willReturn(new PostActionResponse(9L, 2L, false, 1));
+        given(authTokenService.resolveUser(eq("Bearer user-token"))).willReturn(Optional.of(normalUser()));
+        given(forumReactionService.toggleFavorite(9L, 7L))
+                .willReturn(new PostActionResponse(9L, 7L, false, 1));
 
         mockMvc.perform(post("/api/posts/9/favorites/toggle")
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer user-token")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
@@ -62,14 +75,19 @@ class ForumReactionControllerTests {
     }
 
     @Test
-    void rejectsReactionWithoutUser() throws Exception {
-        PostActionRequest request = new PostActionRequest(null);
-
+    void rejectsReactionWithoutLogin() throws Exception {
         mockMvc.perform(post("/api/posts/9/likes/toggle")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(request)))
-                .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.code").value(400))
-                .andExpect(jsonPath("$.message").exists());
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.code").value(401));
+    }
+
+    private static SysUser normalUser() {
+        SysUser user = new SysUser();
+        user.setId(7L);
+        user.setUsername("pmc_rookie");
+        user.setRole("USER");
+        user.setStatus("NORMAL");
+        return user;
     }
 }

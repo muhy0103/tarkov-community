@@ -115,18 +115,14 @@ public class ForumPostServiceImpl implements ForumPostService {
     }
 
     @Override
-    public PostCreatedResponse createPost(PostCreateRequest request) {
-        if (sysUserMapper.selectById(request.userId()) == null) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "用户不存在");
-        }
-
+    public PostCreatedResponse createPost(PostCreateRequest request, SysUser author) {
         Category category = categoryMapper.selectById(request.categoryId());
         if (category == null || !"ENABLED".equals(category.getStatus())) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "分区不存在或已停用");
         }
 
         Post post = new Post();
-        post.setUserId(request.userId());
+        post.setUserId(author.getId());
         post.setCategoryId(request.categoryId());
         post.setTitle(request.title());
         post.setContent(request.content());

@@ -1,6 +1,7 @@
 package com.tarkovcommunity.forum;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.tarkovcommunity.auth.service.AuthTokenService;
 import com.tarkovcommunity.common.PageResponse;
 import com.tarkovcommunity.forum.controller.ForumPostController;
 import com.tarkovcommunity.forum.dto.PostCreateRequest;
@@ -8,17 +9,21 @@ import com.tarkovcommunity.forum.dto.PostCreatedResponse;
 import com.tarkovcommunity.forum.dto.PostDetailResponse;
 import com.tarkovcommunity.forum.dto.PostSummaryResponse;
 import com.tarkovcommunity.forum.service.ForumPostService;
+import com.tarkovcommunity.user.entity.SysUser;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -38,6 +43,9 @@ class ForumPostControllerTests {
 
     @MockitoBean
     private ForumPostService forumPostService;
+
+    @MockitoBean
+    private AuthTokenService authTokenService;
 
     @Test
     void listsPostsWithFilters() throws Exception {
@@ -111,8 +119,9 @@ class ForumPostControllerTests {
 
     @Test
     void createsPost() throws Exception {
+        SysUser user = normalUser();
         PostCreateRequest request = new PostCreateRequest(
-                1L,
+                null,
                 2L,
                 "森林跑图避战路线",
                 "这条路线适合前期做任务，重点是避开伐木场高风险区域。",
@@ -120,10 +129,12 @@ class ForumPostControllerTests {
                 null
         );
 
-        given(forumPostService.createPost(any(PostCreateRequest.class)))
+        given(authTokenService.resolveUser(eq("Bearer user-token"))).willReturn(Optional.of(user));
+        given(forumPostService.createPost(any(PostCreateRequest.class), eq(user)))
                 .willReturn(new PostCreatedResponse(9L));
 
         mockMvc.perform(post("/api/posts")
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer user-token")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
@@ -133,6 +144,7 @@ class ForumPostControllerTests {
 
     @Test
     void rejectsInvalidCreateRequest() throws Exception {
+        given(authTokenService.resolveUser(eq("Bearer user-token"))).willReturn(Optional.of(normalUser()));
         PostCreateRequest request = new PostCreateRequest(
                 null,
                 2L,
@@ -143,10 +155,38 @@ class ForumPostControllerTests {
         );
 
         mockMvc.perform(post("/api/posts")
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer user-token")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.code").value(400))
                 .andExpect(jsonPath("$.message").exists());
+    }
+
+    @Test
+    void rejectsCreatePostWithoutLogin() throws Exception {
+        PostCreateRequest request = new PostCreateRequest(
+                null,
+                2L,
+                "森林跑图避战路线",
+                "这条路线适合前期做任务，重点是避开伐木场高风险区域。",
+                "ROUTE_GUIDE",
+                null
+        );
+
+        mockMvc.perform(post("/api/posts")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.code").value(401));
+    }
+
+    private static SysUser normalUser() {
+        SysUser user = new SysUser();
+        user.setId(7L);
+        user.setUsername("pmc_rookie");
+        user.setRole("USER");
+        user.setStatus("NORMAL");
+        return user;
     }
 }

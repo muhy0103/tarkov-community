@@ -7,7 +7,7 @@ const routes = [
     name: 'home',
     component: HomeView,
     meta: {
-      title: '项目概览',
+      title: '社区概览',
     },
   },
 ]

@@ -6,12 +6,16 @@ import com.tarkovcommunity.common.PageResponse;
 import com.tarkovcommunity.forum.dto.PostSummaryResponse;
 import com.tarkovcommunity.user.dto.UserCenterCommentResponse;
 import com.tarkovcommunity.user.dto.UserCenterSummaryResponse;
+import com.tarkovcommunity.user.dto.UserProfileUpdateRequest;
 import com.tarkovcommunity.user.entity.SysUser;
 import com.tarkovcommunity.user.service.UserCenterService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -58,6 +62,14 @@ public class UserCenterController {
             @RequestParam(defaultValue = "10") int size
     ) {
         return ApiResponse.success(userCenterService.listFavorites(requireUser(authorization), page, size));
+    }
+
+    @PutMapping("/profile")
+    public ApiResponse<UserCenterSummaryResponse> updateProfile(
+            @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authorization,
+            @Valid @RequestBody UserProfileUpdateRequest request
+    ) {
+        return ApiResponse.success(userCenterService.updateProfile(requireUser(authorization), request));
     }
 
     private SysUser requireUser(String authorization) {

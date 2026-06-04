@@ -14,13 +14,17 @@ import com.tarkovcommunity.meta.entity.Category;
 import com.tarkovcommunity.meta.mapper.CategoryMapper;
 import com.tarkovcommunity.user.dto.UserCenterCommentResponse;
 import com.tarkovcommunity.user.dto.UserCenterSummaryResponse;
+import com.tarkovcommunity.user.dto.UserProfileUpdateRequest;
 import com.tarkovcommunity.user.entity.SysUser;
 import com.tarkovcommunity.user.mapper.SysUserMapper;
 import com.tarkovcommunity.user.service.UserCenterService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
+import org.springframework.web.server.ResponseStatusException;
 
+import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -139,6 +143,26 @@ public class UserCenterServiceImpl implements UserCenterService {
         );
     }
 
+    @Override
+    public UserCenterSummaryResponse updateProfile(SysUser user, UserProfileUpdateRequest request) {
+        String email = normalizeNullable(request.email());
+        if (StringUtils.hasText(email)) {
+            SysUser existing = sysUserMapper.selectOne(new LambdaQueryWrapper<SysUser>()
+                    .eq(SysUser::getEmail, email));
+            if (existing != null && !Objects.equals(existing.getId(), user.getId())) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "邮箱已被使用");
+            }
+        }
+
+        user.setNickname(request.nickname().trim());
+        user.setEmail(email);
+        user.setAvatar(normalizeNullable(request.avatar()));
+        user.setUpdatedAt(LocalDateTime.now());
+        sysUserMapper.updateById(user);
+
+        return getSummary(user);
+    }
+
     private List<UserCenterCommentResponse> toCommentResponses(List<PostComment> comments) {
         if (comments.isEmpty()) {
             return List.of();
@@ -231,6 +255,10 @@ public class UserCenterServiceImpl implements UserCenterService {
         }
         String normalized = content.replaceAll("\\s+", " ").trim();
         return normalized.length() > 90 ? normalized.substring(0, 90) + "..." : normalized;
+    }
+
+    private static String normalizeNullable(String value) {
+        return StringUtils.hasText(value) ? value.trim() : null;
     }
 
     private static String categoryName(Category category) {

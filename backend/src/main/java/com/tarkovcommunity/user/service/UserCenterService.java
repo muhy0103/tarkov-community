@@ -4,6 +4,7 @@ import com.tarkovcommunity.common.PageResponse;
 import com.tarkovcommunity.forum.dto.PostSummaryResponse;
 import com.tarkovcommunity.user.dto.UserCenterCommentResponse;
 import com.tarkovcommunity.user.dto.UserCenterSummaryResponse;
+import com.tarkovcommunity.user.dto.UserPasswordUpdateRequest;
 import com.tarkovcommunity.user.dto.UserProfileUpdateRequest;
 import com.tarkovcommunity.user.entity.SysUser;
 
@@ -18,4 +19,6 @@ public interface UserCenterService {
     PageResponse<PostSummaryResponse> listFavorites(SysUser user, int page, int size);
 
     UserCenterSummaryResponse updateProfile(SysUser user, UserProfileUpdateRequest request);
+
+    void updatePassword(SysUser user, UserPasswordUpdateRequest request);
 }

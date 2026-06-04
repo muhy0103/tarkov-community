@@ -14,12 +14,14 @@ import com.tarkovcommunity.meta.entity.Category;
 import com.tarkovcommunity.meta.mapper.CategoryMapper;
 import com.tarkovcommunity.user.dto.UserCenterCommentResponse;
 import com.tarkovcommunity.user.dto.UserCenterSummaryResponse;
+import com.tarkovcommunity.user.dto.UserPasswordUpdateRequest;
 import com.tarkovcommunity.user.dto.UserProfileUpdateRequest;
 import com.tarkovcommunity.user.entity.SysUser;
 import com.tarkovcommunity.user.mapper.SysUserMapper;
 import com.tarkovcommunity.user.service.UserCenterService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 import org.springframework.web.server.ResponseStatusException;
@@ -43,6 +45,7 @@ public class UserCenterServiceImpl implements UserCenterService {
     private final FavoriteMapper favoriteMapper;
     private final CategoryMapper categoryMapper;
     private final SysUserMapper sysUserMapper;
+    private final BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
 
     @Override
     public UserCenterSummaryResponse getSummary(SysUser user) {
@@ -161,6 +164,21 @@ public class UserCenterServiceImpl implements UserCenterService {
         sysUserMapper.updateById(user);
 
         return getSummary(user);
+    }
+
+    @Override
+    public void updatePassword(SysUser user, UserPasswordUpdateRequest request) {
+        if (!StringUtils.hasText(user.getPassword()) || !passwordEncoder.matches(request.currentPassword(), user.getPassword())) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "当前密码不正确");
+        }
+
+        if (passwordEncoder.matches(request.newPassword(), user.getPassword())) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "新密码不能与当前密码相同");
+        }
+
+        user.setPassword(passwordEncoder.encode(request.newPassword()));
+        user.setUpdatedAt(LocalDateTime.now());
+        sysUserMapper.updateById(user);
     }
 
     private List<UserCenterCommentResponse> toCommentResponses(List<PostComment> comments) {

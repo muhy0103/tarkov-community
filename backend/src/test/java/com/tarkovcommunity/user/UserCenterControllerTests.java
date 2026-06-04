@@ -7,6 +7,7 @@ import com.tarkovcommunity.forum.dto.PostSummaryResponse;
 import com.tarkovcommunity.user.controller.UserCenterController;
 import com.tarkovcommunity.user.dto.UserCenterCommentResponse;
 import com.tarkovcommunity.user.dto.UserCenterSummaryResponse;
+import com.tarkovcommunity.user.dto.UserPasswordUpdateRequest;
 import com.tarkovcommunity.user.dto.UserProfileUpdateRequest;
 import com.tarkovcommunity.user.entity.SysUser;
 import com.tarkovcommunity.user.service.UserCenterService;
@@ -160,6 +161,42 @@ class UserCenterControllerTests {
         );
 
         mockMvc.perform(put("/api/users/me/profile")
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer user-token")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value(400));
+    }
+
+    @Test
+    void updatesCurrentUserPassword() throws Exception {
+        SysUser user = normalUser();
+        given(authTokenService.resolveUser(eq("Bearer user-token"))).willReturn(Optional.of(user));
+
+        UserPasswordUpdateRequest request = new UserPasswordUpdateRequest(
+                "OldPass123",
+                "NewPass123"
+        );
+
+        mockMvc.perform(put("/api/users/me/password")
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer user-token")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.code").value(200))
+                .andExpect(jsonPath("$.data").value(true));
+    }
+
+    @Test
+    void rejectsInvalidPasswordUpdate() throws Exception {
+        given(authTokenService.resolveUser(eq("Bearer user-token"))).willReturn(Optional.of(normalUser()));
+
+        UserPasswordUpdateRequest request = new UserPasswordUpdateRequest(
+                "",
+                "123"
+        );
+
+        mockMvc.perform(put("/api/users/me/password")
                         .header(HttpHeaders.AUTHORIZATION, "Bearer user-token")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))

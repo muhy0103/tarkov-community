@@ -78,6 +78,8 @@
   - 我的收藏分页接口
   - 当前登录用户个人资料编辑接口，可修改昵称、邮箱和头像
   - 资料编辑接口会校验昵称、邮箱格式和邮箱唯一性
+  - 当前登录用户修改密码接口，可校验旧密码并保存新密码
+  - 修改后的密码继续使用 BCrypt 加密保存
   - 用户中心接口通过登录 token 识别用户，不从前端接收 userId
 
 ### 前端
@@ -193,12 +195,19 @@
   - `GET /api/users/me/comments`
   - `GET /api/users/me/favorites`
   - `PUT /api/users/me/profile`
+  - `PUT /api/users/me/password`
   - 未登录访问用户中心接口返回 401
 - 个人资料编辑接口实库验证通过：
   - 临时用户可通过 `PUT /api/users/me/profile` 修改昵称、邮箱和头像
   - `GET /api/users/me/summary` 可返回更新后的个人资料
   - 数据库 `sys_user` 表中的昵称、邮箱和头像字段同步更新
   - 未登录访问个人资料编辑接口返回 401
+  - 临时测试用户数据已清理
+- 修改密码接口实库验证通过：
+  - 错误旧密码访问 `PUT /api/users/me/password` 返回 400
+  - 正确旧密码可修改为新密码
+  - 修改后旧密码登录失败，新密码登录成功
+  - 数据库中保存的新密码为 BCrypt 哈希
   - 临时测试用户数据已清理
 - 用户中心接口实库验证通过：
   - 临时用户发布帖子、发表评论、收藏帖子后，可在用户中心统计和列表接口中正确返回
@@ -241,13 +250,14 @@
 - `feat: remove frontend user id writes`
 - `feat: add user profile update API`
 - `feat: add frontend profile editor`
+- `feat: add user password update API`
 
 ## 下一阶段建议
 
 优先级从高到低：
 
 1. 资料维护模块：地图、商人、任务、装备、弹药、Boss、藏身处的后台维护页面
-2. 密码修改：为当前登录用户补充密码修改接口和前端表单
+2. 前端密码修改：在用户中心接入修改密码弹窗
 3. 搜索筛选增强：帖子关键词、分区、类型、推荐、热度和时间排序
 4. 课程报告材料：系统架构图、数据库 ER 图、接口说明、功能截图
 

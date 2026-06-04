@@ -6,6 +6,7 @@ import com.tarkovcommunity.common.PageResponse;
 import com.tarkovcommunity.forum.dto.PostSummaryResponse;
 import com.tarkovcommunity.user.dto.UserCenterCommentResponse;
 import com.tarkovcommunity.user.dto.UserCenterSummaryResponse;
+import com.tarkovcommunity.user.dto.UserPasswordUpdateRequest;
 import com.tarkovcommunity.user.dto.UserProfileUpdateRequest;
 import com.tarkovcommunity.user.entity.SysUser;
 import com.tarkovcommunity.user.service.UserCenterService;
@@ -70,6 +71,15 @@ public class UserCenterController {
             @Valid @RequestBody UserProfileUpdateRequest request
     ) {
         return ApiResponse.success(userCenterService.updateProfile(requireUser(authorization), request));
+    }
+
+    @PutMapping("/password")
+    public ApiResponse<Boolean> updatePassword(
+            @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authorization,
+            @Valid @RequestBody UserPasswordUpdateRequest request
+    ) {
+        userCenterService.updatePassword(requireUser(authorization), request);
+        return ApiResponse.success(true);
     }
 
     private SysUser requireUser(String authorization) {

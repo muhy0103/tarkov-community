@@ -11,6 +11,8 @@
 - Validation
 - Actuator
 - Lombok
+- MyBatis-Plus
+- MySQL Driver
 
 ## 本机 JDK
 
@@ -44,3 +46,15 @@ GET /api/health
 ```
 
 用于确认后端服务已经启动。
+
+## 数据库环境变量
+
+后端默认读取本机 MySQL 的 `tarkov_community` 数据库。
+
+```powershell
+$env:DB_URL="jdbc:mysql://localhost:3306/tarkov_community?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai&useSSL=false&allowPublicKeyRetrieval=true"
+$env:DB_USERNAME="root"
+$env:DB_PASSWORD="你的 MySQL 密码"
+```
+
+如果暂时没有配置密码，项目仍可启动，但真正访问数据库接口时需要正确的 MySQL 账号。

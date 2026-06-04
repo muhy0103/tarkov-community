@@ -21,6 +21,7 @@ function logout() {
       </div>
       <nav class="app-nav" aria-label="主导航">
         <RouterLink to="/">社区概览</RouterLink>
+        <RouterLink to="/posts">情报广场</RouterLink>
         <RouterLink v-if="!userStore.isLoggedIn" to="/login">登录注册</RouterLink>
         <div v-else class="user-chip">
           <span>{{ userStore.userInfo?.nickname }}</span>

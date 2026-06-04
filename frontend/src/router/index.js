@@ -1,6 +1,7 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import HomeView from '../views/HomeView.vue'
 import LoginView from '../views/LoginView.vue'
+import PostBoardView from '../views/PostBoardView.vue'
 import PostCreateView from '../views/PostCreateView.vue'
 import PostDetailView from '../views/PostDetailView.vue'
 
@@ -19,6 +20,14 @@ const routes = [
     component: LoginView,
     meta: {
       title: '登录注册',
+    },
+  },
+  {
+    path: '/posts',
+    name: 'post-board',
+    component: PostBoardView,
+    meta: {
+      title: '情报广场',
     },
   },
   {

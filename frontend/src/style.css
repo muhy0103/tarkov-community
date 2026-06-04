@@ -365,6 +365,60 @@ a {
   gap: 18px;
 }
 
+.board-view {
+  display: grid;
+  gap: 18px;
+}
+
+.board-header,
+.board-toolbar {
+  display: flex;
+  gap: 18px;
+  align-items: center;
+  justify-content: space-between;
+  padding: 22px;
+  border: 1px solid #dbe7e6;
+  border-radius: 8px;
+  background: #ffffff;
+  box-shadow: 0 12px 30px rgba(15, 23, 42, 0.04);
+}
+
+.board-header h2 {
+  margin: 0;
+  color: #111827;
+  font-size: 28px;
+}
+
+.board-header p {
+  max-width: 680px;
+  margin: 8px 0 0;
+  color: #667483;
+  font-size: 14px;
+  line-height: 1.7;
+}
+
+.board-toolbar {
+  align-items: end;
+}
+
+.board-filter-grid {
+  display: grid;
+  grid-template-columns: minmax(220px, 1.3fr) minmax(160px, 0.8fr) minmax(150px, 0.8fr) auto;
+  gap: 12px;
+  align-items: center;
+  flex: 1;
+}
+
+.board-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.board-pagination {
+  justify-content: center;
+  margin-top: 18px;
+}
+
 .back-link {
   display: inline-flex;
   align-items: center;
@@ -718,6 +772,21 @@ a {
 
   .detail-card h2 {
     font-size: 24px;
+  }
+
+  .board-header,
+  .board-toolbar {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .board-filter-grid {
+    width: 100%;
+    grid-template-columns: 1fr;
+  }
+
+  .board-actions {
+    width: 100%;
   }
 
   .comment-form-footer {

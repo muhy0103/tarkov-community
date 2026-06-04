@@ -35,3 +35,19 @@ export function fetchAdminUsers(params = {}) {
 export function updateAdminUser(id, payload) {
   return request.put(`/admin/users/${id}`, payload).then((response) => response?.data)
 }
+
+export function fetchAdminComments(params = {}) {
+  return request
+    .get('/admin/comments', {
+      params: {
+        page: 1,
+        size: 10,
+        ...params,
+      },
+    })
+    .then((response) => response?.data ?? { page: 1, size: 10, total: 0, pages: 0, records: [] })
+}
+
+export function reviewAdminComment(id, payload) {
+  return request.put(`/admin/comments/${id}/review`, payload).then((response) => response?.data)
+}

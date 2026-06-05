@@ -1,6 +1,6 @@
 <script setup>
 import { computed, onMounted, ref } from 'vue'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import {
   ArrowLeft,
@@ -9,8 +9,10 @@ import {
   Refresh,
   Star,
   StarFilled,
+  Warning,
 } from '@element-plus/icons-vue'
 import {
+  createReport,
   createPostComment,
   fetchPostComments,
   fetchPostDetail,
@@ -20,6 +22,7 @@ import {
 import { useUserStore } from '../stores/userStore'
 
 const route = useRoute()
+const router = useRouter()
 const userStore = useUserStore()
 
 const loading = ref(false)
@@ -37,6 +40,11 @@ const commentContent = ref('')
 const likeActive = ref(false)
 const favoriteActive = ref(false)
 const favoriteCount = ref(null)
+const reportDialogVisible = ref(false)
+const reportSaving = ref(false)
+const reportFormRef = ref(null)
+const reportTarget = ref(null)
+const reportForm = ref(emptyReportForm())
 
 const postId = computed(() => Number(route.params.id))
 const comments = computed(() => commentsPage.value.records ?? [])
@@ -46,6 +54,38 @@ const favoriteButtonText = computed(() => {
   const countText = favoriteCount.value === null ? '' : ` ${favoriteCount.value}`
   return `${favoriteActive.value ? '已收藏' : '收藏'}${countText}`
 })
+const reportDialogTitle = computed(() => {
+  if (!reportTarget.value) {
+    return '提交举报'
+  }
+
+  return `举报${targetTypeLabel(reportTarget.value.targetType)}`
+})
+
+const reportReasonOptions = [
+  '违规内容',
+  '误导情报',
+  '广告或刷屏',
+  '人身攻击',
+  '其他问题',
+]
+
+const reportRules = {
+  reason: [
+    { required: true, message: '请选择举报原因', trigger: 'change' },
+    { max: 120, message: '举报原因不能超过 120 个字符', trigger: 'blur' },
+  ],
+  description: [
+    { max: 500, message: '补充说明不能超过 500 个字符', trigger: 'blur' },
+  ],
+}
+
+function emptyReportForm() {
+  return {
+    reason: '',
+    description: '',
+  }
+}
 
 function formatDate(value) {
   if (!value) {
@@ -72,6 +112,30 @@ function requireLogin() {
 
   ElMessage.warning('请先登录后再参与讨论')
   return false
+}
+
+function requireLoginForReport() {
+  if (canInteract.value) {
+    return true
+  }
+
+  ElMessage.warning('请先登录后再提交举报')
+  router.push({
+    name: 'login',
+    query: {
+      redirect: route.fullPath,
+    },
+  })
+  return false
+}
+
+function targetTypeLabel(targetType) {
+  return targetType === 'COMMENT' ? '评论' : '帖子'
+}
+
+function commentReportTitle(comment) {
+  const content = comment.content || '评论内容'
+  return content.length > 42 ? `${content.slice(0, 42)}...` : content
 }
 
 async function loadDetail() {
@@ -163,6 +227,45 @@ async function handleFavorite() {
   }
 }
 
+function openReportDialog(targetType, targetId, title) {
+  if (!requireLoginForReport()) {
+    return
+  }
+
+  reportTarget.value = {
+    targetType,
+    targetId,
+    title,
+  }
+  reportForm.value = emptyReportForm()
+  reportDialogVisible.value = true
+}
+
+async function submitReport() {
+  const valid = await reportFormRef.value?.validate().catch(() => false)
+
+  if (!valid || !reportTarget.value) {
+    return
+  }
+
+  reportSaving.value = true
+
+  try {
+    await createReport({
+      targetType: reportTarget.value.targetType,
+      targetId: reportTarget.value.targetId,
+      reason: reportForm.value.reason,
+      description: reportForm.value.description.trim(),
+    })
+    ElMessage.success('举报已提交，管理员会尽快处理')
+    reportDialogVisible.value = false
+  } catch (error) {
+    ElMessage.error(resolveError(error, '举报提交失败'))
+  } finally {
+    reportSaving.value = false
+  }
+}
+
 onMounted(loadDetail)
 </script>
 
@@ -222,6 +325,9 @@ onMounted(loadDetail)
           <el-button :icon="Refresh" :loading="loading" @click="loadDetail">
             刷新
           </el-button>
+          <el-button :icon="Warning" @click="openReportDialog('POST', post.id, post.title)">
+            举报帖子
+          </el-button>
         </div>
       </article>
 
@@ -264,6 +370,15 @@ onMounted(loadDetail)
               <div class="comment-meta">
                 <strong>{{ comment.authorNickname }}</strong>
                 <span>{{ formatDate(comment.createdAt) }}</span>
+                <el-button
+                  text
+                  size="small"
+                  :icon="Warning"
+                  class="comment-report-button"
+                  @click="openReportDialog('COMMENT', comment.id, commentReportTitle(comment))"
+                >
+                  举报
+                </el-button>
               </div>
               <p>{{ comment.content }}</p>
             </div>
@@ -278,6 +393,56 @@ onMounted(loadDetail)
           </div>
         </div>
       </section>
+
+      <el-dialog
+        v-model="reportDialogVisible"
+        :title="reportDialogTitle"
+        width="min(520px, calc(100vw - 32px))"
+        class="profile-edit-dialog"
+      >
+        <div v-if="reportTarget" class="report-target-preview">
+          <span>{{ targetTypeLabel(reportTarget.targetType) }}</span>
+          <strong>{{ reportTarget.title }}</strong>
+        </div>
+
+        <el-form
+          ref="reportFormRef"
+          :model="reportForm"
+          :rules="reportRules"
+          label-position="top"
+        >
+          <el-form-item label="举报原因" prop="reason">
+            <el-select v-model="reportForm.reason" placeholder="选择原因">
+              <el-option
+                v-for="option in reportReasonOptions"
+                :key="option"
+                :label="option"
+                :value="option"
+              />
+            </el-select>
+          </el-form-item>
+          <el-form-item label="补充说明" prop="description">
+            <el-input
+              v-model="reportForm.description"
+              type="textarea"
+              :rows="5"
+              maxlength="500"
+              show-word-limit
+            />
+          </el-form-item>
+        </el-form>
+
+        <template #footer>
+          <div class="profile-dialog-footer">
+            <el-button @click="reportDialogVisible = false">
+              取消
+            </el-button>
+            <el-button type="primary" :loading="reportSaving" @click="submitReport">
+              提交举报
+            </el-button>
+          </div>
+        </template>
+      </el-dialog>
     </template>
   </div>
 </template>

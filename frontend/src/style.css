@@ -1331,6 +1331,10 @@ a {
   gap: 8px;
 }
 
+.comment-report-button {
+  margin-left: auto;
+}
+
 .comment-meta strong {
   color: #172033;
   font-size: 14px;
@@ -1341,6 +1345,30 @@ a {
   color: #3f4d5a;
   font-size: 14px;
   line-height: 1.7;
+}
+
+.report-target-preview {
+  display: grid;
+  gap: 6px;
+  margin-bottom: 16px;
+  padding: 12px 14px;
+  border: 1px solid #dbe7e6;
+  border-radius: 8px;
+  background: #f8fbfb;
+}
+
+.report-target-preview span {
+  color: #0f766e;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.report-target-preview strong {
+  overflow: hidden;
+  color: #111827;
+  font-size: 14px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .post-create-view {

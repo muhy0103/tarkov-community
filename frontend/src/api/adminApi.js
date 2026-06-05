@@ -275,3 +275,23 @@ export function fetchAdminBosses(params = {}) {
 export function updateAdminBoss(id, payload) {
   return request.put(`/admin/bosses/${id}`, payload).then((response) => response?.data)
 }
+
+export function fetchAdminAnnouncements(params = {}) {
+  return request
+    .get('/admin/announcements', {
+      params: {
+        page: 1,
+        size: 10,
+        ...params,
+      },
+    })
+    .then((response) => response?.data ?? { page: 1, size: 10, total: 0, pages: 0, records: [] })
+}
+
+export function createAdminAnnouncement(payload) {
+  return request.post('/admin/announcements', payload).then((response) => response?.data)
+}
+
+export function updateAdminAnnouncement(id, payload) {
+  return request.put(`/admin/announcements/${id}`, payload).then((response) => response?.data)
+}

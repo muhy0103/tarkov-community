@@ -2,6 +2,7 @@ import { createRouter, createWebHistory } from 'vue-router'
 import { useUserStore } from '../stores/userStore'
 import AccessDeniedView from '../views/AccessDeniedView.vue'
 import AdminAmmoManagementView from '../views/AdminAmmoManagementView.vue'
+import AdminAnnouncementManagementView from '../views/AdminAnnouncementManagementView.vue'
 import AdminBossManagementView from '../views/AdminBossManagementView.vue'
 import HomeView from '../views/HomeView.vue'
 import AdminDashboardView from '../views/AdminDashboardView.vue'
@@ -96,6 +97,16 @@ const routes = [
     component: AdminCommentReviewView,
     meta: {
       title: '评论审核',
+      requiresAuth: true,
+      requiresAdmin: true,
+    },
+  },
+  {
+    path: '/admin/announcements',
+    name: 'admin-announcements',
+    component: AdminAnnouncementManagementView,
+    meta: {
+      title: '公告管理',
       requiresAuth: true,
       requiresAdmin: true,
     },

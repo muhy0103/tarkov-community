@@ -9,22 +9,34 @@ import com.tarkovcommunity.forum.mapper.FavoriteMapper;
 import com.tarkovcommunity.forum.mapper.PostLikeMapper;
 import com.tarkovcommunity.forum.mapper.PostMapper;
 import com.tarkovcommunity.forum.service.ForumReactionService;
+import com.tarkovcommunity.notification.entity.Notification;
+import com.tarkovcommunity.notification.mapper.NotificationMapper;
 import com.tarkovcommunity.user.mapper.SysUserMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
+
+import java.time.LocalDateTime;
+import java.util.Objects;
 
 @Service
 @RequiredArgsConstructor
 public class ForumReactionServiceImpl implements ForumReactionService {
 
+    private static final int UNREAD = 0;
+    private static final int NOTIFICATION_CONTENT_MAX_LENGTH = 500;
+    private static final String POST_LIKE_NOTIFICATION_TYPE = "POST_LIKE";
+
     private final PostMapper postMapper;
     private final PostLikeMapper postLikeMapper;
     private final FavoriteMapper favoriteMapper;
     private final SysUserMapper sysUserMapper;
+    private final NotificationMapper notificationMapper;
 
     @Override
+    @Transactional
     public PostActionResponse toggleLike(Long postId, Long userId) {
         Post post = requireNormalPost(postId);
         requireUser(userId);
@@ -42,6 +54,7 @@ public class ForumReactionServiceImpl implements ForumReactionService {
             postLikeMapper.insert(like);
             active = true;
             count += 1;
+            createPostLikeNotification(post, userId);
         } else {
             postLikeMapper.deleteById(existing.getId());
             active = false;
@@ -51,6 +64,22 @@ public class ForumReactionServiceImpl implements ForumReactionService {
         post.setLikeCount(count);
         postMapper.updateById(post);
         return new PostActionResponse(postId, userId, active, count);
+    }
+
+    private void createPostLikeNotification(Post post, Long likerId) {
+        if (post.getUserId() == null || Objects.equals(post.getUserId(), likerId)) {
+            return;
+        }
+
+        Notification notification = new Notification();
+        notification.setUserId(post.getUserId());
+        notification.setType(POST_LIKE_NOTIFICATION_TYPE);
+        notification.setTitle("帖子收到点赞");
+        notification.setContent(limit("你的帖子《" + post.getTitle() + "》收到了新的点赞。", NOTIFICATION_CONTENT_MAX_LENGTH));
+        notification.setRelatedId(post.getId());
+        notification.setReadStatus(UNREAD);
+        notification.setCreatedAt(LocalDateTime.now());
+        notificationMapper.insert(notification);
     }
 
     @Override
@@ -94,6 +123,10 @@ public class ForumReactionServiceImpl implements ForumReactionService {
         if (sysUserMapper.selectById(userId) == null) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "用户不存在");
         }
+    }
+
+    private static String limit(String value, int maxLength) {
+        return value.length() <= maxLength ? value : value.substring(0, maxLength);
     }
 
     private static int valueOrZero(Integer value) {

@@ -29,6 +29,7 @@ import static org.mockito.BDDMockito.given;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import org.springframework.http.HttpStatus;
@@ -207,6 +208,19 @@ class ForumPostControllerTests {
                         .header(HttpHeaders.AUTHORIZATION, "Bearer user-token")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.code").value(200))
+                .andExpect(jsonPath("$.data.id").value(9L));
+    }
+
+    @Test
+    void withdrawsOwnPost() throws Exception {
+        SysUser user = normalUser();
+        given(authTokenService.resolveUser(eq("Bearer user-token"))).willReturn(Optional.of(user));
+        given(forumPostService.withdrawPost(9L, user)).willReturn(new PostCreatedResponse(9L));
+
+        mockMvc.perform(delete("/api/posts/9")
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer user-token"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.code").value(200))
                 .andExpect(jsonPath("$.data.id").value(9L));

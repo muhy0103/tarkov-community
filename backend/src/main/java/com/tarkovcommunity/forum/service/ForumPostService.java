@@ -25,4 +25,6 @@ public interface ForumPostService {
     PostCreatedResponse createPost(PostCreateRequest request, SysUser author);
 
     PostCreatedResponse updatePost(Long id, PostUpdateRequest request, SysUser currentUser);
+
+    PostCreatedResponse withdrawPost(Long id, SysUser currentUser);
 }

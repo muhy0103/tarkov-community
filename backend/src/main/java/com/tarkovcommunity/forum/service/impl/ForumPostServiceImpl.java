@@ -145,13 +145,7 @@ public class ForumPostServiceImpl implements ForumPostService {
 
     @Override
     public PostCreatedResponse updatePost(Long id, PostUpdateRequest request, SysUser currentUser) {
-        Post post = postMapper.selectById(id);
-        if (post == null || !"NORMAL".equals(post.getStatus())) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "帖子不存在");
-        }
-        if (!Objects.equals(post.getUserId(), currentUser.getId())) {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "只能编辑自己发布的帖子");
-        }
+        Post post = requireOwnedNormalPost(id, currentUser, "只能编辑自己发布的帖子");
 
         Category category = categoryMapper.selectById(request.categoryId());
         if (category == null || !"ENABLED".equals(category.getStatus())) {
@@ -165,6 +159,25 @@ public class ForumPostServiceImpl implements ForumPostService {
         post.setCoverImage(StringUtils.hasText(request.coverImage()) ? request.coverImage().trim() : null);
         postMapper.updateById(post);
         return new PostCreatedResponse(post.getId());
+    }
+
+    @Override
+    public PostCreatedResponse withdrawPost(Long id, SysUser currentUser) {
+        Post post = requireOwnedNormalPost(id, currentUser, "只能下架自己发布的帖子");
+        post.setStatus("HIDDEN");
+        postMapper.updateById(post);
+        return new PostCreatedResponse(post.getId());
+    }
+
+    private Post requireOwnedNormalPost(Long id, SysUser currentUser, String forbiddenMessage) {
+        Post post = postMapper.selectById(id);
+        if (post == null || !"NORMAL".equals(post.getStatus())) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "帖子不存在");
+        }
+        if (!Objects.equals(post.getUserId(), currentUser.getId())) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, forbiddenMessage);
+        }
+        return post;
     }
 
     private List<PostSummaryResponse> toSummaries(List<Post> posts) {

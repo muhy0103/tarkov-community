@@ -84,6 +84,30 @@ class ForumPostServiceImplTests {
                         .isEqualTo(HttpStatus.BAD_REQUEST));
     }
 
+    @Test
+    void withdrawsOwnPostByHidingIt() {
+        ForumPostServiceImpl service = service();
+        given(postMapper.selectById(9L)).willReturn(post());
+
+        PostCreatedResponse response = service.withdrawPost(9L, owner());
+
+        ArgumentCaptor<Post> postCaptor = ArgumentCaptor.forClass(Post.class);
+        verify(postMapper).updateById(postCaptor.capture());
+        assertThat(postCaptor.getValue().getStatus()).isEqualTo("HIDDEN");
+        assertThat(response.id()).isEqualTo(9L);
+    }
+
+    @Test
+    void rejectsWithdrawingAnotherUsersPost() {
+        ForumPostServiceImpl service = service();
+        given(postMapper.selectById(9L)).willReturn(post());
+
+        assertThatThrownBy(() -> service.withdrawPost(9L, otherUser()))
+                .isInstanceOf(ResponseStatusException.class)
+                .satisfies(error -> assertThat(((ResponseStatusException) error).getStatusCode())
+                        .isEqualTo(HttpStatus.FORBIDDEN));
+    }
+
     private ForumPostServiceImpl service() {
         return new ForumPostServiceImpl(postMapper, categoryMapper, sysUserMapper);
     }

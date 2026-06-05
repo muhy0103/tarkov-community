@@ -14,6 +14,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -74,6 +75,14 @@ public class ForumPostController {
             @Valid @RequestBody PostUpdateRequest request
     ) {
         return ApiResponse.success(forumPostService.updatePost(id, request, requireUser(authorization)));
+    }
+
+    @DeleteMapping("/{id}")
+    public ApiResponse<PostCreatedResponse> withdrawPost(
+            @PathVariable Long id,
+            @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authorization
+    ) {
+        return ApiResponse.success(forumPostService.withdrawPost(id, requireUser(authorization)));
     }
 
     private SysUser requireUser(String authorization) {

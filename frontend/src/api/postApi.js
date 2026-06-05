@@ -26,6 +26,10 @@ export function updatePost(id, payload) {
   return request.put(`/posts/${id}`, payload).then(unwrapData)
 }
 
+export function withdrawPost(id) {
+  return request.delete(`/posts/${id}`).then(unwrapData)
+}
+
 export function fetchPostComments(id, params = {}) {
   return request
     .get(`/posts/${id}/comments`, {

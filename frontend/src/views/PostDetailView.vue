@@ -1,11 +1,12 @@
 <script setup>
 import { computed, nextTick, onMounted, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { ElMessage } from 'element-plus'
+import { ElMessage, ElMessageBox } from 'element-plus'
 import {
   ArrowLeft,
   ChatLineRound,
   Close,
+  Delete,
   EditPen,
   Pointer,
   Refresh,
@@ -20,6 +21,7 @@ import {
   fetchPostDetail,
   togglePostFavorite,
   togglePostLike,
+  withdrawPost,
 } from '../api/postApi'
 import { useUserStore } from '../stores/userStore'
 
@@ -277,6 +279,38 @@ async function handleFavorite() {
   }
 }
 
+async function handleWithdrawPost() {
+  if (!canEditPost.value || !post.value) {
+    return
+  }
+
+  const confirmed = await ElMessageBox.confirm(
+    '下架后普通玩家将无法继续浏览这条帖子，后台仍会保留审核记录。确定要下架吗？',
+    '下架帖子',
+    {
+      confirmButtonText: '确认下架',
+      cancelButtonText: '取消',
+      type: 'warning',
+    }
+  ).then(() => true).catch(() => false)
+
+  if (!confirmed) {
+    return
+  }
+
+  actionLoading.value = 'withdraw'
+
+  try {
+    await withdrawPost(post.value.id)
+    ElMessage.success('帖子已下架')
+    router.push({ name: 'user-center' })
+  } catch (error) {
+    ElMessage.error(resolveError(error, '下架失败，请稍后重试'))
+  } finally {
+    actionLoading.value = ''
+  }
+}
+
 function openReportDialog(targetType, targetId, title) {
   if (!requireLoginForReport()) {
     return
@@ -362,6 +396,16 @@ onMounted(loadDetail)
             @click="router.push({ name: 'post-edit', params: { id: post.id } })"
           >
             编辑帖子
+          </el-button>
+          <el-button
+            v-if="canEditPost"
+            type="warning"
+            plain
+            :icon="Delete"
+            :loading="actionLoading === 'withdraw'"
+            @click="handleWithdrawPost"
+          >
+            下架帖子
           </el-button>
           <el-button
             :type="likeActive ? 'primary' : 'default'"

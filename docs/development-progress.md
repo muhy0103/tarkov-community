@@ -103,6 +103,9 @@
   - 后台 Boss 资料管理列表接口
   - 可按地图、状态和关键词分页查询 Boss 资料
   - 可更新 Boss 英文名、中文名、所属地图、说明、装备摘要和启用状态
+  - 后台地图撤离点管理列表接口
+  - 可按地图、状态和关键词分页查询撤离点资料
+  - 可更新所属地图、撤离点名称、阵营限制、开启条件、说明和启用状态
 - 用户中心接口：
   - 当前登录用户个人统计接口
   - 我的帖子分页接口
@@ -318,6 +321,10 @@
   - `GET /api/admin/bosses`
   - `PUT /api/admin/bosses/{id}`
   - 服务层覆盖后台 Boss 管理字段映射、地图名称回填和更新文本标准化
+- 后台地图撤离点管理接口测试覆盖：
+  - `GET /api/admin/map-extracts`
+  - `PUT /api/admin/map-extracts/{id}`
+  - 服务层覆盖撤离点字段映射、地图名称回填和更新文本标准化
 - 后台接口权限测试覆盖：
   - 缺少 token 访问后台接口返回 401
   - 普通用户 token 访问后台接口返回 403
@@ -418,6 +425,13 @@
   - 已验证 Boss 名称、地图、说明、装备摘要和启用状态更新
   - 已验证按地图、状态和关键词可查询 Boss
   - 测试后已清理临时 Boss、临时地图和临时管理员用户
+- 后台地图撤离点管理接口实库验证通过：
+  - 管理员 token 可访问 `GET /api/admin/map-extracts`
+  - 管理员 token 可访问 `PUT /api/admin/map-extracts/{id}`
+  - 已验证撤离点列表返回关联地图名称
+  - 已验证撤离点名称、阵营限制、开启条件、说明和启用状态更新
+  - 已验证按地图、状态和关键词可查询撤离点
+  - 测试后已清理临时撤离点、临时地图和临时管理员用户
 - 前端后台路由权限验证：
   - 未登录访问后台页面跳转登录页并携带 redirect
   - 普通用户访问后台页面进入无权限页
@@ -574,6 +588,7 @@
 - `feat: add frontend admin bosses`
 - `feat: add admin hideout upgrade API`
 - `feat: add frontend admin hideout upgrades`
+- `feat: add admin map extract API`
 
 ## 下一阶段建议
 

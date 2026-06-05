@@ -1,5 +1,6 @@
 package com.tarkovcommunity.forum;
 
+import com.tarkovcommunity.forum.dto.PostDetailResponse;
 import com.tarkovcommunity.forum.dto.PostCreatedResponse;
 import com.tarkovcommunity.forum.dto.PostUpdateRequest;
 import com.tarkovcommunity.forum.entity.Post;
@@ -19,6 +20,7 @@ import org.springframework.web.server.ResponseStatusException;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.verify;
 
@@ -33,6 +35,25 @@ class ForumPostServiceImplTests {
 
     @Mock
     private SysUserMapper sysUserMapper;
+
+    @Test
+    void incrementsViewCountWhenGettingDetail() {
+        ForumPostServiceImpl service = service();
+        Post post = post();
+        post.setViewCount(12);
+        post.setLikeCount(3);
+        post.setCommentCount(2);
+        given(postMapper.selectOne(any())).willReturn(post);
+        given(categoryMapper.selectById(2L)).willReturn(enabledCategory());
+        given(sysUserMapper.selectById(7L)).willReturn(owner());
+
+        PostDetailResponse response = service.getPost(9L);
+
+        ArgumentCaptor<Post> postCaptor = ArgumentCaptor.forClass(Post.class);
+        verify(postMapper).updateById(postCaptor.capture());
+        assertThat(postCaptor.getValue().getViewCount()).isEqualTo(13);
+        assertThat(response.viewCount()).isEqualTo(13);
+    }
 
     @Test
     void updatesOwnPostAndNormalizesText() {

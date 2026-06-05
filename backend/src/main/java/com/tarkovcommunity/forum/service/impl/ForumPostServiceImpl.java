@@ -96,6 +96,9 @@ public class ForumPostServiceImpl implements ForumPostService {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "帖子不存在");
         }
 
+        post.setViewCount(valueOrZero(post.getViewCount()) + 1);
+        postMapper.updateById(post);
+
         Category category = categoryMapper.selectById(post.getCategoryId());
         SysUser author = sysUserMapper.selectById(post.getUserId());
 

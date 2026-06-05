@@ -5,6 +5,7 @@ import com.tarkovcommunity.forum.dto.PostCreateRequest;
 import com.tarkovcommunity.forum.dto.PostCreatedResponse;
 import com.tarkovcommunity.forum.dto.PostDetailResponse;
 import com.tarkovcommunity.forum.dto.PostSummaryResponse;
+import com.tarkovcommunity.forum.dto.PostUpdateRequest;
 import com.tarkovcommunity.user.entity.SysUser;
 
 public interface ForumPostService {
@@ -22,4 +23,6 @@ public interface ForumPostService {
     PostDetailResponse getPost(Long id);
 
     PostCreatedResponse createPost(PostCreateRequest request, SysUser author);
+
+    PostCreatedResponse updatePost(Long id, PostUpdateRequest request, SysUser currentUser);
 }

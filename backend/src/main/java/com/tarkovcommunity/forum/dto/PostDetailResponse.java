@@ -4,9 +4,11 @@ import java.time.LocalDateTime;
 
 public record PostDetailResponse(
         Long id,
+        Long authorId,
         String title,
         String content,
         String postType,
+        Long categoryId,
         String categoryName,
         String categoryCode,
         String authorNickname,

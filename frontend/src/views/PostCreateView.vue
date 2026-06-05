@@ -1,12 +1,13 @@
 <script setup>
 import { computed, onMounted, ref } from 'vue'
-import { useRouter } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import { ArrowLeft, EditPen } from '@element-plus/icons-vue'
 import { fetchCategories } from '../api/catalogApi'
-import { createPost } from '../api/postApi'
+import { createPost, fetchPostDetail, updatePost } from '../api/postApi'
 import { useUserStore } from '../stores/userStore'
 
+const route = useRoute()
 const router = useRouter()
 const userStore = useUserStore()
 
@@ -20,6 +21,20 @@ const form = ref({
   title: '',
   content: '',
 })
+const editPostId = computed(() => Number(route.params.id))
+const isEditMode = computed(() => route.name === 'post-edit' && Number.isFinite(editPostId.value))
+const pageTitle = computed(() => (isEditMode.value ? '编辑战局情报' : '发布战局情报'))
+const pageDescription = computed(() => (
+  isEditMode.value
+    ? '更新标题、分区、类型和正文，让已有情报继续保持准确、清楚、可讨论。'
+    : '把跑图路线、任务点位、装备建议或复盘内容整理成帖子，让其他玩家可以继续讨论。'
+))
+const submitText = computed(() => (isEditMode.value ? '保存修改' : '发布情报'))
+const backTarget = computed(() => (
+  isEditMode.value
+    ? { name: 'post-detail', params: { id: editPostId.value } }
+    : { name: 'home' }
+))
 
 const postTypeOptions = [
   { label: '路线情报', value: 'ROUTE' },
@@ -48,10 +63,24 @@ async function loadCategories() {
   errorMessage.value = ''
 
   try {
-    categories.value = await fetchCategories()
-    form.value.categoryId = categories.value[0]?.id ?? null
+    const [categoryData, postData] = await Promise.all([
+      fetchCategories(),
+      isEditMode.value ? fetchPostDetail(editPostId.value) : Promise.resolve(null),
+    ])
+
+    categories.value = categoryData
+    if (postData) {
+      form.value = {
+        categoryId: postData.categoryId,
+        postType: postData.postType,
+        title: postData.title,
+        content: postData.content,
+      }
+    } else {
+      form.value.categoryId = categories.value[0]?.id ?? null
+    }
   } catch (error) {
-    errorMessage.value = resolveError(error, '社区分区暂时无法加载')
+    errorMessage.value = resolveError(error, isEditMode.value ? '帖子暂时无法加载或没有编辑权限' : '社区分区暂时无法加载')
   } finally {
     loading.value = false
   }
@@ -72,17 +101,20 @@ async function submitPost() {
   submitting.value = true
 
   try {
-    const result = await createPost({
+    const payload = {
       categoryId: form.value.categoryId,
       title: form.value.title.trim(),
       content: form.value.content.trim(),
       postType: form.value.postType,
       coverImage: null,
-    })
-    ElMessage.success('情报帖已发布')
+    }
+    const result = isEditMode.value
+      ? await updatePost(editPostId.value, payload)
+      : await createPost(payload)
+    ElMessage.success(isEditMode.value ? '情报帖已更新' : '情报帖已发布')
     router.push({ name: 'post-detail', params: { id: result.id } })
   } catch (error) {
-    ElMessage.error(resolveError(error, '发布失败，请稍后重试'))
+    ElMessage.error(resolveError(error, isEditMode.value ? '保存失败，请稍后重试' : '发布失败，请稍后重试'))
   } finally {
     submitting.value = false
   }
@@ -93,16 +125,16 @@ onMounted(loadCategories)
 
 <template>
   <div class="post-create-view">
-    <RouterLink class="back-link" to="/">
+    <RouterLink class="back-link" :to="backTarget">
       <ArrowLeft />
-      返回社区概览
+      {{ isEditMode ? '返回帖子详情' : '返回社区概览' }}
     </RouterLink>
 
     <div class="create-layout">
       <section class="detail-card create-card">
         <div class="create-heading">
-          <h2>发布战局情报</h2>
-          <p>把跑图路线、任务点位、装备建议或复盘内容整理成帖子，让其他玩家可以继续讨论。</p>
+          <h2>{{ pageTitle }}</h2>
+          <p>{{ pageDescription }}</p>
         </div>
 
         <el-alert
@@ -180,18 +212,18 @@ onMounted(loadCategories)
               :disabled="!canSubmit"
               @click="submitPost"
             >
-              发布情报
+              {{ submitText }}
             </el-button>
           </div>
         </el-form>
       </section>
 
       <aside class="create-side">
-        <h3>发帖建议</h3>
+        <h3>{{ isEditMode ? '编辑建议' : '发帖建议' }}</h3>
         <ul>
           <li>标题尽量说明地图、任务或装备主题，方便其他玩家快速判断。</li>
           <li>正文优先写实战经验，例如撤离路线、危险点位、物资价值或失败复盘。</li>
-          <li>问题帖可以写清楚等级、任务阶段和预算，后续更容易得到有效回复。</li>
+          <li>{{ isEditMode ? '修改时尽量保留讨论上下文，避免让已有评论失去参考对象。' : '问题帖可以写清楚等级、任务阶段和预算，后续更容易得到有效回复。' }}</li>
         </ul>
       </aside>
     </div>

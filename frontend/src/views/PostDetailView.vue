@@ -6,6 +6,7 @@ import {
   ArrowLeft,
   ChatLineRound,
   Close,
+  EditPen,
   Pointer,
   Refresh,
   Star,
@@ -54,6 +55,9 @@ const postId = computed(() => Number(route.params.id))
 const comments = computed(() => commentsPage.value.records ?? [])
 const currentUserId = computed(() => userStore.userInfo?.id)
 const canInteract = computed(() => userStore.isLoggedIn && Boolean(currentUserId.value))
+const canEditPost = computed(() => (
+  userStore.isLoggedIn && Number(post.value?.authorId) === Number(currentUserId.value)
+))
 const favoriteButtonText = computed(() => {
   const countText = favoriteCount.value === null ? '' : ` ${favoriteCount.value}`
   return `${favoriteActive.value ? '已收藏' : '收藏'}${countText}`
@@ -352,6 +356,13 @@ onMounted(loadDetail)
         <p class="detail-content">{{ post.content }}</p>
 
         <div class="detail-actions">
+          <el-button
+            v-if="canEditPost"
+            :icon="EditPen"
+            @click="router.push({ name: 'post-edit', params: { id: post.id } })"
+          >
+            编辑帖子
+          </el-button>
           <el-button
             :type="likeActive ? 'primary' : 'default'"
             :icon="Pointer"

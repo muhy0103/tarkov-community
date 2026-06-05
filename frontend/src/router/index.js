@@ -279,6 +279,15 @@ const routes = [
     },
   },
   {
+    path: '/posts/:id/edit',
+    name: 'post-edit',
+    component: PostCreateView,
+    meta: {
+      title: '编辑情报',
+      requiresAuth: true,
+    },
+  },
+  {
     path: '/posts/:id',
     name: 'post-detail',
     component: PostDetailView,

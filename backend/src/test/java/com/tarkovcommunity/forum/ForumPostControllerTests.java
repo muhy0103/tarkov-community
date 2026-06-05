@@ -8,6 +8,7 @@ import com.tarkovcommunity.forum.dto.PostCreateRequest;
 import com.tarkovcommunity.forum.dto.PostCreatedResponse;
 import com.tarkovcommunity.forum.dto.PostDetailResponse;
 import com.tarkovcommunity.forum.dto.PostSummaryResponse;
+import com.tarkovcommunity.forum.dto.PostUpdateRequest;
 import com.tarkovcommunity.forum.service.ForumPostService;
 import com.tarkovcommunity.user.entity.SysUser;
 import org.junit.jupiter.api.Test;
@@ -27,6 +28,7 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import org.springframework.http.HttpStatus;
@@ -87,9 +89,11 @@ class ForumPostControllerTests {
         given(forumPostService.getPost(1L))
                 .willReturn(new PostDetailResponse(
                         1L,
+                        7L,
                         "工厂近距离配装讨论",
                         "预算有限时可以优先保证耳机、护甲和高穿弹药。",
                         "LOADOUT",
+                        2L,
                         "装备弹药",
                         "loadouts",
                         "疗养院常客",
@@ -104,6 +108,8 @@ class ForumPostControllerTests {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.code").value(200))
                 .andExpect(jsonPath("$.data.title").value("工厂近距离配装讨论"))
+                .andExpect(jsonPath("$.data.authorId").value(7L))
+                .andExpect(jsonPath("$.data.categoryId").value(2L))
                 .andExpect(jsonPath("$.data.content").value("预算有限时可以优先保证耳机、护甲和高穿弹药。"));
     }
 
@@ -180,6 +186,30 @@ class ForumPostControllerTests {
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isUnauthorized())
                 .andExpect(jsonPath("$.code").value(401));
+    }
+
+    @Test
+    void updatesOwnPost() throws Exception {
+        SysUser user = normalUser();
+        PostUpdateRequest request = new PostUpdateRequest(
+                3L,
+                "海岸线任务路线更新版",
+                "补充了疗养院外圈和发电站附近的绕行方案，适合低等级玩家参考。",
+                "GUIDE",
+                null
+        );
+
+        given(authTokenService.resolveUser(eq("Bearer user-token"))).willReturn(Optional.of(user));
+        given(forumPostService.updatePost(eq(9L), any(PostUpdateRequest.class), eq(user)))
+                .willReturn(new PostCreatedResponse(9L));
+
+        mockMvc.perform(put("/api/posts/9")
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer user-token")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.code").value(200))
+                .andExpect(jsonPath("$.data.id").value(9L));
     }
 
     private static SysUser normalUser() {

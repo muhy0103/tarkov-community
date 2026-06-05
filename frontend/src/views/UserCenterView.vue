@@ -565,6 +565,9 @@ onMounted(loadAll)
                       <span>浏览 {{ post.viewCount }}</span>
                       <span>点赞 {{ post.likeCount }}</span>
                       <span>评论 {{ post.commentCount }}</span>
+                      <RouterLink class="inline-action-link" :to="{ name: 'post-edit', params: { id: post.id } }">
+                        编辑
+                      </RouterLink>
                     </div>
                   </div>
                 </article>

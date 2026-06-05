@@ -7,6 +7,7 @@ import com.tarkovcommunity.forum.dto.PostCreateRequest;
 import com.tarkovcommunity.forum.dto.PostCreatedResponse;
 import com.tarkovcommunity.forum.dto.PostDetailResponse;
 import com.tarkovcommunity.forum.dto.PostSummaryResponse;
+import com.tarkovcommunity.forum.dto.PostUpdateRequest;
 import com.tarkovcommunity.forum.service.ForumPostService;
 import com.tarkovcommunity.user.entity.SysUser;
 import jakarta.validation.Valid;
@@ -16,6 +17,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -63,6 +65,15 @@ public class ForumPostController {
             @Valid @RequestBody PostCreateRequest request
     ) {
         return ApiResponse.success(forumPostService.createPost(request, requireUser(authorization)));
+    }
+
+    @PutMapping("/{id}")
+    public ApiResponse<PostCreatedResponse> updatePost(
+            @PathVariable Long id,
+            @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authorization,
+            @Valid @RequestBody PostUpdateRequest request
+    ) {
+        return ApiResponse.success(forumPostService.updatePost(id, request, requireUser(authorization)));
     }
 
     private SysUser requireUser(String authorization) {

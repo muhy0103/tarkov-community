@@ -7,6 +7,7 @@ import com.tarkovcommunity.forum.dto.PostCreateRequest;
 import com.tarkovcommunity.forum.dto.PostCreatedResponse;
 import com.tarkovcommunity.forum.dto.PostDetailResponse;
 import com.tarkovcommunity.forum.dto.PostSummaryResponse;
+import com.tarkovcommunity.forum.dto.PostUpdateRequest;
 import com.tarkovcommunity.forum.entity.Post;
 import com.tarkovcommunity.forum.mapper.PostMapper;
 import com.tarkovcommunity.forum.service.ForumPostService;
@@ -100,9 +101,11 @@ public class ForumPostServiceImpl implements ForumPostService {
 
         return new PostDetailResponse(
                 post.getId(),
+                post.getUserId(),
                 post.getTitle(),
                 post.getContent(),
                 post.getPostType(),
+                post.getCategoryId(),
                 categoryName(category),
                 categoryCode(category),
                 authorNickname(author),
@@ -137,6 +140,30 @@ public class ForumPostServiceImpl implements ForumPostService {
         post.setCommentCount(0);
 
         postMapper.insert(post);
+        return new PostCreatedResponse(post.getId());
+    }
+
+    @Override
+    public PostCreatedResponse updatePost(Long id, PostUpdateRequest request, SysUser currentUser) {
+        Post post = postMapper.selectById(id);
+        if (post == null || !"NORMAL".equals(post.getStatus())) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "帖子不存在");
+        }
+        if (!Objects.equals(post.getUserId(), currentUser.getId())) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "只能编辑自己发布的帖子");
+        }
+
+        Category category = categoryMapper.selectById(request.categoryId());
+        if (category == null || !"ENABLED".equals(category.getStatus())) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "分区不存在或已停用");
+        }
+
+        post.setCategoryId(request.categoryId());
+        post.setTitle(request.title().trim());
+        post.setContent(request.content().trim());
+        post.setPostType(request.postType().trim());
+        post.setCoverImage(StringUtils.hasText(request.coverImage()) ? request.coverImage().trim() : null);
+        postMapper.updateById(post);
         return new PostCreatedResponse(post.getId());
     }
 

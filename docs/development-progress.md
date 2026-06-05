@@ -85,6 +85,9 @@
   - 可按商人、地图、状态、关键词分页查询塔科夫任务资料
   - 列表返回关联商人名称和地图名称，便于前端直接展示
   - 可更新任务所属商人、地图、名称、类型、说明、奖励、解锁链和启用状态
+  - 后台任务前置关系管理列表接口
+  - 可按任务、前置任务和关键词分页查询任务链关系
+  - 可更新任务和前置任务的关联，并禁止设置自我前置关系
   - 后台物品资料管理列表接口
   - 可按类型、状态、任务需求、藏身处需求、保留建议和关键词分页查询塔科夫物品资料
   - 可更新物品英文名、中文名、类型、稀有度、格子尺寸、需求标记、说明和启用状态
@@ -310,6 +313,10 @@
 - 后台任务资料管理接口测试覆盖：
   - `GET /api/admin/quests`
   - `PUT /api/admin/quests/{id}`
+- 后台任务前置关系管理接口测试覆盖：
+  - `GET /api/admin/quest-prerequisites`
+  - `PUT /api/admin/quest-prerequisites/{id}`
+  - 服务层覆盖任务名称回填、任务链关系更新和自我前置校验
 - 后台物品资料管理接口测试覆盖：
   - `GET /api/admin/items`
   - `PUT /api/admin/items/{id}`
@@ -405,6 +412,14 @@
   - 已验证任务类型、说明、奖励、解锁链和启用状态更新
   - 已验证按商人、地图、状态和关键词可查询更新后的任务
   - 测试后已清理临时任务、临时商人、临时地图和临时管理员用户
+- 后台任务前置关系管理接口实库验证通过：
+  - 管理员 token 可访问 `GET /api/admin/quest-prerequisites`
+  - 管理员 token 可访问 `PUT /api/admin/quest-prerequisites/{id}`
+  - 已验证任务链列表返回任务名称和前置任务名称
+  - 已验证任务前置关系更新后数据库同步保存
+  - 已验证按任务和关键词可查询任务链关系
+  - 已验证同一任务不能设置为自己的前置任务
+  - 测试后已清理临时任务链、临时任务、临时商人、临时地图和临时管理员用户
 - 后台物品资料管理接口实库验证通过：
   - 管理员 token 可访问 `GET /api/admin/items`
   - 管理员 token 可访问 `PUT /api/admin/items/{id}`
@@ -636,6 +651,7 @@
 - `feat: add frontend admin map extracts`
 - `feat: add admin map loot area API`
 - `feat: add frontend admin map loot areas`
+- `feat: add admin quest prerequisite API`
 
 ## 下一阶段建议
 

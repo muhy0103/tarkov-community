@@ -33,6 +33,7 @@ function logout() {
         <RouterLink v-if="userStore.isAdmin" to="/admin/map-loot-areas">资源点管理</RouterLink>
         <RouterLink v-if="userStore.isAdmin" to="/admin/traders">商人管理</RouterLink>
         <RouterLink v-if="userStore.isAdmin" to="/admin/quests">任务管理</RouterLink>
+        <RouterLink v-if="userStore.isAdmin" to="/admin/quest-prerequisites">任务链管理</RouterLink>
         <RouterLink v-if="userStore.isAdmin" to="/admin/items">物品管理</RouterLink>
         <RouterLink v-if="userStore.isAdmin" to="/admin/weapons">武器管理</RouterLink>
         <RouterLink v-if="userStore.isAdmin" to="/admin/ammo">弹药管理</RouterLink>

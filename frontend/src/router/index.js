@@ -14,6 +14,7 @@ import AdminMapExtractManagementView from '../views/AdminMapExtractManagementVie
 import AdminMapLootAreaManagementView from '../views/AdminMapLootAreaManagementView.vue'
 import AdminMapManagementView from '../views/AdminMapManagementView.vue'
 import AdminPostReviewView from '../views/AdminPostReviewView.vue'
+import AdminQuestPrerequisiteManagementView from '../views/AdminQuestPrerequisiteManagementView.vue'
 import AdminQuestManagementView from '../views/AdminQuestManagementView.vue'
 import AdminTraderManagementView from '../views/AdminTraderManagementView.vue'
 import AdminUserManagementView from '../views/AdminUserManagementView.vue'
@@ -154,6 +155,16 @@ const routes = [
     component: AdminQuestManagementView,
     meta: {
       title: '任务管理',
+      requiresAuth: true,
+      requiresAdmin: true,
+    },
+  },
+  {
+    path: '/admin/quest-prerequisites',
+    name: 'admin-quest-prerequisites',
+    component: AdminQuestPrerequisiteManagementView,
+    meta: {
+      title: '任务链管理',
       requiresAuth: true,
       requiresAdmin: true,
     },

@@ -148,6 +148,22 @@ export function updateAdminQuest(id, payload) {
   return request.put(`/admin/quests/${id}`, payload).then((response) => response?.data)
 }
 
+export function fetchAdminQuestPrerequisites(params = {}) {
+  return request
+    .get('/admin/quest-prerequisites', {
+      params: {
+        page: 1,
+        size: 10,
+        ...params,
+      },
+    })
+    .then((response) => response?.data ?? { page: 1, size: 10, total: 0, pages: 0, records: [] })
+}
+
+export function updateAdminQuestPrerequisite(id, payload) {
+  return request.put(`/admin/quest-prerequisites/${id}`, payload).then((response) => response?.data)
+}
+
 export function fetchAdminItems(params = {}) {
   return request
     .get('/admin/items', {

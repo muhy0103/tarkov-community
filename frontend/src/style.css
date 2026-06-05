@@ -838,6 +838,13 @@ a {
   align-items: center;
 }
 
+.admin-upgrade-cell {
+  display: grid;
+  grid-template-columns: 34px minmax(0, 1fr);
+  gap: 10px;
+  align-items: center;
+}
+
 .admin-boss-cell {
   display: grid;
   grid-template-columns: 34px minmax(0, 1fr);
@@ -861,6 +868,7 @@ a {
 .admin-weapon-cell > svg,
 .admin-ammo-cell > svg,
 .admin-hideout-cell > svg,
+.admin-upgrade-cell > svg,
 .admin-boss-cell > svg {
   width: 34px;
   height: 34px;
@@ -916,9 +924,19 @@ a {
   white-space: nowrap;
 }
 
+.admin-upgrade-cell strong {
+  display: block;
+  overflow: hidden;
+  color: #111827;
+  font-size: 14px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .admin-post-cell span,
 .admin-comment-cell span,
 .admin-user-cell span,
+.admin-upgrade-cell span,
 .admin-table-muted {
   color: #667483;
   font-size: 12px;

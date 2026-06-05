@@ -90,6 +90,23 @@ class AdminHideoutUpgradeControllerTests {
                 .andExpect(jsonPath("$.code").value(400));
     }
 
+    @Test
+    void rejectsTooLongHideoutUpgradeUnlocks() throws Exception {
+        AdminHideoutUpgradeUpdateRequest request = new AdminHideoutUpgradeUpdateRequest(
+                1L,
+                1,
+                "Toolset x1",
+                "1h",
+                "A".repeat(501)
+        );
+
+        mockMvc.perform(put("/api/admin/hideout/upgrades/1")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value(400));
+    }
+
     private static AdminHideoutUpgradeResponse upgradeResponse() {
         return new AdminHideoutUpgradeResponse(
                 1L,

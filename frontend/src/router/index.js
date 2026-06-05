@@ -8,6 +8,7 @@ import AdminDashboardView from '../views/AdminDashboardView.vue'
 import AdminCategoryManagementView from '../views/AdminCategoryManagementView.vue'
 import AdminCommentReviewView from '../views/AdminCommentReviewView.vue'
 import AdminHideoutStationManagementView from '../views/AdminHideoutStationManagementView.vue'
+import AdminHideoutUpgradeManagementView from '../views/AdminHideoutUpgradeManagementView.vue'
 import AdminItemManagementView from '../views/AdminItemManagementView.vue'
 import AdminMapManagementView from '../views/AdminMapManagementView.vue'
 import AdminPostReviewView from '../views/AdminPostReviewView.vue'
@@ -171,6 +172,16 @@ const routes = [
     component: AdminHideoutStationManagementView,
     meta: {
       title: '藏身处管理',
+      requiresAuth: true,
+      requiresAdmin: true,
+    },
+  },
+  {
+    path: '/admin/hideout/upgrades',
+    name: 'admin-hideout-upgrades',
+    component: AdminHideoutUpgradeManagementView,
+    meta: {
+      title: '升级管理',
       requiresAuth: true,
       requiresAdmin: true,
     },

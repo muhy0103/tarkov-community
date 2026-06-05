@@ -18,7 +18,7 @@ public record AdminHideoutUpgradeUpdateRequest(
         @Size(max = 80, message = "Required time must not exceed 80 characters")
         String requiredTime,
 
-        @Size(max = 1000, message = "Unlocks must not exceed 1000 characters")
+        @Size(max = 500, message = "Unlocks must not exceed 500 characters")
         String unlocks
 ) {
 }

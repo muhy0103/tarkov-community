@@ -71,6 +71,7 @@ const commentsPage = ref(pageState())
 const favoritesPage = ref(pageState())
 const notificationsPage = ref(pageState(5))
 const unreadNotificationCount = ref(0)
+const notificationReadFilter = ref('ALL')
 
 const playerName = computed(() => summary.value.nickname || userStore.userInfo?.nickname || '塔科夫玩家')
 const playerAvatar = computed(() => summary.value.avatar || userStore.userInfo?.avatar || '')
@@ -142,6 +143,11 @@ const notificationTypeOptions = {
   ANNOUNCEMENT: '公告提醒',
 }
 
+const notificationReadFilterOptions = [
+  { label: '全部', value: 'ALL' },
+  { label: '未读', value: 'UNREAD' },
+]
+
 const postInteractionNotificationTypes = new Set(['POST_COMMENT', 'COMMENT_REPLY', 'POST_LIKE'])
 
 function pageState(size = 6) {
@@ -186,6 +192,19 @@ function notificationTypeLabel(type) {
 
 function canOpenRelatedPost(notification) {
   return postInteractionNotificationTypes.has(notification?.type) && Boolean(notification.relatedId)
+}
+
+function notificationQueryParams(page) {
+  const params = {
+    page,
+    size: notificationsPage.value.size,
+  }
+
+  if (notificationReadFilter.value === 'UNREAD') {
+    params.readStatus = 0
+  }
+
+  return params
 }
 
 function statusLabel(status) {
@@ -235,7 +254,7 @@ async function loadAll() {
       fetchMyPosts({ page: postsPage.value.page, size: postsPage.value.size }),
       fetchMyComments({ page: commentsPage.value.page, size: commentsPage.value.size }),
       fetchMyFavorites({ page: favoritesPage.value.page, size: favoritesPage.value.size }),
-      fetchMyNotifications({ page: notificationsPage.value.page, size: notificationsPage.value.size }),
+      fetchMyNotifications(notificationQueryParams(notificationsPage.value.page)),
       fetchUnreadNotificationCount(),
     ])
 
@@ -298,7 +317,7 @@ async function loadNotifications(page = notificationsPage.value.page) {
 
   try {
     const [notificationData, unreadCount] = await Promise.all([
-      fetchMyNotifications({ page, size: notificationsPage.value.size }),
+      fetchMyNotifications(notificationQueryParams(page)),
       fetchUnreadNotificationCount(),
     ])
     notificationsPage.value = notificationData
@@ -310,6 +329,10 @@ async function loadNotifications(page = notificationsPage.value.page) {
   }
 }
 
+function handleNotificationFilterChange() {
+  loadNotifications(1)
+}
+
 async function markOneNotificationRead(notification) {
   if (!notification || notification.readStatus === 1) {
     return
@@ -318,8 +341,12 @@ async function markOneNotificationRead(notification) {
   sectionLoading.value = 'notifications'
   try {
     await markNotificationRead(notification.id)
-    applyNotificationReadLocally(notification.id)
-    unreadNotificationCount.value = Math.max(0, unreadNotificationCount.value - 1)
+    if (notificationReadFilter.value === 'UNREAD') {
+      await loadNotifications(1)
+    } else {
+      applyNotificationReadLocally(notification.id)
+      unreadNotificationCount.value = Math.max(0, unreadNotificationCount.value - 1)
+    }
     ElMessage.success('通知已标记为已读')
   } catch (error) {
     ElMessage.error(resolveError(error, '通知状态暂时无法更新'))
@@ -363,9 +390,13 @@ async function markAllNotifications() {
   sectionLoading.value = 'notifications'
   try {
     await markAllNotificationsRead()
-    notificationsPage.value = {
-      ...notificationsPage.value,
-      records: notificationsPage.value.records.map((item) => ({ ...item, readStatus: 1 })),
+    if (notificationReadFilter.value === 'UNREAD') {
+      notificationsPage.value = pageState(notificationsPage.value.size)
+    } else {
+      notificationsPage.value = {
+        ...notificationsPage.value,
+        records: notificationsPage.value.records.map((item) => ({ ...item, readStatus: 1 })),
+      }
     }
     unreadNotificationCount.value = 0
     ElMessage.success('所有通知已标记为已读')
@@ -669,9 +700,15 @@ onMounted(loadAll)
 
             <div v-loading="sectionLoading === 'notifications'" class="user-list-wrap">
               <div class="notification-toolbar">
-                <div>
+                <div class="notification-toolbar-content">
                   <h4>社区通知</h4>
                   <p>查看举报处理、系统提醒和社区运营消息。</p>
+                  <el-segmented
+                    v-model="notificationReadFilter"
+                    class="notification-filter"
+                    :options="notificationReadFilterOptions"
+                    @change="handleNotificationFilterChange"
+                  />
                 </div>
                 <el-button
                   size="small"

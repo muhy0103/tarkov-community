@@ -64,14 +64,14 @@ public class ReportServiceImpl implements ReportService {
     private void validateTargetExists(String targetType, Long targetId) {
         if ("POST".equals(targetType)) {
             Post post = postMapper.selectById(targetId);
-            if (post == null || isDeleted(post.getDeleted())) {
+            if (post == null || isDeleted(post.getDeleted()) || !"NORMAL".equals(post.getStatus())) {
                 throw new ResponseStatusException(HttpStatus.NOT_FOUND, "举报的帖子不存在");
             }
             return;
         }
 
         PostComment comment = commentMapper.selectById(targetId);
-        if (comment == null || isDeleted(comment.getDeleted())) {
+        if (comment == null || isDeleted(comment.getDeleted()) || !"NORMAL".equals(comment.getStatus())) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "举报的评论不存在");
         }
     }

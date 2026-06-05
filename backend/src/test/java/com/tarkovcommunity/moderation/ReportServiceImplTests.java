@@ -22,6 +22,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 
 @ExtendWith(MockitoExtension.class)
@@ -110,6 +111,40 @@ class ReportServiceImplTests {
                         .isEqualTo(HttpStatus.NOT_FOUND));
     }
 
+    @Test
+    void rejectsHiddenPostReportTarget() {
+        ReportServiceImpl service = new ReportServiceImpl(reportMapper, postMapper, commentMapper);
+        given(postMapper.selectById(2L)).willReturn(post("HIDDEN"));
+
+        assertThatThrownBy(() -> service.createReport(new ReportCreateRequest(
+                "POST",
+                2L,
+                "广告刷屏",
+                ""
+        ), normalUser()))
+                .isInstanceOf(ResponseStatusException.class)
+                .satisfies(exception -> assertThat(((ResponseStatusException) exception).getStatusCode())
+                        .isEqualTo(HttpStatus.NOT_FOUND));
+        verify(reportMapper, never()).insert(any(Report.class));
+    }
+
+    @Test
+    void rejectsHiddenCommentReportTarget() {
+        ReportServiceImpl service = new ReportServiceImpl(reportMapper, postMapper, commentMapper);
+        given(commentMapper.selectById(3L)).willReturn(comment("HIDDEN"));
+
+        assertThatThrownBy(() -> service.createReport(new ReportCreateRequest(
+                "COMMENT",
+                3L,
+                "人身攻击",
+                ""
+        ), normalUser()))
+                .isInstanceOf(ResponseStatusException.class)
+                .satisfies(exception -> assertThat(((ResponseStatusException) exception).getStatusCode())
+                        .isEqualTo(HttpStatus.NOT_FOUND));
+        verify(reportMapper, never()).insert(any(Report.class));
+    }
+
     private static Report existingReport() {
         Report report = new Report();
         report.setId(5L);
@@ -122,18 +157,28 @@ class ReportServiceImplTests {
     }
 
     private static Post post() {
+        return post("NORMAL");
+    }
+
+    private static Post post(String status) {
         Post post = new Post();
         post.setId(2L);
         post.setTitle("海关任务路线");
+        post.setStatus(status);
         post.setDeleted(0);
         return post;
     }
 
     private static PostComment comment() {
+        return comment("NORMAL");
+    }
+
+    private static PostComment comment(String status) {
         PostComment comment = new PostComment();
         comment.setId(3L);
         comment.setPostId(2L);
         comment.setContent("这个评论需要处理。");
+        comment.setStatus(status);
         comment.setDeleted(0);
         return comment;
     }

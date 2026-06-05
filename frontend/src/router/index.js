@@ -1,6 +1,7 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import { useUserStore } from '../stores/userStore'
 import AccessDeniedView from '../views/AccessDeniedView.vue'
+import AdminAmmoManagementView from '../views/AdminAmmoManagementView.vue'
 import HomeView from '../views/HomeView.vue'
 import AdminDashboardView from '../views/AdminDashboardView.vue'
 import AdminCategoryManagementView from '../views/AdminCategoryManagementView.vue'
@@ -148,6 +149,16 @@ const routes = [
     component: AdminWeaponManagementView,
     meta: {
       title: '武器管理',
+      requiresAuth: true,
+      requiresAdmin: true,
+    },
+  },
+  {
+    path: '/admin/ammo',
+    name: 'admin-ammo',
+    component: AdminAmmoManagementView,
+    meta: {
+      title: '弹药管理',
       requiresAuth: true,
       requiresAdmin: true,
     },

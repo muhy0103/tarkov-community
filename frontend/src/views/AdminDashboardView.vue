@@ -1,6 +1,7 @@
 <script setup>
 import { computed, onMounted, ref } from 'vue'
 import {
+  Bell,
   ChatLineRound,
   Collection,
   DataAnalysis,
@@ -30,6 +31,8 @@ const summary = ref({
   ammoCount: 0,
   hideoutStationCount: 0,
   bossCount: 0,
+  pendingReportCount: 0,
+  publishedAnnouncementCount: 0,
 })
 
 const communityStats = computed(() => [
@@ -70,21 +73,45 @@ const catalogStats = computed(() => [
   { label: 'Boss', value: summary.value.bossCount },
 ])
 
+const governanceStats = computed(() => [
+  {
+    label: '待处理举报',
+    value: summary.value.pendingReportCount,
+    icon: Warning,
+    tone: 'attention',
+    description: '需要管理员判断的帖子或评论举报',
+    action: '进入举报管理',
+    to: '/admin/reports',
+  },
+  {
+    label: '已发布公告',
+    value: summary.value.publishedAnnouncementCount,
+    icon: Bell,
+    tone: 'published',
+    description: '正在社区首页向玩家公开展示的公告',
+    action: '进入公告管理',
+    to: '/admin/announcements',
+  },
+])
+
 const managementCards = [
   {
     title: '帖子审核',
-    description: '后续接入置顶、推荐、隐藏和违规处理。',
+    description: '处理帖子状态、推荐位和内容可见性。',
     icon: ChatLineRound,
+    to: '/admin/posts',
   },
   {
     title: '用户管理',
-    description: '后续接入角色、状态、贡献值和封禁管理。',
+    description: '维护账号角色、状态和贡献数据。',
     icon: User,
+    to: '/admin/users',
   },
   {
     title: '资料维护',
-    description: '后续接入地图、任务、装备、Boss 等资料维护。',
+    description: '维护地图、任务、装备和 Boss 资料。',
     icon: MapLocation,
+    to: '/admin/maps',
   },
 ]
 
@@ -97,7 +124,10 @@ async function loadSummary() {
   errorMessage.value = ''
 
   try {
-    summary.value = await fetchAdminDashboardSummary()
+    summary.value = {
+      ...summary.value,
+      ...(await fetchAdminDashboardSummary()),
+    }
   } catch (error) {
     errorMessage.value = resolveError(error)
   } finally {
@@ -166,18 +196,47 @@ onMounted(loadSummary)
 
       <section class="section-block">
         <div class="section-heading">
+          <h3>社区治理</h3>
+          <p>把需要管理员及时处理的事项放在概览页，让论坛管理从入口上更清晰。</p>
+        </div>
+
+        <div class="admin-governance-grid">
+          <RouterLink
+            v-for="item in governanceStats"
+            :key="item.label"
+            :to="item.to"
+            :class="['admin-governance-card', item.tone]"
+          >
+            <component :is="item.icon" />
+            <div>
+              <span>{{ item.label }}</span>
+              <strong>{{ item.value }}</strong>
+              <p>{{ item.description }}</p>
+              <small>{{ item.action }}</small>
+            </div>
+          </RouterLink>
+        </div>
+      </section>
+
+      <section class="section-block">
+        <div class="section-heading">
           <h3>管理入口</h3>
-          <p>先保留清晰的后台结构，后续每个入口可以继续拆成独立模块。</p>
+          <p>常用后台模块集中在这里，便于按内容、用户和资料三个方向维护社区。</p>
         </div>
 
         <div class="admin-module-grid">
-          <article v-for="card in managementCards" :key="card.title" class="admin-module-card">
+          <RouterLink
+            v-for="card in managementCards"
+            :key="card.title"
+            :to="card.to"
+            class="admin-module-card"
+          >
             <component :is="card.icon" />
             <div>
               <h4>{{ card.title }}</h4>
               <p>{{ card.description }}</p>
             </div>
-          </article>
+          </RouterLink>
         </div>
       </section>
 

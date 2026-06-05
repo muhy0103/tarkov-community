@@ -84,6 +84,22 @@ export function updateAdminMap(id, payload) {
   return request.put(`/admin/maps/${id}`, payload).then((response) => response?.data)
 }
 
+export function fetchAdminMapExtracts(params = {}) {
+  return request
+    .get('/admin/map-extracts', {
+      params: {
+        page: 1,
+        size: 10,
+        ...params,
+      },
+    })
+    .then((response) => response?.data ?? { page: 1, size: 10, total: 0, pages: 0, records: [] })
+}
+
+export function updateAdminMapExtract(id, payload) {
+  return request.put(`/admin/map-extracts/${id}`, payload).then((response) => response?.data)
+}
+
 export function fetchAdminTraders(params = {}) {
   return request
     .get('/admin/traders', {

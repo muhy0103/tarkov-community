@@ -796,6 +796,13 @@ a {
   align-items: center;
 }
 
+.admin-extract-cell {
+  display: grid;
+  grid-template-columns: 34px minmax(0, 1fr);
+  gap: 10px;
+  align-items: center;
+}
+
 .admin-trader-cell {
   display: grid;
   grid-template-columns: 34px minmax(0, 1fr);
@@ -862,6 +869,7 @@ a {
 .admin-post-cell > svg,
 .admin-category-cell > svg,
 .admin-map-cell > svg,
+.admin-extract-cell > svg,
 .admin-trader-cell > svg,
 .admin-quest-cell > svg,
 .admin-item-cell > svg,
@@ -933,10 +941,20 @@ a {
   white-space: nowrap;
 }
 
+.admin-extract-cell strong {
+  display: block;
+  overflow: hidden;
+  color: #111827;
+  font-size: 14px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .admin-post-cell span,
 .admin-comment-cell span,
 .admin-user-cell span,
 .admin-upgrade-cell span,
+.admin-extract-cell span,
 .admin-table-muted {
   color: #667483;
   font-size: 12px;

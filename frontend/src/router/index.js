@@ -10,6 +10,7 @@ import AdminCommentReviewView from '../views/AdminCommentReviewView.vue'
 import AdminHideoutStationManagementView from '../views/AdminHideoutStationManagementView.vue'
 import AdminHideoutUpgradeManagementView from '../views/AdminHideoutUpgradeManagementView.vue'
 import AdminItemManagementView from '../views/AdminItemManagementView.vue'
+import AdminMapExtractManagementView from '../views/AdminMapExtractManagementView.vue'
 import AdminMapManagementView from '../views/AdminMapManagementView.vue'
 import AdminPostReviewView from '../views/AdminPostReviewView.vue'
 import AdminQuestManagementView from '../views/AdminQuestManagementView.vue'
@@ -112,6 +113,16 @@ const routes = [
     component: AdminMapManagementView,
     meta: {
       title: '地图管理',
+      requiresAuth: true,
+      requiresAdmin: true,
+    },
+  },
+  {
+    path: '/admin/map-extracts',
+    name: 'admin-map-extracts',
+    component: AdminMapExtractManagementView,
+    meta: {
+      title: '撤离点管理',
       requiresAuth: true,
       requiresAdmin: true,
     },

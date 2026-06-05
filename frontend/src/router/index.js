@@ -6,6 +6,7 @@ import HomeView from '../views/HomeView.vue'
 import AdminDashboardView from '../views/AdminDashboardView.vue'
 import AdminCategoryManagementView from '../views/AdminCategoryManagementView.vue'
 import AdminCommentReviewView from '../views/AdminCommentReviewView.vue'
+import AdminHideoutStationManagementView from '../views/AdminHideoutStationManagementView.vue'
 import AdminItemManagementView from '../views/AdminItemManagementView.vue'
 import AdminMapManagementView from '../views/AdminMapManagementView.vue'
 import AdminPostReviewView from '../views/AdminPostReviewView.vue'
@@ -159,6 +160,16 @@ const routes = [
     component: AdminAmmoManagementView,
     meta: {
       title: '弹药管理',
+      requiresAuth: true,
+      requiresAdmin: true,
+    },
+  },
+  {
+    path: '/admin/hideout/stations',
+    name: 'admin-hideout-stations',
+    component: AdminHideoutStationManagementView,
+    meta: {
+      title: '藏身处管理',
       requiresAuth: true,
       requiresAdmin: true,
     },

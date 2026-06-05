@@ -163,3 +163,19 @@ export function fetchAdminAmmo(params = {}) {
 export function updateAdminAmmo(id, payload) {
   return request.put(`/admin/ammo/${id}`, payload).then((response) => response?.data)
 }
+
+export function fetchAdminHideoutStations(params = {}) {
+  return request
+    .get('/admin/hideout/stations', {
+      params: {
+        page: 1,
+        size: 10,
+        ...params,
+      },
+    })
+    .then((response) => response?.data ?? { page: 1, size: 10, total: 0, pages: 0, records: [] })
+}
+
+export function updateAdminHideoutStation(id, payload) {
+  return request.put(`/admin/hideout/stations/${id}`, payload).then((response) => response?.data)
+}

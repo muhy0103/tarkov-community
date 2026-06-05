@@ -13,6 +13,7 @@ import {
   Refresh,
   Star,
   User,
+  View,
 } from '@element-plus/icons-vue'
 import {
   fetchMyNotifications,
@@ -134,9 +135,14 @@ const postTypeOptions = {
 
 const notificationTypeOptions = {
   REPORT_RESULT: '举报结果',
+  POST_COMMENT: '帖子评论',
+  COMMENT_REPLY: '评论回复',
+  POST_LIKE: '帖子点赞',
   SYSTEM: '系统通知',
   ANNOUNCEMENT: '公告提醒',
 }
+
+const postInteractionNotificationTypes = new Set(['POST_COMMENT', 'COMMENT_REPLY', 'POST_LIKE'])
 
 function pageState(size = 6) {
   return {
@@ -176,6 +182,10 @@ function postTypeLabel(type) {
 
 function notificationTypeLabel(type) {
   return notificationTypeOptions[type] || type || '通知'
+}
+
+function canOpenRelatedPost(notification) {
+  return postInteractionNotificationTypes.has(notification?.type) && Boolean(notification.relatedId)
 }
 
 function statusLabel(status) {
@@ -308,18 +318,40 @@ async function markOneNotificationRead(notification) {
   sectionLoading.value = 'notifications'
   try {
     await markNotificationRead(notification.id)
-    notificationsPage.value = {
-      ...notificationsPage.value,
-      records: notificationsPage.value.records.map((item) => (
-        item.id === notification.id ? { ...item, readStatus: 1 } : item
-      )),
-    }
+    applyNotificationReadLocally(notification.id)
     unreadNotificationCount.value = Math.max(0, unreadNotificationCount.value - 1)
     ElMessage.success('通知已标记为已读')
   } catch (error) {
     ElMessage.error(resolveError(error, '通知状态暂时无法更新'))
   } finally {
     sectionLoading.value = ''
+  }
+}
+
+async function openRelatedPost(notification) {
+  if (!canOpenRelatedPost(notification)) {
+    return
+  }
+
+  if (notification.readStatus === 0) {
+    try {
+      await markNotificationRead(notification.id)
+      applyNotificationReadLocally(notification.id)
+      unreadNotificationCount.value = Math.max(0, unreadNotificationCount.value - 1)
+    } catch (error) {
+      ElMessage.warning(resolveError(error, '通知已读状态暂时无法同步'))
+    }
+  }
+
+  router.push({ name: 'post-detail', params: { id: notification.relatedId } })
+}
+
+function applyNotificationReadLocally(notificationId) {
+  notificationsPage.value = {
+    ...notificationsPage.value,
+    records: notificationsPage.value.records.map((item) => (
+      item.id === notificationId ? { ...item, readStatus: 1 } : item
+    )),
   }
 }
 
@@ -678,16 +710,28 @@ onMounted(loadAll)
                       <span>{{ formatDate(notification.createdAt) }}</span>
                     </div>
                   </div>
-                  <el-button
-                    v-if="notification.readStatus === 0"
-                    text
-                    type="primary"
-                    size="small"
-                    :icon="CircleCheck"
-                    @click="markOneNotificationRead(notification)"
-                  >
-                    已读
-                  </el-button>
+                  <div class="notification-actions">
+                    <el-button
+                      v-if="canOpenRelatedPost(notification)"
+                      text
+                      type="primary"
+                      size="small"
+                      :icon="View"
+                      @click="openRelatedPost(notification)"
+                    >
+                      查看帖子
+                    </el-button>
+                    <el-button
+                      v-if="notification.readStatus === 0"
+                      text
+                      type="primary"
+                      size="small"
+                      :icon="CircleCheck"
+                      @click="markOneNotificationRead(notification)"
+                    >
+                      已读
+                    </el-button>
+                  </div>
                 </article>
               </div>
 

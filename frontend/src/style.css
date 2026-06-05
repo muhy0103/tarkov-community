@@ -732,6 +732,18 @@ a {
   font-size: 12px;
 }
 
+.notification-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  align-items: flex-start;
+  justify-content: flex-start;
+}
+
+.notification-actions .el-button {
+  margin-left: 0;
+}
+
 .user-comment-item {
   display: grid;
   grid-template-columns: 42px minmax(0, 1fr);
@@ -1874,6 +1886,15 @@ a {
     justify-content: flex-start;
   }
 
+  .user-center-view,
+  .user-center-hero,
+  .user-stat-grid,
+  .user-stat-card,
+  .user-content-panel {
+    min-width: 0;
+    max-width: 100%;
+  }
+
   .board-filter-grid {
     width: 100%;
     grid-template-columns: 1fr;
@@ -1908,7 +1929,7 @@ a {
     grid-template-columns: 42px minmax(0, 1fr);
   }
 
-  .user-notification-item > .el-button {
+  .notification-actions {
     grid-column: 2;
     justify-self: flex-start;
   }

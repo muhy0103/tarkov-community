@@ -12,6 +12,8 @@ public record AdminDashboardSummaryResponse(
         Long weaponCount,
         Long ammoCount,
         Long hideoutStationCount,
-        Long bossCount
+        Long bossCount,
+        Long pendingReportCount,
+        Long publishedAnnouncementCount
 ) {
 }

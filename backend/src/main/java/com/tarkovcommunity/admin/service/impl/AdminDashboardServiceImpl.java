@@ -1,10 +1,15 @@
 package com.tarkovcommunity.admin.service.impl;
 
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.tarkovcommunity.admin.dto.AdminDashboardSummaryResponse;
 import com.tarkovcommunity.admin.service.AdminDashboardService;
 import com.tarkovcommunity.forum.mapper.PostCommentMapper;
 import com.tarkovcommunity.forum.mapper.PostMapper;
+import com.tarkovcommunity.meta.entity.Announcement;
+import com.tarkovcommunity.meta.mapper.AnnouncementMapper;
 import com.tarkovcommunity.meta.mapper.CategoryMapper;
+import com.tarkovcommunity.moderation.entity.Report;
+import com.tarkovcommunity.moderation.mapper.ReportMapper;
 import com.tarkovcommunity.tarkov.mapper.BossMapper;
 import com.tarkovcommunity.tarkov.mapper.HideoutStationMapper;
 import com.tarkovcommunity.tarkov.mapper.TarkovAmmoMapper;
@@ -33,6 +38,8 @@ public class AdminDashboardServiceImpl implements AdminDashboardService {
     private final TarkovAmmoMapper ammoMapper;
     private final HideoutStationMapper hideoutStationMapper;
     private final BossMapper bossMapper;
+    private final ReportMapper reportMapper;
+    private final AnnouncementMapper announcementMapper;
 
     @Override
     public AdminDashboardSummaryResponse getSummary() {
@@ -48,7 +55,11 @@ public class AdminDashboardServiceImpl implements AdminDashboardService {
                 weaponMapper.selectCount(null),
                 ammoMapper.selectCount(null),
                 hideoutStationMapper.selectCount(null),
-                bossMapper.selectCount(null)
+                bossMapper.selectCount(null),
+                reportMapper.selectCount(new QueryWrapper<Report>()
+                        .eq("status", "PENDING")),
+                announcementMapper.selectCount(new QueryWrapper<Announcement>()
+                        .eq("status", "PUBLISHED"))
         );
     }
 }

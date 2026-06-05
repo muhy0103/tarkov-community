@@ -48,7 +48,9 @@ class AdminDashboardControllerTests {
                         3L,
                         3L,
                         4L,
-                        3L
+                        3L,
+                        2L,
+                        6L
                 ));
 
         mockMvc.perform(get("/api/admin/dashboard/summary")
@@ -58,7 +60,9 @@ class AdminDashboardControllerTests {
                 .andExpect(jsonPath("$.data.userCount").value(3))
                 .andExpect(jsonPath("$.data.postCount").value(12))
                 .andExpect(jsonPath("$.data.mapCount").value(5))
-                .andExpect(jsonPath("$.data.bossCount").value(3));
+                .andExpect(jsonPath("$.data.bossCount").value(3))
+                .andExpect(jsonPath("$.data.pendingReportCount").value(2))
+                .andExpect(jsonPath("$.data.publishedAnnouncementCount").value(6));
     }
 
     private static SysUser adminUser() {

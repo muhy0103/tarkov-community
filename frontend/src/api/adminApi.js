@@ -179,3 +179,19 @@ export function fetchAdminHideoutStations(params = {}) {
 export function updateAdminHideoutStation(id, payload) {
   return request.put(`/admin/hideout/stations/${id}`, payload).then((response) => response?.data)
 }
+
+export function fetchAdminBosses(params = {}) {
+  return request
+    .get('/admin/bosses', {
+      params: {
+        page: 1,
+        size: 10,
+        ...params,
+      },
+    })
+    .then((response) => response?.data ?? { page: 1, size: 10, total: 0, pages: 0, records: [] })
+}
+
+export function updateAdminBoss(id, payload) {
+  return request.put(`/admin/bosses/${id}`, payload).then((response) => response?.data)
+}

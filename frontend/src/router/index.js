@@ -2,6 +2,7 @@ import { createRouter, createWebHistory } from 'vue-router'
 import { useUserStore } from '../stores/userStore'
 import AccessDeniedView from '../views/AccessDeniedView.vue'
 import AdminAmmoManagementView from '../views/AdminAmmoManagementView.vue'
+import AdminBossManagementView from '../views/AdminBossManagementView.vue'
 import HomeView from '../views/HomeView.vue'
 import AdminDashboardView from '../views/AdminDashboardView.vue'
 import AdminCategoryManagementView from '../views/AdminCategoryManagementView.vue'
@@ -170,6 +171,16 @@ const routes = [
     component: AdminHideoutStationManagementView,
     meta: {
       title: '藏身处管理',
+      requiresAuth: true,
+      requiresAdmin: true,
+    },
+  },
+  {
+    path: '/admin/bosses',
+    name: 'admin-bosses',
+    component: AdminBossManagementView,
+    meta: {
+      title: 'Boss 管理',
       requiresAuth: true,
       requiresAdmin: true,
     },

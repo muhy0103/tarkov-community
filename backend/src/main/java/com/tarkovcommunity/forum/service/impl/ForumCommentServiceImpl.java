@@ -68,7 +68,7 @@ public class ForumCommentServiceImpl implements ForumCommentService {
 
         if (request.parentId() != null) {
             PostComment parent = postCommentMapper.selectById(request.parentId());
-            if (parent == null || !Objects.equals(parent.getPostId(), postId)) {
+            if (parent == null || !Objects.equals(parent.getPostId(), postId) || !"NORMAL".equals(parent.getStatus())) {
                 throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "父评论不存在");
             }
         }

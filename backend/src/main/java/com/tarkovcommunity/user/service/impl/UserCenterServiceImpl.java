@@ -56,8 +56,7 @@ public class UserCenterServiceImpl implements UserCenterService {
         Long commentCount = postCommentMapper.selectCount(new QueryWrapper<PostComment>()
                 .eq("user_id", user.getId())
                 .eq("status", "NORMAL"));
-        Long favoriteCount = favoriteMapper.selectCount(new LambdaQueryWrapper<Favorite>()
-                .eq(Favorite::getUserId, user.getId()));
+        Long favoriteCount = favoriteMapper.selectVisiblePostFavoriteCount(user.getId());
 
         return new UserCenterSummaryResponse(
                 user.getId(),
@@ -121,13 +120,7 @@ public class UserCenterServiceImpl implements UserCenterService {
     public PageResponse<PostSummaryResponse> listFavorites(SysUser user, int page, int size) {
         int safePage = safePage(page);
         int safeSize = safeSize(size);
-        Page<Favorite> favoritePage = favoriteMapper.selectPage(
-                new Page<>(safePage, safeSize),
-                new LambdaQueryWrapper<Favorite>()
-                        .eq(Favorite::getUserId, user.getId())
-                        .orderByDesc(Favorite::getCreatedAt)
-                        .orderByDesc(Favorite::getId)
-        );
+        Page<Favorite> favoritePage = favoriteMapper.selectVisiblePostFavoritesPage(new Page<>(safePage, safeSize), user.getId());
 
         List<Long> postIds = favoritePage.getRecords()
                 .stream()

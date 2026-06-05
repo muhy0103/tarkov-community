@@ -97,6 +97,9 @@
   - 后台藏身处设施管理列表接口
   - 可按状态和关键词分页查询藏身处设施资料
   - 可更新设施英文名、中文名、说明和启用状态
+  - 后台藏身处升级等级管理列表接口
+  - 可按设施和关键词分页查询藏身处升级要求
+  - 可更新所属设施、等级、所需物品、耗时和解锁内容
   - 后台 Boss 资料管理列表接口
   - 可按地图、状态和关键词分页查询 Boss 资料
   - 可更新 Boss 英文名、中文名、所属地图、说明、装备摘要和启用状态
@@ -301,6 +304,10 @@
   - `GET /api/admin/hideout/stations`
   - `PUT /api/admin/hideout/stations/{id}`
   - 服务层覆盖后台藏身处设施管理字段映射和更新文本标准化
+- 后台藏身处升级等级管理接口测试覆盖：
+  - `GET /api/admin/hideout/upgrades`
+  - `PUT /api/admin/hideout/upgrades/{id}`
+  - 服务层覆盖后台藏身处升级等级字段映射、设施名称回填和更新文本标准化
 - 后台 Boss 资料管理接口测试覆盖：
   - `GET /api/admin/bosses`
   - `PUT /api/admin/bosses/{id}`
@@ -391,6 +398,13 @@
   - 已验证设施名称、说明和启用状态更新
   - 已验证按状态和关键词可查询藏身处设施
   - 测试后已清理临时藏身处设施和临时管理员用户
+- 后台藏身处升级等级管理接口实库验证通过：
+  - 管理员 token 可访问 `GET /api/admin/hideout/upgrades`
+  - 管理员 token 可访问 `PUT /api/admin/hideout/upgrades/{id}`
+  - 已验证升级列表返回关联设施名称
+  - 已验证等级、所需物品、耗时和解锁内容更新
+  - 已验证按设施和关键词可查询升级要求
+  - 测试后已清理临时藏身处设施、临时升级数据和临时管理员用户
 - 后台 Boss 资料管理接口实库验证通过：
   - 管理员 token 可访问 `GET /api/admin/bosses`
   - 管理员 token 可访问 `PUT /api/admin/bosses/{id}`
@@ -543,6 +557,7 @@
 - `feat: add frontend admin hideout stations`
 - `feat: add admin boss API`
 - `feat: add frontend admin bosses`
+- `feat: add admin hideout upgrade API`
 
 ## 下一阶段建议
 

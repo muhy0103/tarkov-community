@@ -13,7 +13,8 @@ import org.springframework.context.annotation.Configuration;
         "com.tarkovcommunity.tarkov.mapper",
         "com.tarkovcommunity.user.mapper",
         "com.tarkovcommunity.forum.mapper",
-        "com.tarkovcommunity.moderation.mapper"
+        "com.tarkovcommunity.moderation.mapper",
+        "com.tarkovcommunity.notification.mapper"
 })
 public class MybatisPlusConfig {
 

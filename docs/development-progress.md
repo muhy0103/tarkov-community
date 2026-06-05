@@ -75,6 +75,9 @@
   - 后台分区管理列表接口
   - 可按状态、关键词分页查询社区分区
   - 可更新分区名称、说明、图标、排序和启用状态
+  - 后台标签管理列表接口
+  - 可按类型、状态和关键词分页查询社区标签
+  - 可更新标签名称、类型、颜色和启用状态
   - 后台地图资料管理列表接口
   - 可按状态、关键词分页查询塔科夫地图资料
   - 可更新地图英文名、中文名、难度、说明、推荐等级和启用状态
@@ -310,6 +313,10 @@
 - 后台分区管理接口测试覆盖：
   - `GET /api/admin/categories`
   - `PUT /api/admin/categories/{id}`
+- 后台标签管理接口测试覆盖：
+  - `GET /api/admin/tags`
+  - `PUT /api/admin/tags/{id}`
+  - 服务层覆盖标签字段映射和更新文本标准化
 - 后台地图资料管理接口测试覆盖：
   - `GET /api/admin/maps`
   - `PUT /api/admin/maps/{id}`
@@ -411,6 +418,12 @@
   - 已验证商人说明、解锁条件、头像和启用状态更新
   - 已验证按状态和关键词可查询更新后的商人
   - 测试后已清理临时商人和临时管理员用户
+- 后台标签管理接口实库验证通过：
+  - 管理员 token 可访问 `GET /api/admin/tags`
+  - 管理员 token 可访问 `PUT /api/admin/tags/{id}`
+  - 已验证标签名称、类型、颜色和启用状态更新
+  - 已验证按类型、状态和关键词可查询标签
+  - 测试后已清理临时标签和临时管理员用户
 - 后台任务资料管理接口实库验证通过：
   - 管理员 token 可访问 `GET /api/admin/quests`
   - 管理员 token 可访问 `PUT /api/admin/quests/{id}`
@@ -645,6 +658,7 @@
 - `feat: add frontend post sorting`
 - `feat: add admin category API`
 - `feat: add frontend admin categories`
+- `feat: add admin tag API`
 - `feat: add admin map API`
 - `feat: add frontend admin maps`
 - `feat: add admin trader API`

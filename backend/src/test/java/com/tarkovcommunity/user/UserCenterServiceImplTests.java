@@ -1,7 +1,5 @@
 package com.tarkovcommunity.user;
 
-import com.baomidou.mybatisplus.core.conditions.AbstractWrapper;
-import com.baomidou.mybatisplus.core.conditions.Wrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.tarkovcommunity.forum.entity.Favorite;
 import com.tarkovcommunity.forum.entity.Post;
@@ -85,29 +83,29 @@ class UserCenterServiceImplTests {
     }
 
     @Test
-    void countsAndListsOnlyNormalComments() {
+    void countsAndListsOnlyVisibleComments() {
         UserCenterServiceImpl service = service();
         SysUser user = userWithPassword("OldPass123");
+        Page<PostComment> commentPage = new Page<>(1, 10, 1);
+        commentPage.setRecords(List.of(comment(21L, 31L)));
+
         given(postMapper.selectCount(any())).willReturn(2L);
-        given(postCommentMapper.selectCount(any())).willReturn(5L);
+        given(postCommentMapper.selectVisiblePostCommentCount(7L)).willReturn(5L);
         given(favoriteMapper.selectVisiblePostFavoriteCount(7L)).willReturn(1L);
-        given(postCommentMapper.selectPage(any(), any())).willReturn(new Page<PostComment>(1, 10, 0));
+        given(postCommentMapper.selectVisiblePostCommentsPage(any(Page.class), eq(7L))).willReturn(commentPage);
+        given(postMapper.selectBatchIds(any())).willReturn(List.of(post(31L)));
 
         UserCenterSummaryResponse summary = service.getSummary(user);
-        service.listComments(user, 1, 10);
+        var comments = service.listComments(user, 1, 10);
 
         assertThat(summary.commentCount()).isEqualTo(5L);
-
-        @SuppressWarnings("unchecked")
-        ArgumentCaptor<Wrapper<PostComment>> countWrapperCaptor = ArgumentCaptor.forClass(Wrapper.class);
-        @SuppressWarnings("unchecked")
-        ArgumentCaptor<Wrapper<PostComment>> pageWrapperCaptor = ArgumentCaptor.forClass(Wrapper.class);
-        verify(postCommentMapper).selectCount(countWrapperCaptor.capture());
-        verify(postCommentMapper).selectPage(any(), pageWrapperCaptor.capture());
-        assertThat(wrapperValues(countWrapperCaptor.getValue())).containsEntry("MPGENVAL1", 7L);
-        assertThat(wrapperValues(countWrapperCaptor.getValue())).containsValue("NORMAL");
-        assertThat(wrapperValues(pageWrapperCaptor.getValue())).containsEntry("MPGENVAL1", 7L);
-        assertThat(wrapperValues(pageWrapperCaptor.getValue())).containsValue("NORMAL");
+        assertThat(comments.total()).isEqualTo(1L);
+        assertThat(comments.records()).hasSize(1);
+        assertThat(comments.records().get(0).id()).isEqualTo(21L);
+        assertThat(comments.records().get(0).postId()).isEqualTo(31L);
+        assertThat(comments.records().get(0).postTitle()).isEqualTo("Visible favorite post");
+        verify(postCommentMapper).selectVisiblePostCommentCount(7L);
+        verify(postCommentMapper).selectVisiblePostCommentsPage(any(Page.class), eq(7L));
     }
 
     @Test
@@ -118,7 +116,7 @@ class UserCenterServiceImplTests {
         favoritePage.setRecords(List.of(favorite(11L, 31L)));
 
         given(postMapper.selectCount(any())).willReturn(0L);
-        given(postCommentMapper.selectCount(any())).willReturn(0L);
+        given(postCommentMapper.selectVisiblePostCommentCount(7L)).willReturn(0L);
         given(favoriteMapper.selectVisiblePostFavoriteCount(7L)).willReturn(1L);
         given(favoriteMapper.selectVisiblePostFavoritesPage(any(Page.class), eq(7L))).willReturn(favoritePage);
         given(postMapper.selectBatchIds(any())).willReturn(List.of(post(31L)));
@@ -168,6 +166,18 @@ class UserCenterServiceImplTests {
         return favorite;
     }
 
+    private PostComment comment(Long id, Long postId) {
+        PostComment comment = new PostComment();
+        comment.setId(id);
+        comment.setPostId(postId);
+        comment.setUserId(7L);
+        comment.setContent("Visible comment");
+        comment.setStatus("NORMAL");
+        comment.setLikeCount(3);
+        comment.setCreatedAt(LocalDateTime.now());
+        return comment;
+    }
+
     private Post post(Long id) {
         Post post = new Post();
         post.setId(id);
@@ -193,8 +203,4 @@ class UserCenterServiceImplTests {
         return category;
     }
 
-    private static java.util.Map<String, Object> wrapperValues(Wrapper<?> wrapper) {
-        wrapper.getSqlSegment();
-        return ((AbstractWrapper<?, ?, ?>) wrapper).getParamNameValuePairs();
-    }
 }

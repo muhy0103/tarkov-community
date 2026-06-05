@@ -1522,6 +1522,14 @@ a {
   white-space: nowrap;
 }
 
+.report-review-hint {
+  width: 100%;
+  margin: 4px 0 0;
+  color: #667483;
+  font-size: 13px;
+  line-height: 1.6;
+}
+
 .post-create-view {
   display: grid;
   gap: 18px;

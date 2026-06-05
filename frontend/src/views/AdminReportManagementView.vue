@@ -1,5 +1,5 @@
 <script setup>
-import { computed, onMounted, ref } from 'vue'
+import { computed, nextTick, onMounted, ref, watch } from 'vue'
 import { ElMessage } from 'element-plus'
 import { ChatLineRound, EditPen, Refresh, Search, Warning } from '@element-plus/icons-vue'
 import { fetchAdminReports, reviewAdminReport } from '../api/adminApi'
@@ -55,10 +55,16 @@ const dialogTitle = computed(() => {
   return `处理举报 #${editingRow.value.id}`
 })
 
+const canHideTarget = computed(() => (
+  reviewForm.value.status === 'RESOLVED' &&
+  ['POST', 'COMMENT'].includes(editingRow.value?.targetType)
+))
+
 function emptyReviewForm() {
   return {
     status: 'RESOLVED',
     handleResult: '',
+    hideTarget: false,
   }
 }
 
@@ -128,8 +134,16 @@ function openReviewDialog(row) {
   reviewForm.value = {
     status: row.status === 'PENDING' ? 'RESOLVED' : row.status,
     handleResult: row.handleResult || '',
+    hideTarget: false,
   }
   reviewDialogVisible.value = true
+}
+
+async function closeReviewDialog() {
+  reviewDialogVisible.value = false
+  await nextTick()
+  editingRow.value = null
+  reviewForm.value = emptyReviewForm()
 }
 
 async function submitReview() {
@@ -143,13 +157,14 @@ async function submitReview() {
   const payload = {
     status: reviewForm.value.status,
     handleResult: reviewForm.value.handleResult.trim(),
+    hideTarget: canHideTarget.value && reviewForm.value.hideTarget,
   }
 
   try {
     const updated = await reviewAdminReport(editingRow.value.id, payload)
     Object.assign(editingRow.value, updated)
     ElMessage.success('举报处理结果已保存')
-    reviewDialogVisible.value = false
+    await closeReviewDialog()
     if (filters.value.status && filters.value.status !== updated.status) {
       loadReports(1)
     }
@@ -170,6 +185,7 @@ async function quickReview(row, status) {
     const updated = await reviewAdminReport(row.id, {
       status,
       handleResult,
+      hideTarget: false,
     })
     Object.assign(row, updated)
     ElMessage.success(status === 'RESOLVED' ? '举报已标记解决' : '举报已驳回')
@@ -182,6 +198,15 @@ async function quickReview(row, status) {
     actionReportId.value = null
   }
 }
+
+watch(
+  () => reviewForm.value.status,
+  (status) => {
+    if (status !== 'RESOLVED') {
+      reviewForm.value.hideTarget = false
+    }
+  },
+)
 
 onMounted(() => loadReports(1))
 </script>
@@ -351,6 +376,7 @@ onMounted(() => loadReports(1))
     </section>
 
     <el-dialog
+      v-if="reviewDialogVisible"
       v-model="reviewDialogVisible"
       :title="dialogTitle"
       width="min(560px, calc(100vw - 32px))"
@@ -381,11 +407,19 @@ onMounted(() => loadReports(1))
             show-word-limit
           />
         </el-form-item>
+        <el-form-item v-if="canHideTarget" label="内容处理">
+          <el-checkbox v-model="reviewForm.hideTarget">
+            同时隐藏被举报内容
+          </el-checkbox>
+          <p class="report-review-hint">
+            勾选后，保存处理结果时会把对应帖子或评论状态改为隐藏。
+          </p>
+        </el-form-item>
       </el-form>
 
       <template #footer>
         <div class="profile-dialog-footer">
-          <el-button @click="reviewDialogVisible = false">
+          <el-button @click="closeReviewDialog">
             取消
           </el-button>
           <el-button type="primary" :loading="saving" @click="submitReview">

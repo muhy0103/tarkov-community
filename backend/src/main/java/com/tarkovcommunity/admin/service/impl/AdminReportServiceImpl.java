@@ -12,6 +12,8 @@ import com.tarkovcommunity.forum.mapper.PostCommentMapper;
 import com.tarkovcommunity.forum.mapper.PostMapper;
 import com.tarkovcommunity.moderation.entity.Report;
 import com.tarkovcommunity.moderation.mapper.ReportMapper;
+import com.tarkovcommunity.notification.entity.Notification;
+import com.tarkovcommunity.notification.mapper.NotificationMapper;
 import com.tarkovcommunity.user.entity.SysUser;
 import com.tarkovcommunity.user.mapper.SysUserMapper;
 import lombok.RequiredArgsConstructor;
@@ -36,12 +38,16 @@ import java.util.stream.Stream;
 public class AdminReportServiceImpl implements AdminReportService {
 
     private static final int MAX_PAGE_SIZE = 50;
+    private static final int UNREAD = 0;
+    private static final int NOTIFICATION_CONTENT_MAX_LENGTH = 500;
+    private static final String REPORT_RESULT_NOTIFICATION_TYPE = "REPORT_RESULT";
     private static final Set<String> ALLOWED_STATUSES = Set.of("PENDING", "RESOLVED", "REJECTED");
 
     private final ReportMapper reportMapper;
     private final SysUserMapper userMapper;
     private final PostMapper postMapper;
     private final PostCommentMapper commentMapper;
+    private final NotificationMapper notificationMapper;
 
     @Override
     public PageResponse<AdminReportResponse> listReports(
@@ -101,9 +107,31 @@ public class AdminReportServiceImpl implements AdminReportService {
             report.setHandledAt(LocalDateTime.now());
         }
         reportMapper.updateById(report);
+        createReporterNotificationIfHandled(report);
 
         Report updatedReport = reportMapper.selectById(id);
         return toResponses(List.of(updatedReport == null ? report : updatedReport)).get(0);
+    }
+
+    private void createReporterNotificationIfHandled(Report report) {
+        if ("PENDING".equals(report.getStatus())) {
+            return;
+        }
+
+        Notification notification = new Notification();
+        notification.setUserId(report.getReporterId());
+        notification.setType(REPORT_RESULT_NOTIFICATION_TYPE);
+        notification.setTitle("举报处理结果");
+        notification.setContent(reportNotificationContent(report));
+        notification.setRelatedId(report.getId());
+        notification.setReadStatus(UNREAD);
+        notification.setCreatedAt(LocalDateTime.now());
+        notificationMapper.insert(notification);
+    }
+
+    private static String reportNotificationContent(Report report) {
+        String result = StringUtils.hasText(report.getHandleResult()) ? report.getHandleResult() : "暂无处理说明";
+        return limit("你的举报已处理，状态：" + report.getStatus() + "，处理说明：" + result, NOTIFICATION_CONTENT_MAX_LENGTH);
     }
 
     private void hideTargetIfRequested(Report report, AdminReportReviewRequest request) {
@@ -278,6 +306,10 @@ public class AdminReportServiceImpl implements AdminReportService {
 
     private static String trimToEmpty(String value) {
         return StringUtils.hasText(value) ? value.trim() : "";
+    }
+
+    private static String limit(String value, int maxLength) {
+        return value.length() <= maxLength ? value : value.substring(0, maxLength);
     }
 
     private static int valueOrZero(Integer value) {

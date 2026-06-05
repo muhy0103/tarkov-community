@@ -11,6 +11,8 @@ import com.tarkovcommunity.forum.mapper.PostCommentMapper;
 import com.tarkovcommunity.forum.mapper.PostMapper;
 import com.tarkovcommunity.moderation.entity.Report;
 import com.tarkovcommunity.moderation.mapper.ReportMapper;
+import com.tarkovcommunity.notification.entity.Notification;
+import com.tarkovcommunity.notification.mapper.NotificationMapper;
 import com.tarkovcommunity.user.entity.SysUser;
 import com.tarkovcommunity.user.mapper.SysUserMapper;
 import org.junit.jupiter.api.Test;
@@ -43,9 +45,12 @@ class AdminReportServiceImplTests {
     @Mock
     private PostCommentMapper commentMapper;
 
+    @Mock
+    private NotificationMapper notificationMapper;
+
     @Test
     void listsReportsWithReporterAndTargetSummary() {
-        AdminReportServiceImpl service = new AdminReportServiceImpl(reportMapper, userMapper, postMapper, commentMapper);
+        AdminReportServiceImpl service = service();
         Page<Report> page = new Page<>(1, 10, 1);
         page.setRecords(List.of(pendingPostReport()));
         given(reportMapper.selectPage(any(), any())).willReturn(page);
@@ -66,7 +71,7 @@ class AdminReportServiceImplTests {
 
     @Test
     void reviewsReportAndRecordsHandler() {
-        AdminReportServiceImpl service = new AdminReportServiceImpl(reportMapper, userMapper, postMapper, commentMapper);
+        AdminReportServiceImpl service = service();
         given(reportMapper.selectById(1L)).willReturn(pendingPostReport(), resolvedPostReport());
         given(userMapper.selectBatchIds(any())).willReturn(List.of(reporter(), admin()));
         given(postMapper.selectBatchIds(List.of(2L))).willReturn(List.of(post()));
@@ -87,12 +92,21 @@ class AdminReportServiceImplTests {
         assertThat(savedReport.getHandleResult()).isEqualTo("已隐藏违规内容。");
         assertThat(savedReport.getHandledAt()).isNotNull();
         assertThat(response.status()).isEqualTo("RESOLVED");
+        ArgumentCaptor<Notification> notificationCaptor = ArgumentCaptor.forClass(Notification.class);
+        verify(notificationMapper).insert(notificationCaptor.capture());
+        Notification notification = notificationCaptor.getValue();
+        assertThat(notification.getUserId()).isEqualTo(7L);
+        assertThat(notification.getType()).isEqualTo("REPORT_RESULT");
+        assertThat(notification.getRelatedId()).isEqualTo(1L);
+        assertThat(notification.getReadStatus()).isEqualTo(0);
+        assertThat(notification.getTitle()).contains("举报");
+        assertThat(notification.getContent()).contains("RESOLVED");
         assertThat(response.handlerNickname()).isEqualTo("管理员");
     }
 
     @Test
     void resolvesReportAndHidesPostTargetWhenRequested() {
-        AdminReportServiceImpl service = new AdminReportServiceImpl(reportMapper, userMapper, postMapper, commentMapper);
+        AdminReportServiceImpl service = service();
         given(reportMapper.selectById(1L)).willReturn(pendingPostReport(), resolvedPostReport());
         given(postMapper.updateById(any(Post.class))).willReturn(1);
         given(userMapper.selectBatchIds(any())).willReturn(List.of(reporter(), admin()));
@@ -112,7 +126,7 @@ class AdminReportServiceImplTests {
 
     @Test
     void resolvesReportAndHidesCommentTargetWhenRequested() {
-        AdminReportServiceImpl service = new AdminReportServiceImpl(reportMapper, userMapper, postMapper, commentMapper);
+        AdminReportServiceImpl service = service();
         given(reportMapper.selectById(1L)).willReturn(pendingCommentReport(), resolvedCommentReport());
         given(commentMapper.selectById(3L)).willReturn(comment());
         given(commentMapper.updateById(any(PostComment.class))).willReturn(1);
@@ -136,6 +150,10 @@ class AdminReportServiceImplTests {
         verify(postMapper).updateById(postCaptor.capture());
         assertThat(postCaptor.getValue().getId()).isEqualTo(2L);
         assertThat(postCaptor.getValue().getCommentCount()).isEqualTo(3);
+    }
+
+    private AdminReportServiceImpl service() {
+        return new AdminReportServiceImpl(reportMapper, userMapper, postMapper, commentMapper, notificationMapper);
     }
 
     private static Report pendingPostReport() {

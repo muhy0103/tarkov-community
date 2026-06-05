@@ -880,6 +880,13 @@ a {
   align-items: center;
 }
 
+.admin-report-cell {
+  display: grid;
+  grid-template-columns: 34px minmax(0, 1fr);
+  gap: 10px;
+  align-items: center;
+}
+
 .admin-announcement-cell {
   display: grid;
   grid-template-columns: 34px minmax(0, 1fr);
@@ -909,6 +916,7 @@ a {
 .admin-hideout-cell > svg,
 .admin-upgrade-cell > svg,
 .admin-boss-cell > svg,
+.admin-report-cell > svg,
 .admin-announcement-cell > svg {
   width: 34px;
   height: 34px;
@@ -1009,7 +1017,26 @@ a {
   white-space: nowrap;
 }
 
+.admin-report-cell strong {
+  display: block;
+  overflow: hidden;
+  color: #111827;
+  font-size: 14px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .admin-announcement-cell span {
+  display: -webkit-box;
+  overflow: hidden;
+  color: #667483;
+  font-size: 12px;
+  line-height: 1.45;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+.admin-report-cell span {
   display: -webkit-box;
   overflow: hidden;
   color: #667483;
@@ -1049,6 +1076,32 @@ a {
 .admin-time-stack span {
   color: #667483;
   font-size: 12px;
+}
+
+.admin-report-reason,
+.admin-report-result {
+  display: grid;
+  gap: 5px;
+}
+
+.admin-report-reason strong,
+.admin-report-result strong {
+  overflow: hidden;
+  color: #111827;
+  font-size: 14px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.admin-report-reason span,
+.admin-report-result span {
+  display: -webkit-box;
+  overflow: hidden;
+  color: #667483;
+  font-size: 12px;
+  line-height: 1.45;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
 }
 
 .admin-marker-tags,

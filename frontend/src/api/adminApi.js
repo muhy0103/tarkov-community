@@ -52,6 +52,22 @@ export function reviewAdminComment(id, payload) {
   return request.put(`/admin/comments/${id}/review`, payload).then((response) => response?.data)
 }
 
+export function fetchAdminReports(params = {}) {
+  return request
+    .get('/admin/reports', {
+      params: {
+        page: 1,
+        size: 10,
+        ...params,
+      },
+    })
+    .then((response) => response?.data ?? { page: 1, size: 10, total: 0, pages: 0, records: [] })
+}
+
+export function reviewAdminReport(id, payload) {
+  return request.put(`/admin/reports/${id}/review`, payload).then((response) => response?.data)
+}
+
 export function fetchAdminCategories(params = {}) {
   return request
     .get('/admin/categories', {

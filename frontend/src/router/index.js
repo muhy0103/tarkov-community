@@ -17,6 +17,7 @@ import AdminMapManagementView from '../views/AdminMapManagementView.vue'
 import AdminPostReviewView from '../views/AdminPostReviewView.vue'
 import AdminQuestPrerequisiteManagementView from '../views/AdminQuestPrerequisiteManagementView.vue'
 import AdminQuestManagementView from '../views/AdminQuestManagementView.vue'
+import AdminReportManagementView from '../views/AdminReportManagementView.vue'
 import AdminTagManagementView from '../views/AdminTagManagementView.vue'
 import AdminTraderManagementView from '../views/AdminTraderManagementView.vue'
 import AdminUserManagementView from '../views/AdminUserManagementView.vue'
@@ -97,6 +98,16 @@ const routes = [
     component: AdminCommentReviewView,
     meta: {
       title: '评论审核',
+      requiresAuth: true,
+      requiresAdmin: true,
+    },
+  },
+  {
+    path: '/admin/reports',
+    name: 'admin-reports',
+    component: AdminReportManagementView,
+    meta: {
+      title: '举报管理',
       requiresAuth: true,
       requiresAdmin: true,
     },

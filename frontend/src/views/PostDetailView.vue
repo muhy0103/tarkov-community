@@ -27,6 +27,7 @@ const router = useRouter()
 const userStore = useUserStore()
 
 const loading = ref(false)
+const commentsLoading = ref(false)
 const actionLoading = ref('')
 const errorMessage = ref('')
 const post = ref(null)
@@ -159,7 +160,7 @@ async function loadDetail() {
   try {
     const [postData, commentData] = await Promise.all([
       fetchPostDetail(postId.value),
-      fetchPostComments(postId.value),
+      fetchPostComments(postId.value, { page: 1, size: commentsPage.value.size }),
     ])
     post.value = postData
     commentsPage.value = commentData
@@ -167,6 +168,26 @@ async function loadDetail() {
     errorMessage.value = resolveError(error, '帖子详情暂时无法加载')
   } finally {
     loading.value = false
+  }
+}
+
+async function loadComments(page = commentsPage.value.page) {
+  if (!Number.isFinite(postId.value)) {
+    return
+  }
+
+  commentsLoading.value = true
+  commentsPage.value.page = page
+
+  try {
+    commentsPage.value = await fetchPostComments(postId.value, {
+      page,
+      size: commentsPage.value.size,
+    })
+  } catch (error) {
+    ElMessage.error(resolveError(error, '评论暂时无法加载'))
+  } finally {
+    commentsLoading.value = false
   }
 }
 
@@ -397,7 +418,7 @@ onMounted(loadDetail)
           </div>
         </div>
 
-        <div v-if="comments.length" class="comment-list">
+        <div v-if="comments.length" v-loading="commentsLoading" class="comment-list">
           <article v-for="comment in comments" :key="comment.id" class="comment-item">
             <div class="comment-avatar">{{ comment.authorNickname?.slice(0, 1) || 'P' }}</div>
             <div>
@@ -438,6 +459,17 @@ onMounted(loadDetail)
             <p>可以先发布一条路线建议、任务点位提示或配装补充，让这个帖子真正变成讨论现场。</p>
           </div>
         </div>
+
+        <el-pagination
+          v-if="commentsPage.pages > 1"
+          class="board-pagination"
+          background
+          layout="prev, pager, next"
+          :current-page="commentsPage.page"
+          :page-size="commentsPage.size"
+          :total="commentsPage.total"
+          @current-change="loadComments"
+        />
       </section>
 
       <el-dialog

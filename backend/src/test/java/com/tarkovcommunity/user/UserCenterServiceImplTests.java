@@ -1,9 +1,14 @@
 package com.tarkovcommunity.user;
 
+import com.baomidou.mybatisplus.core.conditions.AbstractWrapper;
+import com.baomidou.mybatisplus.core.conditions.Wrapper;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.tarkovcommunity.forum.entity.PostComment;
 import com.tarkovcommunity.forum.mapper.FavoriteMapper;
 import com.tarkovcommunity.forum.mapper.PostCommentMapper;
 import com.tarkovcommunity.forum.mapper.PostMapper;
 import com.tarkovcommunity.meta.mapper.CategoryMapper;
+import com.tarkovcommunity.user.dto.UserCenterSummaryResponse;
 import com.tarkovcommunity.user.dto.UserPasswordUpdateRequest;
 import com.tarkovcommunity.user.entity.SysUser;
 import com.tarkovcommunity.user.mapper.SysUserMapper;
@@ -18,6 +23,8 @@ import org.springframework.web.server.ResponseStatusException;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 
@@ -70,6 +77,32 @@ class UserCenterServiceImplTests {
         verify(sysUserMapper, never()).updateById(user);
     }
 
+    @Test
+    void countsAndListsOnlyNormalComments() {
+        UserCenterServiceImpl service = service();
+        SysUser user = userWithPassword("OldPass123");
+        given(postMapper.selectCount(any())).willReturn(2L);
+        given(postCommentMapper.selectCount(any())).willReturn(5L);
+        given(favoriteMapper.selectCount(any())).willReturn(1L);
+        given(postCommentMapper.selectPage(any(), any())).willReturn(new Page<PostComment>(1, 10, 0));
+
+        UserCenterSummaryResponse summary = service.getSummary(user);
+        service.listComments(user, 1, 10);
+
+        assertThat(summary.commentCount()).isEqualTo(5L);
+
+        @SuppressWarnings("unchecked")
+        ArgumentCaptor<Wrapper<PostComment>> countWrapperCaptor = ArgumentCaptor.forClass(Wrapper.class);
+        @SuppressWarnings("unchecked")
+        ArgumentCaptor<Wrapper<PostComment>> pageWrapperCaptor = ArgumentCaptor.forClass(Wrapper.class);
+        verify(postCommentMapper).selectCount(countWrapperCaptor.capture());
+        verify(postCommentMapper).selectPage(any(), pageWrapperCaptor.capture());
+        assertThat(wrapperValues(countWrapperCaptor.getValue())).containsEntry("MPGENVAL1", 7L);
+        assertThat(wrapperValues(countWrapperCaptor.getValue())).containsValue("NORMAL");
+        assertThat(wrapperValues(pageWrapperCaptor.getValue())).containsEntry("MPGENVAL1", 7L);
+        assertThat(wrapperValues(pageWrapperCaptor.getValue())).containsValue("NORMAL");
+    }
+
     private UserCenterServiceImpl service() {
         return new UserCenterServiceImpl(
                 postMapper,
@@ -90,5 +123,10 @@ class UserCenterServiceImplTests {
         user.setStatus("NORMAL");
         user.setContribution(18);
         return user;
+    }
+
+    private static java.util.Map<String, Object> wrapperValues(Wrapper<?> wrapper) {
+        wrapper.getSqlSegment();
+        return ((AbstractWrapper<?, ?, ?>) wrapper).getParamNameValuePairs();
     }
 }

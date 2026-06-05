@@ -1,6 +1,7 @@
 package com.tarkovcommunity.user.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.tarkovcommunity.common.PageResponse;
 import com.tarkovcommunity.forum.dto.PostSummaryResponse;
@@ -52,8 +53,9 @@ public class UserCenterServiceImpl implements UserCenterService {
         Long postCount = postMapper.selectCount(new LambdaQueryWrapper<Post>()
                 .eq(Post::getUserId, user.getId())
                 .eq(Post::getStatus, "NORMAL"));
-        Long commentCount = postCommentMapper.selectCount(new LambdaQueryWrapper<PostComment>()
-                .eq(PostComment::getUserId, user.getId()));
+        Long commentCount = postCommentMapper.selectCount(new QueryWrapper<PostComment>()
+                .eq("user_id", user.getId())
+                .eq("status", "NORMAL"));
         Long favoriteCount = favoriteMapper.selectCount(new LambdaQueryWrapper<Favorite>()
                 .eq(Favorite::getUserId, user.getId()));
 
@@ -100,10 +102,11 @@ public class UserCenterServiceImpl implements UserCenterService {
         int safeSize = safeSize(size);
         Page<PostComment> commentPage = postCommentMapper.selectPage(
                 new Page<>(safePage, safeSize),
-                new LambdaQueryWrapper<PostComment>()
-                        .eq(PostComment::getUserId, user.getId())
-                        .orderByDesc(PostComment::getCreatedAt)
-                        .orderByDesc(PostComment::getId)
+                new QueryWrapper<PostComment>()
+                        .eq("user_id", user.getId())
+                        .eq("status", "NORMAL")
+                        .orderByDesc("created_at")
+                        .orderByDesc("id")
         );
 
         return PageResponse.of(

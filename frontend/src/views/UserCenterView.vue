@@ -3,19 +3,26 @@ import { computed, onMounted, ref } from 'vue'
 import { ElMessage } from 'element-plus'
 import { useRouter } from 'vue-router'
 import {
+  Bell,
   ChatLineRound,
+  CircleCheck,
   Collection,
   EditPen,
   Lock,
+  MessageBox,
   Refresh,
   Star,
   User,
 } from '@element-plus/icons-vue'
 import {
+  fetchMyNotifications,
   fetchMyComments,
   fetchMyFavorites,
   fetchMyPosts,
+  fetchUnreadNotificationCount,
   fetchUserCenterSummary,
+  markAllNotificationsRead,
+  markNotificationRead,
   updateMyPassword,
   updateMyProfile,
 } from '../api/userCenterApi'
@@ -61,6 +68,8 @@ const summary = ref({
 const postsPage = ref(pageState())
 const commentsPage = ref(pageState())
 const favoritesPage = ref(pageState())
+const notificationsPage = ref(pageState(5))
+const unreadNotificationCount = ref(0)
 
 const playerName = computed(() => summary.value.nickname || userStore.userInfo?.nickname || '塔科夫玩家')
 const playerAvatar = computed(() => summary.value.avatar || userStore.userInfo?.avatar || '')
@@ -109,6 +118,7 @@ const summaryStats = computed(() => [
   { label: '我的帖子', value: summary.value.postCount || 0, icon: ChatLineRound },
   { label: '我的评论', value: summary.value.commentCount || 0, icon: Collection },
   { label: '我的收藏', value: summary.value.favoriteCount || 0, icon: Star },
+  { label: '未读通知', value: unreadNotificationCount.value || 0, icon: Bell },
 ])
 
 const postTypeOptions = {
@@ -122,10 +132,16 @@ const postTypeOptions = {
   TEAM_UP: '组队招募',
 }
 
-function pageState() {
+const notificationTypeOptions = {
+  REPORT_RESULT: '举报结果',
+  SYSTEM: '系统通知',
+  ANNOUNCEMENT: '公告提醒',
+}
+
+function pageState(size = 6) {
   return {
     page: 1,
-    size: 6,
+    size,
     total: 0,
     pages: 0,
     records: [],
@@ -156,6 +172,10 @@ function syncUserInfo(summaryData) {
 
 function postTypeLabel(type) {
   return postTypeOptions[type] || type || '普通讨论'
+}
+
+function notificationTypeLabel(type) {
+  return notificationTypeOptions[type] || type || '通知'
 }
 
 function statusLabel(status) {
@@ -200,11 +220,13 @@ async function loadAll() {
   errorMessage.value = ''
 
   try {
-    const [summaryData, postData, commentData, favoriteData] = await Promise.all([
+    const [summaryData, postData, commentData, favoriteData, notificationData, unreadCount] = await Promise.all([
       fetchUserCenterSummary(),
       fetchMyPosts({ page: postsPage.value.page, size: postsPage.value.size }),
       fetchMyComments({ page: commentsPage.value.page, size: commentsPage.value.size }),
       fetchMyFavorites({ page: favoritesPage.value.page, size: favoritesPage.value.size }),
+      fetchMyNotifications({ page: notificationsPage.value.page, size: notificationsPage.value.size }),
+      fetchUnreadNotificationCount(),
     ])
 
     summary.value = summaryData
@@ -212,6 +234,8 @@ async function loadAll() {
     postsPage.value = postData
     commentsPage.value = commentData
     favoritesPage.value = favoriteData
+    notificationsPage.value = notificationData
+    unreadNotificationCount.value = unreadCount
   } catch (error) {
     errorMessage.value = resolveError(error, '用户中心暂时无法加载')
   } finally {
@@ -253,6 +277,68 @@ async function loadFavorites(page = favoritesPage.value.page) {
     favoritesPage.value = await fetchMyFavorites({ page, size: favoritesPage.value.size })
   } catch (error) {
     errorMessage.value = resolveError(error, '我的收藏暂时无法加载')
+  } finally {
+    sectionLoading.value = ''
+  }
+}
+
+async function loadNotifications(page = notificationsPage.value.page) {
+  sectionLoading.value = 'notifications'
+  notificationsPage.value.page = page
+
+  try {
+    const [notificationData, unreadCount] = await Promise.all([
+      fetchMyNotifications({ page, size: notificationsPage.value.size }),
+      fetchUnreadNotificationCount(),
+    ])
+    notificationsPage.value = notificationData
+    unreadNotificationCount.value = unreadCount
+  } catch (error) {
+    errorMessage.value = resolveError(error, '通知暂时无法加载')
+  } finally {
+    sectionLoading.value = ''
+  }
+}
+
+async function markOneNotificationRead(notification) {
+  if (!notification || notification.readStatus === 1) {
+    return
+  }
+
+  sectionLoading.value = 'notifications'
+  try {
+    await markNotificationRead(notification.id)
+    notificationsPage.value = {
+      ...notificationsPage.value,
+      records: notificationsPage.value.records.map((item) => (
+        item.id === notification.id ? { ...item, readStatus: 1 } : item
+      )),
+    }
+    unreadNotificationCount.value = Math.max(0, unreadNotificationCount.value - 1)
+    ElMessage.success('通知已标记为已读')
+  } catch (error) {
+    ElMessage.error(resolveError(error, '通知状态暂时无法更新'))
+  } finally {
+    sectionLoading.value = ''
+  }
+}
+
+async function markAllNotifications() {
+  if (unreadNotificationCount.value <= 0) {
+    return
+  }
+
+  sectionLoading.value = 'notifications'
+  try {
+    await markAllNotificationsRead()
+    notificationsPage.value = {
+      ...notificationsPage.value,
+      records: notificationsPage.value.records.map((item) => ({ ...item, readStatus: 1 })),
+    }
+    unreadNotificationCount.value = 0
+    ElMessage.success('所有通知已标记为已读')
+  } catch (error) {
+    ElMessage.error(resolveError(error, '通知状态暂时无法更新'))
   } finally {
     sectionLoading.value = ''
   }
@@ -532,6 +618,96 @@ onMounted(loadAll)
                 :page-size="favoritesPage.size"
                 :total="favoritesPage.total"
                 @current-change="loadFavorites"
+              />
+            </div>
+          </el-tab-pane>
+
+          <el-tab-pane name="notifications">
+            <template #label>
+              <span class="notification-tab-label">
+                通知
+                <el-badge
+                  v-if="unreadNotificationCount > 0"
+                  :value="unreadNotificationCount"
+                  :max="99"
+                  class="notification-tab-badge"
+                />
+              </span>
+            </template>
+
+            <div v-loading="sectionLoading === 'notifications'" class="user-list-wrap">
+              <div class="notification-toolbar">
+                <div>
+                  <h4>社区通知</h4>
+                  <p>查看举报处理、系统提醒和社区运营消息。</p>
+                </div>
+                <el-button
+                  size="small"
+                  :icon="CircleCheck"
+                  :disabled="unreadNotificationCount <= 0"
+                  @click="markAllNotifications"
+                >
+                  全部已读
+                </el-button>
+              </div>
+
+              <div v-if="notificationsPage.records.length" class="notification-list">
+                <article
+                  v-for="notification in notificationsPage.records"
+                  :key="notification.id"
+                  class="user-notification-item"
+                  :class="{ unread: notification.readStatus === 0 }"
+                >
+                  <div class="notification-icon">
+                    <MessageBox />
+                  </div>
+                  <div class="notification-body">
+                    <div class="notification-title-row">
+                      <h4>{{ notification.title }}</h4>
+                      <el-tag
+                        size="small"
+                        effect="plain"
+                        :type="notification.readStatus === 0 ? 'warning' : 'info'"
+                      >
+                        {{ notification.readStatus === 0 ? '未读' : '已读' }}
+                      </el-tag>
+                    </div>
+                    <p>{{ notification.content || '暂无通知内容' }}</p>
+                    <div class="notification-meta">
+                      <span>{{ notificationTypeLabel(notification.type) }}</span>
+                      <span>{{ formatDate(notification.createdAt) }}</span>
+                    </div>
+                  </div>
+                  <el-button
+                    v-if="notification.readStatus === 0"
+                    text
+                    type="primary"
+                    size="small"
+                    :icon="CircleCheck"
+                    @click="markOneNotificationRead(notification)"
+                  >
+                    已读
+                  </el-button>
+                </article>
+              </div>
+
+              <div v-else class="post-empty">
+                <Bell />
+                <div>
+                  <h4>暂时没有通知</h4>
+                  <p>举报处理结果、系统提醒和社区消息会出现在这里。</p>
+                </div>
+              </div>
+
+              <el-pagination
+                v-if="notificationsPage.pages > 1"
+                class="board-pagination"
+                background
+                layout="prev, pager, next"
+                :current-page="notificationsPage.page"
+                :page-size="notificationsPage.size"
+                :total="notificationsPage.total"
+                @current-change="loadNotifications"
               />
             </div>
           </el-tab-pane>

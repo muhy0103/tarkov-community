@@ -55,3 +55,29 @@ export function fetchMyFavorites(params = {}) {
     })
     .then((response) => response?.data ?? pageFallback(params.page, params.size))
 }
+
+export function fetchMyNotifications(params = {}) {
+  return request
+    .get('/notifications/me', {
+      params: {
+        page: 1,
+        size: 5,
+        ...params,
+      },
+    })
+    .then((response) => response?.data ?? pageFallback(params.page, params.size || 5))
+}
+
+export function fetchUnreadNotificationCount() {
+  return request
+    .get('/notifications/me/unread-count')
+    .then((response) => response?.data?.unreadCount ?? 0)
+}
+
+export function markNotificationRead(id) {
+  return request.put(`/notifications/me/${id}/read`).then((response) => response?.data)
+}
+
+export function markAllNotificationsRead() {
+  return request.put('/notifications/me/read-all').then((response) => response?.data)
+}

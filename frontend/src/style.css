@@ -568,7 +568,7 @@ a {
 
 .user-stat-grid {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
   gap: 14px;
 }
 
@@ -622,6 +622,114 @@ a {
 
 .user-list-wrap {
   min-height: 180px;
+}
+
+.notification-tab-label {
+  display: inline-flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.notification-tab-badge {
+  line-height: 1;
+}
+
+.notification-toolbar {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 14px;
+  padding: 14px 16px;
+  border: 1px solid #dbe7e6;
+  border-radius: 8px;
+  background: #f8fffe;
+}
+
+.notification-toolbar h4 {
+  margin: 0;
+  color: #111827;
+  font-size: 16px;
+  line-height: 1.35;
+}
+
+.notification-toolbar p {
+  margin: 5px 0 0;
+  color: #52616d;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.notification-list {
+  display: grid;
+  gap: 12px;
+}
+
+.user-notification-item {
+  display: grid;
+  grid-template-columns: 42px minmax(0, 1fr) auto;
+  gap: 14px;
+  align-items: flex-start;
+  padding: 16px;
+  border: 1px solid #dbe7e6;
+  border-radius: 8px;
+  background: #ffffff;
+}
+
+.user-notification-item.unread {
+  border-color: #99f6e4;
+  background: linear-gradient(90deg, #ecfeff 0%, #ffffff 45%);
+}
+
+.notification-icon {
+  display: grid;
+  width: 42px;
+  height: 42px;
+  place-items: center;
+  color: #0f766e;
+  border-radius: 8px;
+  background: #ecfeff;
+}
+
+.notification-icon > svg {
+  width: 22px;
+  height: 22px;
+}
+
+.notification-body {
+  min-width: 0;
+}
+
+.notification-title-row {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.notification-title-row h4 {
+  margin: 0;
+  color: #111827;
+  font-size: 16px;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+}
+
+.notification-body p {
+  margin: 8px 0 0;
+  color: #3f4d5a;
+  font-size: 14px;
+  line-height: 1.7;
+  overflow-wrap: anywhere;
+}
+
+.notification-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 10px;
+  color: #7b8794;
+  font-size: 12px;
 }
 
 .user-comment-item {
@@ -1788,5 +1896,20 @@ a {
   .comment-form-footer {
     align-items: flex-start;
     flex-direction: column;
+  }
+
+  .notification-toolbar,
+  .notification-title-row {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .user-notification-item {
+    grid-template-columns: 42px minmax(0, 1fr);
+  }
+
+  .user-notification-item > .el-button {
+    grid-column: 2;
+    justify-self: flex-start;
   }
 }

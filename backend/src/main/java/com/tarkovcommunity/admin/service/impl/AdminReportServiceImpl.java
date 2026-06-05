@@ -120,14 +120,40 @@ public class AdminReportServiceImpl implements AdminReportService {
         }
 
         if ("COMMENT".equals(report.getTargetType())) {
-            PostComment comment = new PostComment();
-            comment.setId(report.getTargetId());
+            PostComment comment = commentMapper.selectById(report.getTargetId());
+            if (comment == null) {
+                throw new ResponseStatusException(HttpStatus.NOT_FOUND, "被举报评论不存在，无法隐藏");
+            }
+
+            String oldStatus = comment.getStatus();
             comment.setStatus("HIDDEN");
             ensureUpdated(commentMapper.updateById(comment), "被举报评论不存在，无法隐藏");
+            adjustPostCommentCount(comment.getPostId(), oldStatus, "HIDDEN");
             return;
         }
 
         throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "举报目标类型不支持联动隐藏");
+    }
+
+    private void adjustPostCommentCount(Long postId, String oldStatus, String newStatus) {
+        if (Objects.equals(oldStatus, newStatus)) {
+            return;
+        }
+
+        boolean wasVisible = "NORMAL".equals(oldStatus);
+        boolean isVisible = "NORMAL".equals(newStatus);
+        if (wasVisible == isVisible) {
+            return;
+        }
+
+        Post post = postMapper.selectById(postId);
+        if (post == null) {
+            return;
+        }
+
+        int currentCount = valueOrZero(post.getCommentCount());
+        post.setCommentCount(isVisible ? currentCount + 1 : Math.max(0, currentCount - 1));
+        postMapper.updateById(post);
     }
 
     private static void ensureUpdated(int affectedRows, String message) {
@@ -252,6 +278,10 @@ public class AdminReportServiceImpl implements AdminReportService {
 
     private static String trimToEmpty(String value) {
         return StringUtils.hasText(value) ? value.trim() : "";
+    }
+
+    private static int valueOrZero(Integer value) {
+        return value == null ? 0 : value;
     }
 
     private record TargetView(String title, String summary) {

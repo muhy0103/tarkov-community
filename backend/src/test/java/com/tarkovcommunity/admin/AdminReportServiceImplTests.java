@@ -114,7 +114,9 @@ class AdminReportServiceImplTests {
     void resolvesReportAndHidesCommentTargetWhenRequested() {
         AdminReportServiceImpl service = new AdminReportServiceImpl(reportMapper, userMapper, postMapper, commentMapper);
         given(reportMapper.selectById(1L)).willReturn(pendingCommentReport(), resolvedCommentReport());
+        given(commentMapper.selectById(3L)).willReturn(comment());
         given(commentMapper.updateById(any(PostComment.class))).willReturn(1);
+        given(postMapper.selectById(2L)).willReturn(postWithCommentCount(4));
         given(userMapper.selectBatchIds(any())).willReturn(List.of(reporter(), admin()));
         given(commentMapper.selectBatchIds(List.of(3L))).willReturn(List.of(hiddenComment()));
         given(postMapper.selectBatchIds(List.of(2L))).willReturn(List.of(post()));
@@ -129,6 +131,11 @@ class AdminReportServiceImplTests {
         verify(commentMapper).updateById(commentCaptor.capture());
         assertThat(commentCaptor.getValue().getId()).isEqualTo(3L);
         assertThat(commentCaptor.getValue().getStatus()).isEqualTo("HIDDEN");
+
+        ArgumentCaptor<Post> postCaptor = ArgumentCaptor.forClass(Post.class);
+        verify(postMapper).updateById(postCaptor.capture());
+        assertThat(postCaptor.getValue().getId()).isEqualTo(2L);
+        assertThat(postCaptor.getValue().getCommentCount()).isEqualTo(3);
     }
 
     private static Report pendingPostReport() {
@@ -183,11 +190,18 @@ class AdminReportServiceImplTests {
         return post;
     }
 
+    private static Post postWithCommentCount(int commentCount) {
+        Post post = post();
+        post.setCommentCount(commentCount);
+        return post;
+    }
+
     private static PostComment comment() {
         PostComment comment = new PostComment();
         comment.setId(3L);
         comment.setPostId(2L);
         comment.setContent("这是一条需要处理的评论。");
+        comment.setStatus("NORMAL");
         return comment;
     }
 

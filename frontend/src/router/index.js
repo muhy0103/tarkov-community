@@ -16,6 +16,7 @@ import AdminMapManagementView from '../views/AdminMapManagementView.vue'
 import AdminPostReviewView from '../views/AdminPostReviewView.vue'
 import AdminQuestPrerequisiteManagementView from '../views/AdminQuestPrerequisiteManagementView.vue'
 import AdminQuestManagementView from '../views/AdminQuestManagementView.vue'
+import AdminTagManagementView from '../views/AdminTagManagementView.vue'
 import AdminTraderManagementView from '../views/AdminTraderManagementView.vue'
 import AdminUserManagementView from '../views/AdminUserManagementView.vue'
 import AdminWeaponManagementView from '../views/AdminWeaponManagementView.vue'
@@ -105,6 +106,16 @@ const routes = [
     component: AdminCategoryManagementView,
     meta: {
       title: '分区管理',
+      requiresAuth: true,
+      requiresAdmin: true,
+    },
+  },
+  {
+    path: '/admin/tags',
+    name: 'admin-tags',
+    component: AdminTagManagementView,
+    meta: {
+      title: '标签管理',
       requiresAuth: true,
       requiresAdmin: true,
     },

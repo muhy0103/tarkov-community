@@ -1,12 +1,15 @@
 package com.tarkovcommunity.meta.controller;
 
 import com.tarkovcommunity.common.ApiResponse;
+import com.tarkovcommunity.common.PageResponse;
+import com.tarkovcommunity.meta.dto.AnnouncementResponse;
 import com.tarkovcommunity.meta.dto.CategoryResponse;
 import com.tarkovcommunity.meta.dto.TagResponse;
 import com.tarkovcommunity.meta.service.CommunityMetaService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
@@ -26,5 +29,13 @@ public class CommunityMetaController {
     @GetMapping("/tags")
     public ApiResponse<List<TagResponse>> listTags() {
         return ApiResponse.success(communityMetaService.listTags());
+    }
+
+    @GetMapping("/announcements")
+    public ApiResponse<PageResponse<AnnouncementResponse>> listAnnouncements(
+            @RequestParam(defaultValue = "1") int page,
+            @RequestParam(defaultValue = "5") int size
+    ) {
+        return ApiResponse.success(communityMetaService.listPublishedAnnouncements(page, size));
     }
 }

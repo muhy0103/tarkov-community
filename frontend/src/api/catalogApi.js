@@ -6,6 +6,17 @@ export const fetchCategories = () => request.get('/categories').then(unwrapList)
 
 export const fetchTags = () => request.get('/tags').then(unwrapList)
 
+export const fetchAnnouncements = (params = {}) =>
+  request
+    .get('/announcements', {
+      params: {
+        page: 1,
+        size: 3,
+        ...params,
+      },
+    })
+    .then((response) => response?.data ?? { page: 1, size: 3, total: 0, pages: 0, records: [] })
+
 export const fetchMaps = () => request.get('/tarkov/maps').then(unwrapList)
 
 export const fetchTraders = () => request.get('/tarkov/traders').then(unwrapList)

@@ -3,6 +3,7 @@ import { computed, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import {
   Aim,
+  Bell,
   ChatLineRound,
   Collection,
   Connection,
@@ -18,7 +19,7 @@ import {
   View,
   Warning,
 } from '@element-plus/icons-vue'
-import { fetchHomeCatalog } from '../api/catalogApi'
+import { fetchAnnouncements, fetchHomeCatalog } from '../api/catalogApi'
 import { fetchPosts } from '../api/postApi'
 import { useUserStore } from '../stores/userStore'
 
@@ -30,6 +31,13 @@ const catalogSection = ref(null)
 const postsPage = ref({
   page: 1,
   size: 5,
+  total: 0,
+  pages: 0,
+  records: [],
+})
+const announcementsPage = ref({
+  page: 1,
+  size: 3,
   total: 0,
   pages: 0,
   records: [],
@@ -133,18 +141,29 @@ const quickCatalogGroups = computed(() => [
     ],
   },
 ])
+const announcements = computed(() => announcementsPage.value.records ?? [])
+
+function formatDate(value) {
+  if (!value) {
+    return '时间未知'
+  }
+
+  return String(value).replace('T', ' ').slice(0, 16)
+}
 
 async function loadCatalog() {
   loading.value = true
   errorMessage.value = ''
 
   try {
-    const [catalogData, postData] = await Promise.all([
+    const [catalogData, postData, announcementData] = await Promise.all([
       fetchHomeCatalog(),
       fetchPosts({ page: 1, size: 5 }),
+      fetchAnnouncements({ page: 1, size: 3 }),
     ])
     catalog.value = catalogData
     postsPage.value = postData
+    announcementsPage.value = announcementData
   } catch (error) {
     errorMessage.value =
       error?.response?.data?.message ||
@@ -208,6 +227,30 @@ onMounted(loadCatalog)
     <el-skeleton v-if="loading" :rows="6" animated class="home-skeleton" />
 
     <template v-else>
+      <section v-if="announcements.length" class="section-block">
+        <div class="section-heading">
+          <h3>社区公告</h3>
+          <p>展示后台已发布的维护通知、活动提醒和社区规则更新。</p>
+        </div>
+
+        <div class="announcement-list">
+          <article
+            v-for="announcement in announcements"
+            :key="announcement.id"
+            class="announcement-item"
+          >
+            <Bell />
+            <div>
+              <div class="announcement-meta">
+                <strong>{{ announcement.title }}</strong>
+                <span>{{ formatDate(announcement.updatedAt || announcement.createdAt) }}</span>
+              </div>
+              <p>{{ announcement.content }}</p>
+            </div>
+          </article>
+        </div>
+      </section>
+
       <section class="section-block">
         <div class="section-heading">
           <h3>社区帖子</h3>

@@ -1572,6 +1572,28 @@ a {
   justify-content: space-between;
 }
 
+.reply-target-bar {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 12px;
+  border: 1px solid #99f6e4;
+  border-radius: 8px;
+  background: #ecfeff;
+}
+
+.reply-target-bar span {
+  min-width: 0;
+  color: #3f4d5a;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.reply-target-bar strong {
+  color: #0f766e;
+}
+
 .comment-list {
   display: grid;
   gap: 12px;
@@ -1603,6 +1625,10 @@ a {
 }
 
 .comment-report-button {
+  margin-left: 0;
+}
+
+.comment-reply-button {
   margin-left: auto;
 }
 
@@ -1915,6 +1941,11 @@ a {
   }
 
   .comment-form-footer {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .reply-target-bar {
     align-items: flex-start;
     flex-direction: column;
   }

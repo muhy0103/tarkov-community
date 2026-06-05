@@ -1,10 +1,11 @@
 <script setup>
-import { computed, onMounted, ref } from 'vue'
+import { computed, nextTick, onMounted, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import {
   ArrowLeft,
   ChatLineRound,
+  Close,
   Pointer,
   Refresh,
   Star,
@@ -43,8 +44,10 @@ const favoriteCount = ref(null)
 const reportDialogVisible = ref(false)
 const reportSaving = ref(false)
 const reportFormRef = ref(null)
+const commentInputRef = ref(null)
 const reportTarget = ref(null)
 const reportForm = ref(emptyReportForm())
+const replyTarget = ref(null)
 
 const postId = computed(() => Number(route.params.id))
 const comments = computed(() => commentsPage.value.records ?? [])
@@ -61,6 +64,12 @@ const reportDialogTitle = computed(() => {
 
   return `举报${targetTypeLabel(reportTarget.value.targetType)}`
 })
+const commentPlaceholder = computed(() => (
+  replyTarget.value
+    ? `回复 ${replyTarget.value.authorNickname || '玩家'}，补充你的看法...`
+    : '补充你的情报、路线建议或复盘看法...'
+))
+const submitCommentText = computed(() => (replyTarget.value ? '发布回复' : '发布评论'))
 
 const reportReasonOptions = [
   '违规内容',
@@ -176,19 +185,35 @@ async function submitComment() {
   actionLoading.value = 'comment'
 
   try {
+    const target = replyTarget.value
     await createPostComment(postId.value, {
       content,
-      parentId: null,
-      replyToUserId: null,
+      parentId: target ? (target.parentId || target.id) : null,
+      replyToUserId: target?.userId ?? null,
     })
     commentContent.value = ''
-    ElMessage.success('评论已发布')
+    replyTarget.value = null
+    ElMessage.success(target ? '回复已发布' : '评论已发布')
     await loadDetail()
   } catch (error) {
-    ElMessage.error(resolveError(error, '评论发布失败'))
+    ElMessage.error(resolveError(error, replyTarget.value ? '回复发布失败' : '评论发布失败'))
   } finally {
     actionLoading.value = ''
   }
+}
+
+async function startReply(comment) {
+  if (!requireLogin()) {
+    return
+  }
+
+  replyTarget.value = comment
+  await nextTick()
+  commentInputRef.value?.focus?.()
+}
+
+function cancelReply() {
+  replyTarget.value = null
 }
 
 async function handleLike() {
@@ -341,13 +366,22 @@ onMounted(loadDetail)
         </div>
 
         <div class="comment-form">
+          <div v-if="replyTarget" class="reply-target-bar">
+            <span>
+              正在回复 <strong>{{ replyTarget.authorNickname || '玩家' }}</strong>
+            </span>
+            <el-button text size="small" :icon="Close" @click="cancelReply">
+              取消回复
+            </el-button>
+          </div>
           <el-input
+            ref="commentInputRef"
             v-model="commentContent"
             type="textarea"
             :autosize="{ minRows: 4, maxRows: 7 }"
             maxlength="1000"
             show-word-limit
-            placeholder="补充你的情报、路线建议或复盘看法..."
+            :placeholder="commentPlaceholder"
           />
           <div class="comment-form-footer">
             <span v-if="!canInteract">登录后可以发表评论、点赞和收藏</span>
@@ -358,7 +392,7 @@ onMounted(loadDetail)
               :loading="actionLoading === 'comment'"
               @click="submitComment"
             >
-              发布评论
+              {{ submitCommentText }}
             </el-button>
           </div>
         </div>
@@ -370,6 +404,18 @@ onMounted(loadDetail)
               <div class="comment-meta">
                 <strong>{{ comment.authorNickname }}</strong>
                 <span>{{ formatDate(comment.createdAt) }}</span>
+                <el-tag v-if="comment.parentId" size="small" effect="plain">
+                  回复
+                </el-tag>
+                <el-button
+                  text
+                  size="small"
+                  :icon="ChatLineRound"
+                  class="comment-reply-button"
+                  @click="startReply(comment)"
+                >
+                  回复
+                </el-button>
                 <el-button
                   text
                   size="small"

@@ -17,6 +17,7 @@ import com.tarkovcommunity.user.mapper.SysUserMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -77,6 +78,7 @@ public class AdminReportServiceImpl implements AdminReportService {
     }
 
     @Override
+    @Transactional
     public AdminReportResponse reviewReport(Long id, AdminReportReviewRequest request, SysUser admin) {
         Report report = reportMapper.selectById(id);
         if (report == null) {
@@ -86,6 +88,8 @@ public class AdminReportServiceImpl implements AdminReportService {
         if (!ALLOWED_STATUSES.contains(request.status())) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "举报处理状态不正确");
         }
+
+        hideTargetIfRequested(report, request);
 
         report.setStatus(request.status());
         report.setHandleResult(trimToEmpty(request.handleResult()));
@@ -100,6 +104,36 @@ public class AdminReportServiceImpl implements AdminReportService {
 
         Report updatedReport = reportMapper.selectById(id);
         return toResponses(List.of(updatedReport == null ? report : updatedReport)).get(0);
+    }
+
+    private void hideTargetIfRequested(Report report, AdminReportReviewRequest request) {
+        if (!"RESOLVED".equals(request.status()) || !Boolean.TRUE.equals(request.hideTarget())) {
+            return;
+        }
+
+        if ("POST".equals(report.getTargetType())) {
+            Post post = new Post();
+            post.setId(report.getTargetId());
+            post.setStatus("HIDDEN");
+            ensureUpdated(postMapper.updateById(post), "被举报帖子不存在，无法隐藏");
+            return;
+        }
+
+        if ("COMMENT".equals(report.getTargetType())) {
+            PostComment comment = new PostComment();
+            comment.setId(report.getTargetId());
+            comment.setStatus("HIDDEN");
+            ensureUpdated(commentMapper.updateById(comment), "被举报评论不存在，无法隐藏");
+            return;
+        }
+
+        throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "举报目标类型不支持联动隐藏");
+    }
+
+    private static void ensureUpdated(int affectedRows, String message) {
+        if (affectedRows <= 0) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, message);
+        }
     }
 
     private List<AdminReportResponse> toResponses(List<Report> reports) {

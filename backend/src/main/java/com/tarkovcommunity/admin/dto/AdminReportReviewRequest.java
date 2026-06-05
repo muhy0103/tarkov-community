@@ -10,6 +10,8 @@ public record AdminReportReviewRequest(
         String status,
 
         @Size(max = 500, message = "处理说明不能超过500个字符")
-        String handleResult
+        String handleResult,
+
+        Boolean hideTarget
 ) {
 }

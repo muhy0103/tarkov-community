@@ -71,7 +71,8 @@ class AdminReportControllerTests {
 
         AdminReportReviewRequest request = new AdminReportReviewRequest(
                 "RESOLVED",
-                "已隐藏违规内容。"
+                "已隐藏违规内容。",
+                false
         );
 
         mockMvc.perform(put("/api/admin/reports/1/review")

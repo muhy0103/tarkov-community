@@ -11,6 +11,7 @@ import AdminHideoutStationManagementView from '../views/AdminHideoutStationManag
 import AdminHideoutUpgradeManagementView from '../views/AdminHideoutUpgradeManagementView.vue'
 import AdminItemManagementView from '../views/AdminItemManagementView.vue'
 import AdminMapExtractManagementView from '../views/AdminMapExtractManagementView.vue'
+import AdminMapLootAreaManagementView from '../views/AdminMapLootAreaManagementView.vue'
 import AdminMapManagementView from '../views/AdminMapManagementView.vue'
 import AdminPostReviewView from '../views/AdminPostReviewView.vue'
 import AdminQuestManagementView from '../views/AdminQuestManagementView.vue'
@@ -123,6 +124,16 @@ const routes = [
     component: AdminMapExtractManagementView,
     meta: {
       title: '撤离点管理',
+      requiresAuth: true,
+      requiresAdmin: true,
+    },
+  },
+  {
+    path: '/admin/map-loot-areas',
+    name: 'admin-map-loot-areas',
+    component: AdminMapLootAreaManagementView,
+    meta: {
+      title: '资源点管理',
       requiresAuth: true,
       requiresAdmin: true,
     },

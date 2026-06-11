@@ -28,7 +28,7 @@ import {
   updateMyPassword,
   updateMyProfile,
 } from '../api/userCenterApi'
-import { withdrawComment } from '../api/postApi'
+import { updateComment, withdrawComment } from '../api/postApi'
 import { useUserStore } from '../stores/userStore'
 
 const router = useRouter()
@@ -237,6 +237,10 @@ function canWithdrawComment(comment) {
   return comment?.status === 'NORMAL' && Boolean(comment.postId) && Boolean(comment.id)
 }
 
+function canEditComment(comment) {
+  return canWithdrawComment(comment)
+}
+
 function formatDate(value) {
   if (!value) {
     return '暂无记录'
@@ -300,6 +304,58 @@ async function loadComments(page = commentsPage.value.page) {
     commentsPage.value = await fetchMyComments({ page, size: commentsPage.value.size })
   } catch (error) {
     errorMessage.value = resolveError(error, '我的评论暂时无法加载')
+  } finally {
+    sectionLoading.value = ''
+  }
+}
+
+async function handleEditComment(comment) {
+  if (!canEditComment(comment)) {
+    return
+  }
+
+  const promptResult = await ElMessageBox.prompt(
+    '修改评论内容',
+    '编辑评论',
+    {
+      confirmButtonText: '保存修改',
+      cancelButtonText: '取消',
+      inputType: 'textarea',
+      inputValue: comment.content || '',
+      inputValidator: (value) => {
+        const content = value.trim()
+        if (content.length < 5) {
+          return '评论至少需要 5 个字'
+        }
+        if (content.length > 1000) {
+          return '评论不能超过 1000 个字符'
+        }
+        return true
+      },
+    }
+  ).catch(() => null)
+
+  if (!promptResult) {
+    return
+  }
+
+  sectionLoading.value = 'comments'
+
+  try {
+    const result = await updateComment(comment.postId, comment.id, {
+      content: promptResult.value.trim(),
+    })
+    commentsPage.value = {
+      ...commentsPage.value,
+      records: commentsPage.value.records.map((item) => (
+        item.id === comment.id
+          ? { ...item, content: result.content, updatedAt: result.updatedAt || item.updatedAt }
+          : item
+      )),
+    }
+    ElMessage.success('评论已更新')
+  } catch (error) {
+    ElMessage.error(resolveError(error, '评论更新失败'))
   } finally {
     sectionLoading.value = ''
   }
@@ -651,6 +707,16 @@ onMounted(loadAll)
                       </el-tag>
                       <span>点赞 {{ comment.likeCount }}</span>
                       <span>{{ formatDate(comment.createdAt) }}</span>
+                      <el-button
+                        v-if="canEditComment(comment)"
+                        text
+                        size="small"
+                        type="primary"
+                        :icon="EditPen"
+                        @click="handleEditComment(comment)"
+                      >
+                        编辑
+                      </el-button>
                       <el-button
                         v-if="canWithdrawComment(comment)"
                         text

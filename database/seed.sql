@@ -2,7 +2,7 @@ USE tarkov_community;
 
 INSERT INTO sys_user (id, username, password, nickname, email, role, status, contribution)
 VALUES
-  (1, 'admin', '$2b$10$KCd/lllnmSdJwet56sk5oOUycBL3oZxnoWJNjY3oG8SG785NaBo.6', '社区管理员', 'admin@example.com', 'ADMIN', 'NORMAL', 100),
+  (1, 'admin', '$2a$10$fZQPznyJUYHn6Vr3DhaEYez/xqqLYYQyR/xqF1FaD0Gimpd0Rudgm', '社区管理员', 'admin@example.com', 'ADMIN', 'NORMAL', 100),
   (2, 'pmc_rookie', '$2b$10$KCd/lllnmSdJwet56sk5oOUycBL3oZxnoWJNjY3oG8SG785NaBo.6', '海关萌新', 'rookie@example.com', 'USER', 'NORMAL', 12),
   (3, 'reserve_runner', '$2b$10$KCd/lllnmSdJwet56sk5oOUycBL3oZxnoWJNjY3oG8SG785NaBo.6', '储备站跑商人', 'runner@example.com', 'USER', 'NORMAL', 36)
 ON DUPLICATE KEY UPDATE nickname = VALUES(nickname), role = VALUES(role), status = VALUES(status);

@@ -28,7 +28,7 @@ import {
   updateMyPassword,
   updateMyProfile,
 } from '../api/userCenterApi'
-import { updateComment, withdrawComment } from '../api/postApi'
+import { togglePostFavorite, updateComment, withdrawComment } from '../api/postApi'
 import { useUserStore } from '../stores/userStore'
 
 const router = useRouter()
@@ -410,6 +410,48 @@ async function loadFavorites(page = favoritesPage.value.page) {
   }
 }
 
+async function handleRemoveFavorite(post) {
+  if (!post?.id) {
+    return
+  }
+
+  const confirmed = await ElMessageBox.confirm(
+    '取消收藏后，这条情报将从“我的收藏”列表中移除。确定要取消收藏吗？',
+    '取消收藏',
+    {
+      confirmButtonText: '取消收藏',
+      cancelButtonText: '返回',
+      type: 'warning',
+    }
+  ).then(() => true).catch(() => false)
+
+  if (!confirmed) {
+    return
+  }
+
+  sectionLoading.value = 'favorites'
+
+  try {
+    const result = await togglePostFavorite(post.id)
+    if (result.active) {
+      ElMessage.warning('收藏状态已同步，请刷新后查看')
+      await loadFavorites(favoritesPage.value.page)
+      return
+    }
+
+    summary.value.favoriteCount = Math.max(0, (summary.value.favoriteCount || 0) - 1)
+    const nextPage = favoritesPage.value.records.length <= 1 && favoritesPage.value.page > 1
+      ? favoritesPage.value.page - 1
+      : favoritesPage.value.page
+    ElMessage.success('已取消收藏')
+    await loadFavorites(nextPage)
+  } catch (error) {
+    ElMessage.error(resolveError(error, '取消收藏失败'))
+  } finally {
+    sectionLoading.value = ''
+  }
+}
+
 async function loadNotifications(page = notificationsPage.value.page) {
   sectionLoading.value = 'notifications'
   notificationsPage.value.page = page
@@ -781,6 +823,15 @@ onMounted(loadAll)
                       <span>浏览 {{ post.viewCount }}</span>
                       <span>点赞 {{ post.likeCount }}</span>
                       <span>评论 {{ post.commentCount }}</span>
+                      <el-button
+                        text
+                        size="small"
+                        type="warning"
+                        :icon="Star"
+                        @click="handleRemoveFavorite(post)"
+                      >
+                        取消收藏
+                      </el-button>
                     </div>
                   </div>
                 </article>

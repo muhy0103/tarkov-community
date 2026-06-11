@@ -47,6 +47,11 @@ const sortOptions = [
   { label: '点赞最多', value: 'MOST_LIKED' },
 ]
 
+const postTypeLabelMap = postTypeOptions.reduce((map, option) => {
+  map[option.value] = option.label
+  return map
+}, {})
+
 const queryParams = computed(() => ({
   page: postsPage.value.page,
   size: postsPage.value.size,
@@ -59,6 +64,10 @@ const queryParams = computed(() => ({
 
 function resolveError(error, fallback) {
   return error?.response?.data?.message || error?.message || fallback
+}
+
+function postTypeLabel(type) {
+  return postTypeLabelMap[type] || type || '普通讨论'
 }
 
 async function loadBoard(page = postsPage.value.page) {
@@ -116,10 +125,11 @@ onMounted(() => loadBoard(1))
           v-model="filters.keyword"
           placeholder="搜索标题或正文"
           clearable
+          @clear="loadBoard(1)"
           @keyup.enter="loadBoard(1)"
         />
 
-        <el-select v-model="filters.categoryCode" placeholder="全部分区" clearable>
+        <el-select v-model="filters.categoryCode" placeholder="全部分区" clearable @change="loadBoard(1)">
           <el-option
             v-for="category in categories"
             :key="category.id"
@@ -128,7 +138,7 @@ onMounted(() => loadBoard(1))
           />
         </el-select>
 
-        <el-select v-model="filters.postType" placeholder="全部类型" clearable>
+        <el-select v-model="filters.postType" placeholder="全部类型" clearable @change="loadBoard(1)">
           <el-option
             v-for="option in postTypeOptions"
             :key="option.value"
@@ -150,6 +160,7 @@ onMounted(() => loadBoard(1))
           v-model="filters.recommended"
           active-text="只看推荐"
           inactive-text="全部"
+          @change="loadBoard(1)"
         />
       </div>
 
@@ -188,7 +199,7 @@ onMounted(() => loadBoard(1))
             <div class="post-meta">
               <el-tag size="small" effect="plain">{{ post.categoryName }}</el-tag>
               <span>{{ post.authorNickname }}</span>
-              <span>{{ post.postType }}</span>
+              <span>{{ postTypeLabel(post.postType) }}</span>
             </div>
             <RouterLink
               class="post-title-link"

@@ -285,6 +285,7 @@ const routes = [
     component: PostCreateView,
     meta: {
       title: '发布情报',
+      requiresAuth: true,
     },
   },
   {

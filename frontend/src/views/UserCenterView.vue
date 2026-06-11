@@ -1,7 +1,7 @@
 <script setup>
-import { computed, onMounted, ref } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { useRouter } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import {
   Bell,
   ChatLineRound,
@@ -32,6 +32,7 @@ import { togglePostFavorite, updateComment, withdrawComment } from '../api/postA
 import { useUserStore } from '../stores/userStore'
 
 const router = useRouter()
+const route = useRoute()
 const userStore = useUserStore()
 
 const loading = ref(false)
@@ -74,6 +75,7 @@ const favoritesPage = ref(pageState())
 const notificationsPage = ref(pageState(5))
 const unreadNotificationCount = ref(0)
 const notificationReadFilter = ref('ALL')
+const tabNames = new Set(['posts', 'comments', 'favorites', 'notifications'])
 
 const playerName = computed(() => summary.value.nickname || userStore.userInfo?.nickname || '塔科夫玩家')
 const playerAvatar = computed(() => summary.value.avatar || userStore.userInfo?.avatar || '')
@@ -629,7 +631,22 @@ function goCreatePost() {
   router.push({ name: 'post-create' })
 }
 
-onMounted(loadAll)
+function syncActiveTabFromRoute() {
+  const queryTab = route.query.tab
+  if (typeof queryTab === 'string' && tabNames.has(queryTab)) {
+    activeTab.value = queryTab
+  }
+}
+
+watch(
+  () => route.query.tab,
+  () => syncActiveTabFromRoute()
+)
+
+onMounted(() => {
+  syncActiveTabFromRoute()
+  loadAll()
+})
 </script>
 
 <template>

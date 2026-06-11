@@ -4,8 +4,11 @@ import { useRouter } from 'vue-router'
 import {
   ChatLineRound,
   EditPen,
+  Pointer,
   Refresh,
   Search,
+  Star,
+  View,
 } from '@element-plus/icons-vue'
 import { fetchCategories } from '../api/catalogApi'
 import { fetchPosts } from '../api/postApi'
@@ -101,7 +104,10 @@ function resetFilters() {
 }
 
 function goCreatePost() {
-  router.push(userStore.isLoggedIn ? { name: 'post-create' } : { name: 'login' })
+  router.push(userStore.isLoggedIn
+    ? { name: 'post-create' }
+    : { name: 'login', query: { redirect: '/posts/new' } }
+  )
 }
 
 onMounted(() => loadBoard(1))
@@ -117,6 +123,40 @@ onMounted(() => loadBoard(1))
       <el-button type="primary" :icon="EditPen" @click="goCreatePost">
         发布情报
       </el-button>
+    </section>
+
+    <section class="board-player-panel">
+      <div>
+        <h3>{{ userStore.isLoggedIn ? `欢迎回来，${userStore.userInfo?.nickname || 'PMC'}` : '登录后参与社区互动' }}</h3>
+        <p>
+          {{ userStore.isLoggedIn
+            ? '你可以继续回复帖子、收藏路线、查看自己的通知，也可以发布新的战局情报。'
+            : '登录后可以发布情报、评论补充、点赞收藏，并在用户中心查看自己的帖子和通知。' }}
+        </p>
+      </div>
+      <div class="board-player-actions">
+        <el-button
+          v-if="userStore.isLoggedIn"
+          :icon="Star"
+          @click="router.push({ name: 'user-center', query: { tab: 'favorites' } })"
+        >
+          我的收藏
+        </el-button>
+        <el-button
+          v-if="userStore.isLoggedIn"
+          :icon="ChatLineRound"
+          @click="router.push({ name: 'user-center', query: { tab: 'comments' } })"
+        >
+          我的讨论
+        </el-button>
+        <el-button
+          v-else
+          type="primary"
+          @click="router.push({ name: 'login', query: { redirect: '/posts' } })"
+        >
+          去登录
+        </el-button>
+      </div>
     </section>
 
     <section class="board-toolbar">
@@ -209,9 +249,15 @@ onMounted(() => loadBoard(1))
             </RouterLink>
             <p>{{ post.summary }}</p>
             <div class="post-counts">
-              <span>浏览 {{ post.viewCount }}</span>
-              <span>点赞 {{ post.likeCount }}</span>
-              <span>评论 {{ post.commentCount }}</span>
+              <span><View /> 浏览 {{ post.viewCount }}</span>
+              <span><Pointer /> 点赞 {{ post.likeCount }}</span>
+              <span><ChatLineRound /> 评论 {{ post.commentCount }}</span>
+              <RouterLink
+                class="inline-action-link"
+                :to="{ name: 'post-detail', params: { id: post.id } }"
+              >
+                进入讨论
+              </RouterLink>
             </div>
           </div>
         </article>

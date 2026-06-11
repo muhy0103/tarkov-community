@@ -1,10 +1,14 @@
 <script setup>
-import { useRouter } from 'vue-router'
-import { ArrowDown, Setting, SwitchButton } from '@element-plus/icons-vue'
+import { ref, watch } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
+import { ArrowDown, Bell, Setting, SwitchButton } from '@element-plus/icons-vue'
+import { fetchUnreadNotificationCount } from './api/userCenterApi'
 import { useUserStore } from './stores/userStore'
 
+const route = useRoute()
 const router = useRouter()
 const userStore = useUserStore()
+const unreadNotificationCount = ref(0)
 
 const adminLinks = [
   { label: '后台概览', to: '/admin/dashboard' },
@@ -33,10 +37,35 @@ function goAdmin(path) {
   router.push(path)
 }
 
+async function refreshUnreadNotificationCount() {
+  if (!userStore.isLoggedIn) {
+    unreadNotificationCount.value = 0
+    return
+  }
+
+  try {
+    unreadNotificationCount.value = await fetchUnreadNotificationCount()
+  } catch (error) {
+    unreadNotificationCount.value = 0
+  }
+}
+
 function logout() {
   userStore.clearAuth()
+  unreadNotificationCount.value = 0
   router.push('/')
 }
+
+watch(
+  () => userStore.isLoggedIn,
+  () => refreshUnreadNotificationCount(),
+  { immediate: true }
+)
+
+watch(
+  () => route.fullPath,
+  () => refreshUnreadNotificationCount()
+)
 </script>
 
 <template>
@@ -50,6 +79,22 @@ function logout() {
         <RouterLink to="/">社区概览</RouterLink>
         <RouterLink to="/posts">情报广场</RouterLink>
         <RouterLink v-if="userStore.isLoggedIn" to="/me">用户中心</RouterLink>
+        <RouterLink
+          v-if="userStore.isLoggedIn"
+          class="nav-notification-link"
+          :to="{ name: 'user-center', query: { tab: 'notifications' } }"
+        >
+          <el-badge
+            :value="unreadNotificationCount"
+            :max="99"
+            :hidden="unreadNotificationCount <= 0"
+          >
+            <span class="nav-link-inner">
+              <Bell />
+              通知
+            </span>
+          </el-badge>
+        </RouterLink>
         <el-dropdown
           v-if="userStore.isAdmin"
           trigger="click"

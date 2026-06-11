@@ -44,6 +44,46 @@ const postTypeOptions = [
   { label: '组队招募', value: 'TEAM_UP' },
 ]
 
+const postTypeGuides = {
+  ROUTE: {
+    title: '路线情报模板',
+    description: '适合写地图路线、撤离方案、危险点和高价值资源区。',
+    titlePlaceholder: '例如：森林夜图跑任务路线复盘',
+    contentPlaceholder: '建议写清楚：地图、出生点、目标路线、危险点位、撤离选择、适合携带的装备和失败经验。',
+    checklist: ['地图和出生点', '路线步骤', '危险区域', '撤离与备用方案'],
+  },
+  GUIDE: {
+    title: '任务攻略模板',
+    description: '适合整理商人任务、任务物品、点位和前置条件。',
+    titlePlaceholder: '例如：Delivery From the Past 低风险路线',
+    contentPlaceholder: '建议写清楚：任务名称、商人、前置条件、目标物品或点位、路线顺序、容易翻车的位置。',
+    checklist: ['任务名称和商人', '目标点位', '前置条件', '注意事项'],
+  },
+  QUESTION: {
+    title: '问题求助模板',
+    description: '适合请教任务卡点、配装选择、地图路线或经济问题。',
+    titlePlaceholder: '例如：12 级新手海关任务卡住了该怎么走',
+    contentPlaceholder: '建议写清楚：等级、预算、地图、任务阶段、已经尝试过的方法和希望大家帮你判断的问题。',
+    checklist: ['等级和预算', '具体卡点', '已尝试方法', '希望获得的建议'],
+  },
+  MARKET: {
+    title: '市场讨论模板',
+    description: '适合讨论物品价值、藏身处材料、跳蚤市场和版本经济。',
+    titlePlaceholder: '例如：这周显卡和燃料价格适合囤吗',
+    contentPlaceholder: '建议写清楚：物品名称、当前价格、用途、你的判断和希望别人补充的数据。',
+    checklist: ['物品和价格', '用途场景', '风险判断', '讨论问题'],
+  },
+  TEAM_UP: {
+    title: '组队招募模板',
+    description: '适合找任务队友、跑图搭子、复盘队友或固定开黑。',
+    titlePlaceholder: '例如：今晚海关任务队找两名稳定队友',
+    contentPlaceholder: '建议写清楚：时间、服务器、地图、任务目标、语音方式、队友要求和风险偏好。',
+    checklist: ['时间和服务器', '地图与目标', '语音方式', '队友要求'],
+  },
+}
+
+const currentPostGuide = computed(() => postTypeGuides[form.value.postType] || postTypeGuides.ROUTE)
+
 const canSubmit = computed(() => {
   return (
     userStore.isLoggedIn &&
@@ -89,7 +129,7 @@ async function loadCategories() {
 async function submitPost() {
   if (!userStore.isLoggedIn) {
     ElMessage.warning('请先登录后再发布情报')
-    router.push({ name: 'login' })
+    router.push({ name: 'login', query: { redirect: route.fullPath } })
     return
   }
 
@@ -188,7 +228,7 @@ onMounted(loadCategories)
               v-model="form.title"
               maxlength="160"
               show-word-limit
-              placeholder="例如：森林夜图跑任务路线复盘"
+              :placeholder="currentPostGuide.titlePlaceholder"
               :disabled="!userStore.isLoggedIn"
             />
           </el-form-item>
@@ -198,7 +238,7 @@ onMounted(loadCategories)
               v-model="form.content"
               type="textarea"
               :autosize="{ minRows: 8, maxRows: 14 }"
-              placeholder="写清楚地图、路线、关键点位、风险位置和你希望其他玩家补充的内容..."
+              :placeholder="currentPostGuide.contentPlaceholder"
               :disabled="!userStore.isLoggedIn"
             />
           </el-form-item>
@@ -219,12 +259,14 @@ onMounted(loadCategories)
       </section>
 
       <aside class="create-side">
-        <h3>{{ isEditMode ? '编辑建议' : '发帖建议' }}</h3>
+        <h3>{{ currentPostGuide.title }}</h3>
+        <p>{{ currentPostGuide.description }}</p>
         <ul>
-          <li>标题尽量说明地图、任务或装备主题，方便其他玩家快速判断。</li>
-          <li>正文优先写实战经验，例如撤离路线、危险点位、物资价值或失败复盘。</li>
-          <li>{{ isEditMode ? '修改时尽量保留讨论上下文，避免让已有评论失去参考对象。' : '问题帖可以写清楚等级、任务阶段和预算，后续更容易得到有效回复。' }}</li>
+          <li v-for="item in currentPostGuide.checklist" :key="item">{{ item }}</li>
         </ul>
+        <div class="create-side-note">
+          {{ isEditMode ? '编辑时尽量保留讨论上下文，避免让已有评论失去参考对象。' : '写得越具体，其他玩家越容易给出有效补充。' }}
+        </div>
       </aside>
     </div>
   </div>

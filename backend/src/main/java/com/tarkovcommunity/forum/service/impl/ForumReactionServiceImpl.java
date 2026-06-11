@@ -1,11 +1,16 @@
 package com.tarkovcommunity.forum.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.tarkovcommunity.forum.dto.CommentActionResponse;
 import com.tarkovcommunity.forum.dto.PostActionResponse;
+import com.tarkovcommunity.forum.entity.CommentLike;
 import com.tarkovcommunity.forum.entity.Favorite;
 import com.tarkovcommunity.forum.entity.Post;
+import com.tarkovcommunity.forum.entity.PostComment;
 import com.tarkovcommunity.forum.entity.PostLike;
+import com.tarkovcommunity.forum.mapper.CommentLikeMapper;
 import com.tarkovcommunity.forum.mapper.FavoriteMapper;
+import com.tarkovcommunity.forum.mapper.PostCommentMapper;
 import com.tarkovcommunity.forum.mapper.PostLikeMapper;
 import com.tarkovcommunity.forum.mapper.PostMapper;
 import com.tarkovcommunity.forum.service.ForumReactionService;
@@ -31,6 +36,8 @@ public class ForumReactionServiceImpl implements ForumReactionService {
 
     private final PostMapper postMapper;
     private final PostLikeMapper postLikeMapper;
+    private final CommentLikeMapper commentLikeMapper;
+    private final PostCommentMapper postCommentMapper;
     private final FavoriteMapper favoriteMapper;
     private final SysUserMapper sysUserMapper;
     private final NotificationMapper notificationMapper;
@@ -64,6 +71,41 @@ public class ForumReactionServiceImpl implements ForumReactionService {
         post.setLikeCount(count);
         postMapper.updateById(post);
         return new PostActionResponse(postId, userId, active, count);
+    }
+
+    @Override
+    @Transactional
+    public CommentActionResponse toggleCommentLike(Long postId, Long commentId, Long userId) {
+        requireNormalPost(postId);
+        requireUser(userId);
+
+        PostComment comment = postCommentMapper.selectById(commentId);
+        if (comment == null || !"NORMAL".equals(comment.getStatus()) || !Objects.equals(comment.getPostId(), postId)) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "评论不存在");
+        }
+
+        CommentLike existing = commentLikeMapper.selectOne(new LambdaQueryWrapper<CommentLike>()
+                .eq(CommentLike::getCommentId, commentId)
+                .eq(CommentLike::getUserId, userId));
+
+        boolean active;
+        int count = valueOrZero(comment.getLikeCount());
+        if (existing == null) {
+            CommentLike like = new CommentLike();
+            like.setCommentId(commentId);
+            like.setUserId(userId);
+            commentLikeMapper.insert(like);
+            active = true;
+            count += 1;
+        } else {
+            commentLikeMapper.deleteById(existing.getId());
+            active = false;
+            count = Math.max(0, count - 1);
+        }
+
+        comment.setLikeCount(count);
+        postCommentMapper.updateById(comment);
+        return new CommentActionResponse(commentId, userId, active, count);
     }
 
     private void createPostLikeNotification(Post post, Long likerId) {

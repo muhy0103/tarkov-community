@@ -1,9 +1,14 @@
 package com.tarkovcommunity.forum;
 
+import com.tarkovcommunity.forum.dto.CommentActionResponse;
 import com.tarkovcommunity.forum.dto.PostActionResponse;
+import com.tarkovcommunity.forum.entity.CommentLike;
 import com.tarkovcommunity.forum.entity.Post;
+import com.tarkovcommunity.forum.entity.PostComment;
 import com.tarkovcommunity.forum.entity.PostLike;
+import com.tarkovcommunity.forum.mapper.CommentLikeMapper;
 import com.tarkovcommunity.forum.mapper.FavoriteMapper;
+import com.tarkovcommunity.forum.mapper.PostCommentMapper;
 import com.tarkovcommunity.forum.mapper.PostLikeMapper;
 import com.tarkovcommunity.forum.mapper.PostMapper;
 import com.tarkovcommunity.forum.service.impl.ForumReactionServiceImpl;
@@ -31,6 +36,12 @@ class ForumReactionServiceImplTests {
 
     @Mock
     private PostLikeMapper postLikeMapper;
+
+    @Mock
+    private CommentLikeMapper commentLikeMapper;
+
+    @Mock
+    private PostCommentMapper postCommentMapper;
 
     @Mock
     private FavoriteMapper favoriteMapper;
@@ -90,8 +101,53 @@ class ForumReactionServiceImplTests {
         verify(notificationMapper, never()).insert(any(Notification.class));
     }
 
+    @Test
+    void togglesCommentLikeOn() {
+        ForumReactionServiceImpl service = service();
+        given(postMapper.selectById(9L)).willReturn(normalPost());
+        given(sysUserMapper.selectById(7L)).willReturn(normalUser(7L));
+        given(postCommentMapper.selectById(21L)).willReturn(normalComment());
+        given(commentLikeMapper.selectOne(any())).willReturn(null);
+
+        CommentActionResponse response = service.toggleCommentLike(9L, 21L, 7L);
+
+        assertThat(response.commentId()).isEqualTo(21L);
+        assertThat(response.active()).isTrue();
+        assertThat(response.count()).isEqualTo(5);
+        verify(commentLikeMapper).insert(any(CommentLike.class));
+        ArgumentCaptor<PostComment> commentCaptor = ArgumentCaptor.forClass(PostComment.class);
+        verify(postCommentMapper).updateById(commentCaptor.capture());
+        assertThat(commentCaptor.getValue().getLikeCount()).isEqualTo(5);
+    }
+
+    @Test
+    void togglesCommentLikeOff() {
+        ForumReactionServiceImpl service = service();
+        given(postMapper.selectById(9L)).willReturn(normalPost());
+        given(sysUserMapper.selectById(7L)).willReturn(normalUser(7L));
+        given(postCommentMapper.selectById(21L)).willReturn(normalComment());
+        given(commentLikeMapper.selectOne(any())).willReturn(existingCommentLike());
+
+        CommentActionResponse response = service.toggleCommentLike(9L, 21L, 7L);
+
+        assertThat(response.active()).isFalse();
+        assertThat(response.count()).isEqualTo(3);
+        verify(commentLikeMapper).deleteById(31L);
+        ArgumentCaptor<PostComment> commentCaptor = ArgumentCaptor.forClass(PostComment.class);
+        verify(postCommentMapper).updateById(commentCaptor.capture());
+        assertThat(commentCaptor.getValue().getLikeCount()).isEqualTo(3);
+    }
+
     private ForumReactionServiceImpl service() {
-        return new ForumReactionServiceImpl(postMapper, postLikeMapper, favoriteMapper, sysUserMapper, notificationMapper);
+        return new ForumReactionServiceImpl(
+                postMapper,
+                postLikeMapper,
+                commentLikeMapper,
+                postCommentMapper,
+                favoriteMapper,
+                sysUserMapper,
+                notificationMapper
+        );
     }
 
     private Post normalPost() {
@@ -109,6 +165,25 @@ class ForumReactionServiceImplTests {
         PostLike like = new PostLike();
         like.setId(21L);
         like.setPostId(9L);
+        like.setUserId(7L);
+        return like;
+    }
+
+    private PostComment normalComment() {
+        PostComment comment = new PostComment();
+        comment.setId(21L);
+        comment.setPostId(9L);
+        comment.setUserId(8L);
+        comment.setContent("Good route");
+        comment.setStatus("NORMAL");
+        comment.setLikeCount(4);
+        return comment;
+    }
+
+    private CommentLike existingCommentLike() {
+        CommentLike like = new CommentLike();
+        like.setId(31L);
+        like.setCommentId(21L);
         like.setUserId(7L);
         return like;
     }

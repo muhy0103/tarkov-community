@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.tarkovcommunity.auth.service.AuthTokenService;
 import com.tarkovcommunity.forum.controller.ForumReactionController;
 import com.tarkovcommunity.forum.dto.PostActionRequest;
+import com.tarkovcommunity.forum.dto.CommentActionResponse;
 import com.tarkovcommunity.forum.dto.PostActionResponse;
 import com.tarkovcommunity.forum.service.ForumReactionService;
 import com.tarkovcommunity.user.entity.SysUser;
@@ -72,6 +73,21 @@ class ForumReactionControllerTests {
                 .andExpect(jsonPath("$.code").value(200))
                 .andExpect(jsonPath("$.data.active").value(false))
                 .andExpect(jsonPath("$.data.count").value(1));
+    }
+
+    @Test
+    void togglesCommentLike() throws Exception {
+        given(authTokenService.resolveUser(eq("Bearer user-token"))).willReturn(Optional.of(normalUser()));
+        given(forumReactionService.toggleCommentLike(9L, 21L, 7L))
+                .willReturn(new CommentActionResponse(21L, 7L, true, 4));
+
+        mockMvc.perform(post("/api/posts/9/comments/21/likes/toggle")
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer user-token"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.code").value(200))
+                .andExpect(jsonPath("$.data.commentId").value(21L))
+                .andExpect(jsonPath("$.data.active").value(true))
+                .andExpect(jsonPath("$.data.count").value(4));
     }
 
     @Test

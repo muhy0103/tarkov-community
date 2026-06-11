@@ -2,6 +2,7 @@ package com.tarkovcommunity.forum.controller;
 
 import com.tarkovcommunity.auth.service.AuthTokenService;
 import com.tarkovcommunity.common.ApiResponse;
+import com.tarkovcommunity.forum.dto.CommentActionResponse;
 import com.tarkovcommunity.forum.dto.PostActionResponse;
 import com.tarkovcommunity.forum.service.ForumReactionService;
 import com.tarkovcommunity.user.entity.SysUser;
@@ -39,6 +40,16 @@ public class ForumReactionController {
     ) {
         SysUser user = requireUser(authorization);
         return ApiResponse.success(forumReactionService.toggleFavorite(postId, user.getId()));
+    }
+
+    @PostMapping("/comments/{commentId}/likes/toggle")
+    public ApiResponse<CommentActionResponse> toggleCommentLike(
+            @PathVariable Long postId,
+            @PathVariable Long commentId,
+            @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authorization
+    ) {
+        SysUser user = requireUser(authorization);
+        return ApiResponse.success(forumReactionService.toggleCommentLike(postId, commentId, user.getId()));
     }
 
     private SysUser requireUser(String authorization) {

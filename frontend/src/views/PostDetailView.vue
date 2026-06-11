@@ -19,6 +19,7 @@ import {
   createPostComment,
   fetchPostComments,
   fetchPostDetail,
+  toggleCommentLike,
   togglePostFavorite,
   togglePostLike,
   withdrawPost,
@@ -52,6 +53,7 @@ const commentInputRef = ref(null)
 const reportTarget = ref(null)
 const reportForm = ref(emptyReportForm())
 const replyTarget = ref(null)
+const likedCommentIds = ref(new Set())
 
 const postId = computed(() => Number(route.params.id))
 const comments = computed(() => commentsPage.value.records ?? [])
@@ -279,6 +281,35 @@ async function handleFavorite() {
   }
 }
 
+async function handleCommentLike(comment) {
+  if (!requireLogin() || !comment?.id) {
+    return
+  }
+
+  actionLoading.value = `comment-like-${comment.id}`
+
+  try {
+    const result = await toggleCommentLike(postId.value, comment.id)
+    commentsPage.value = {
+      ...commentsPage.value,
+      records: comments.value.map((item) => (
+        item.id === comment.id ? { ...item, likeCount: result.count } : item
+      )),
+    }
+    const nextLiked = new Set(likedCommentIds.value)
+    if (result.active) {
+      nextLiked.add(comment.id)
+    } else {
+      nextLiked.delete(comment.id)
+    }
+    likedCommentIds.value = nextLiked
+  } catch (error) {
+    ElMessage.error(resolveError(error, '评论点赞失败'))
+  } finally {
+    actionLoading.value = ''
+  }
+}
+
 async function handleWithdrawPost() {
   if (!canEditPost.value || !post.value) {
     return
@@ -491,6 +522,17 @@ onMounted(loadDetail)
                   @click="startReply(comment)"
                 >
                   回复
+                </el-button>
+                <el-button
+                  text
+                  size="small"
+                  :type="likedCommentIds.has(comment.id) ? 'primary' : 'default'"
+                  :icon="Pointer"
+                  :loading="actionLoading === `comment-like-${comment.id}`"
+                  class="comment-reply-button"
+                  @click="handleCommentLike(comment)"
+                >
+                  点赞 {{ comment.likeCount || 0 }}
                 </el-button>
                 <el-button
                   text

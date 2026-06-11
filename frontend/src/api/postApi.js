@@ -54,6 +54,10 @@ export function togglePostFavorite(id) {
   return request.post(`/posts/${id}/favorites/toggle`).then(unwrapData)
 }
 
+export function toggleCommentLike(postId, commentId) {
+  return request.post(`/posts/${postId}/comments/${commentId}/likes/toggle`).then(unwrapData)
+}
+
 export function createReport(payload) {
   return request.post('/reports', payload).then(unwrapData)
 }

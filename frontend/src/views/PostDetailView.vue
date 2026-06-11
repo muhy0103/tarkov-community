@@ -90,6 +90,17 @@ const reportReasonOptions = [
   '其他问题',
 ]
 
+const postTypeOptions = {
+  ROUTE: '路线情报',
+  ROUTE_GUIDE: '路线情报',
+  GUIDE: '任务攻略',
+  QUEST_GUIDE: '任务攻略',
+  LOADOUT: '装备配装',
+  QUESTION: '问题求助',
+  MARKET: '市场讨论',
+  TEAM_UP: '组队招募',
+}
+
 const reportRules = {
   reason: [
     { required: true, message: '请选择举报原因', trigger: 'change' },
@@ -123,6 +134,10 @@ function formatDate(value) {
 
 function resolveError(error, fallback) {
   return error?.response?.data?.message || error?.message || fallback
+}
+
+function postTypeLabel(type) {
+  return postTypeOptions[type] || type || '普通讨论'
 }
 
 function requireLogin() {
@@ -530,7 +545,7 @@ onMounted(loadDetail)
       <article class="detail-card">
         <div class="detail-topline">
           <el-tag effect="plain">{{ post.categoryName }}</el-tag>
-          <span>{{ post.postType }}</span>
+          <span>{{ postTypeLabel(post.postType) }}</span>
           <span v-if="post.recommended">推荐情报</span>
         </div>
 

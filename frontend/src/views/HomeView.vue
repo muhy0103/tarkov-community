@@ -66,6 +66,17 @@ const categoryIconMap = {
   'team-up': User,
 }
 
+const postTypeOptions = {
+  ROUTE: '路线情报',
+  ROUTE_GUIDE: '路线情报',
+  GUIDE: '任务攻略',
+  QUEST_GUIDE: '任务攻略',
+  LOADOUT: '装备配装',
+  QUESTION: '问题求助',
+  MARKET: '市场讨论',
+  TEAM_UP: '组队招募',
+}
+
 const stats = computed(() => [
   {
     label: '社区板块',
@@ -149,6 +160,10 @@ function formatDate(value) {
   }
 
   return String(value).replace('T', ' ').slice(0, 16)
+}
+
+function postTypeLabel(type) {
+  return postTypeOptions[type] || type || '普通讨论'
 }
 
 async function loadCatalog() {
@@ -266,7 +281,7 @@ onMounted(loadCatalog)
               <div class="post-meta">
                 <el-tag size="small" effect="plain">{{ post.categoryName }}</el-tag>
                 <span>{{ post.authorNickname }}</span>
-                <span>{{ post.postType }}</span>
+                <span>{{ postTypeLabel(post.postType) }}</span>
               </div>
               <RouterLink
                 class="post-title-link"

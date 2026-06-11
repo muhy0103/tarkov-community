@@ -139,6 +139,7 @@ const notificationTypeOptions = {
   POST_COMMENT: '帖子评论',
   COMMENT_REPLY: '评论回复',
   POST_LIKE: '帖子点赞',
+  COMMENT_LIKE: '评论点赞',
   SYSTEM: '系统通知',
   ANNOUNCEMENT: '公告提醒',
 }
@@ -148,7 +149,7 @@ const notificationReadFilterOptions = [
   { label: '未读', value: 'UNREAD' },
 ]
 
-const postInteractionNotificationTypes = new Set(['POST_COMMENT', 'COMMENT_REPLY', 'POST_LIKE'])
+const postInteractionNotificationTypes = new Set(['POST_COMMENT', 'COMMENT_REPLY', 'POST_LIKE', 'COMMENT_LIKE'])
 
 function pageState(size = 6) {
   return {

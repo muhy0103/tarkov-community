@@ -33,6 +33,7 @@ public class ForumReactionServiceImpl implements ForumReactionService {
     private static final int UNREAD = 0;
     private static final int NOTIFICATION_CONTENT_MAX_LENGTH = 500;
     private static final String POST_LIKE_NOTIFICATION_TYPE = "POST_LIKE";
+    private static final String COMMENT_LIKE_NOTIFICATION_TYPE = "COMMENT_LIKE";
 
     private final PostMapper postMapper;
     private final PostLikeMapper postLikeMapper;
@@ -76,7 +77,7 @@ public class ForumReactionServiceImpl implements ForumReactionService {
     @Override
     @Transactional
     public CommentActionResponse toggleCommentLike(Long postId, Long commentId, Long userId) {
-        requireNormalPost(postId);
+        Post post = requireNormalPost(postId);
         requireUser(userId);
 
         PostComment comment = postCommentMapper.selectById(commentId);
@@ -97,6 +98,7 @@ public class ForumReactionServiceImpl implements ForumReactionService {
             commentLikeMapper.insert(like);
             active = true;
             count += 1;
+            createCommentLikeNotification(post, comment, userId);
         } else {
             commentLikeMapper.deleteById(existing.getId());
             active = false;
@@ -118,6 +120,24 @@ public class ForumReactionServiceImpl implements ForumReactionService {
         notification.setType(POST_LIKE_NOTIFICATION_TYPE);
         notification.setTitle("帖子收到点赞");
         notification.setContent(limit("你的帖子《" + post.getTitle() + "》收到了新的点赞。", NOTIFICATION_CONTENT_MAX_LENGTH));
+        notification.setRelatedId(post.getId());
+        notification.setReadStatus(UNREAD);
+        notification.setCreatedAt(LocalDateTime.now());
+        notificationMapper.insert(notification);
+    }
+
+    private void createCommentLikeNotification(Post post, PostComment comment, Long likerId) {
+        if (comment.getUserId() == null || Objects.equals(comment.getUserId(), likerId)) {
+            return;
+        }
+
+        Notification notification = new Notification();
+        notification.setUserId(comment.getUserId());
+        notification.setType(COMMENT_LIKE_NOTIFICATION_TYPE);
+        notification.setTitle("\u8bc4\u8bba\u6536\u5230\u70b9\u8d5e");
+        notification.setContent(limit("\u4f60\u5728\u5e16\u5b50\u300a" + post.getTitle()
+                + "\u300b\u4e0b\u7684\u8bc4\u8bba\u6536\u5230\u4e86\u65b0\u7684\u70b9\u8d5e\u3002",
+                NOTIFICATION_CONTENT_MAX_LENGTH));
         notification.setRelatedId(post.getId());
         notification.setReadStatus(UNREAD);
         notification.setCreatedAt(LocalDateTime.now());

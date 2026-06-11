@@ -121,6 +121,51 @@ class ForumReactionServiceImplTests {
     }
 
     @Test
+    void notifiesCommentAuthorWhenLikedByOtherUser() {
+        ForumReactionServiceImpl service = service();
+        given(postMapper.selectById(9L)).willReturn(normalPost());
+        given(sysUserMapper.selectById(7L)).willReturn(normalUser(7L));
+        given(postCommentMapper.selectById(21L)).willReturn(normalComment());
+        given(commentLikeMapper.selectOne(any())).willReturn(null);
+
+        service.toggleCommentLike(9L, 21L, 7L);
+
+        ArgumentCaptor<Notification> notificationCaptor = ArgumentCaptor.forClass(Notification.class);
+        verify(notificationMapper).insert(notificationCaptor.capture());
+        Notification notification = notificationCaptor.getValue();
+        assertThat(notification.getUserId()).isEqualTo(8L);
+        assertThat(notification.getType()).isEqualTo("COMMENT_LIKE");
+        assertThat(notification.getRelatedId()).isEqualTo(9L);
+        assertThat(notification.getReadStatus()).isEqualTo(0);
+    }
+
+    @Test
+    void skipsNotificationWhenLikingOwnComment() {
+        ForumReactionServiceImpl service = service();
+        given(postMapper.selectById(9L)).willReturn(normalPost());
+        given(sysUserMapper.selectById(7L)).willReturn(normalUser(7L));
+        given(postCommentMapper.selectById(21L)).willReturn(normalCommentBy(7L));
+        given(commentLikeMapper.selectOne(any())).willReturn(null);
+
+        service.toggleCommentLike(9L, 21L, 7L);
+
+        verify(notificationMapper, never()).insert(any(Notification.class));
+    }
+
+    @Test
+    void skipsNotificationWhenCommentLikeIsRemoved() {
+        ForumReactionServiceImpl service = service();
+        given(postMapper.selectById(9L)).willReturn(normalPost());
+        given(sysUserMapper.selectById(7L)).willReturn(normalUser(7L));
+        given(postCommentMapper.selectById(21L)).willReturn(normalComment());
+        given(commentLikeMapper.selectOne(any())).willReturn(existingCommentLike());
+
+        service.toggleCommentLike(9L, 21L, 7L);
+
+        verify(notificationMapper, never()).insert(any(Notification.class));
+    }
+
+    @Test
     void togglesCommentLikeOff() {
         ForumReactionServiceImpl service = service();
         given(postMapper.selectById(9L)).willReturn(normalPost());
@@ -170,10 +215,14 @@ class ForumReactionServiceImplTests {
     }
 
     private PostComment normalComment() {
+        return normalCommentBy(8L);
+    }
+
+    private PostComment normalCommentBy(Long userId) {
         PostComment comment = new PostComment();
         comment.setId(21L);
         comment.setPostId(9L);
-        comment.setUserId(8L);
+        comment.setUserId(userId);
         comment.setContent("Good route");
         comment.setStatus("NORMAL");
         comment.setLikeCount(4);

@@ -63,6 +63,16 @@ $env:DB_PASSWORD="你的 MySQL 密码"
 
 如果暂时没有配置密码，项目仍可启动，但真正访问数据库接口时需要正确的 MySQL 账号。
 
+## 认证 Token 环境变量
+
+登录成功后后端会签发 HMAC-SHA256 签名 token，前端仍通过 `Authorization: Bearer <token>` 携带身份信息。生产或正式演示时建议通过环境变量设置独立密钥。
+
+```powershell
+$env:AUTH_TOKEN_SECRET="一段足够长的随机密钥"
+$env:AUTH_TOKEN_ISSUER="tarkov-community"
+$env:AUTH_TOKEN_MINUTES="720"
+```
+
 ## 邮箱验证环境变量
 
 注册接口会创建待验证账号，并向用户邮箱发送确认链接。邮件授权码只建议通过环境变量传入，不要写入配置文件或提交到仓库。
@@ -76,9 +86,4 @@ $env:MAIL_FROM="nzdyhbzx@sina.com"
 $env:APP_FRONTEND_URL="http://127.0.0.1:5173"
 ```
 
-开发阶段如暂时不发送真实邮件，可以关闭发送并使用接口返回的本地验证链接：
-
-```powershell
-$env:MAIL_ENABLED="false"
-$env:MAIL_DEV_LINK_ENABLED="true"
-```
+如果邮件服务未配置或发送失败，注册请求会返回服务不可用提示，账号不会通过本地调试链接绕过邮箱确认。

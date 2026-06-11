@@ -15,6 +15,7 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
+import org.springframework.mail.MailSendException;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.test.util.ReflectionTestUtils;
@@ -30,6 +31,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.BDDMockito.willThrow;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 
@@ -53,7 +55,6 @@ class EmailVerificationServiceTests {
         properties.setFrontendUrl("http://127.0.0.1:5173/");
         properties.setFrom("nzdyhbzx@sina.com");
         properties.setEnabled(true);
-        properties.setDevLinkEnabled(true);
         properties.setTokenMinutes(20);
     }
 
@@ -80,18 +81,31 @@ class EmailVerificationServiceTests {
         assertThat(mail.getSubject()).contains("确认你的邮箱");
         assertThat(mail.getText()).contains("森林侦察员", "/verify-email?token=");
         assertThat(result.mailSent()).isTrue();
-        assertThat(result.devVerificationUrl()).startsWith("http://127.0.0.1:5173/verify-email?token=");
     }
 
     @Test
-    void returnsDevLinkWithoutSendingWhenPasswordMissing() {
+    void rejectsRegistrationWhenMailPasswordMissing() {
         EmailVerificationService service = service("");
 
-        EmailVerificationResult result = service.createAndSendVerification(pendingUser());
+        assertThatThrownBy(() -> service.createAndSendVerification(pendingUser()))
+                .isInstanceOf(ResponseStatusException.class)
+                .satisfies(error -> assertThat(((ResponseStatusException) error).getStatusCode())
+                        .isEqualTo(HttpStatus.SERVICE_UNAVAILABLE));
 
         verify(mailSender, never()).send(any(SimpleMailMessage.class));
-        assertThat(result.mailSent()).isFalse();
-        assertThat(result.devVerificationUrl()).contains("/verify-email?token=");
+    }
+
+    @Test
+    void rejectsRegistrationWhenMailSendFails() {
+        EmailVerificationService service = service("mail-password");
+        willThrow(new MailSendException("smtp unavailable"))
+                .given(mailSender)
+                .send(any(SimpleMailMessage.class));
+
+        assertThatThrownBy(() -> service.createAndSendVerification(pendingUser()))
+                .isInstanceOf(ResponseStatusException.class)
+                .satisfies(error -> assertThat(((ResponseStatusException) error).getStatusCode())
+                        .isEqualTo(HttpStatus.SERVICE_UNAVAILABLE));
     }
 
     @Test

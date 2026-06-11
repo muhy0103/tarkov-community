@@ -68,8 +68,7 @@ class AuthControllerTests {
                 "woods@example.com",
                 "PENDING",
                 "注册成功，请前往邮箱点击确认链接",
-                true,
-                null
+                true
         );
 
         given(authService.register(any(RegisterRequest.class))).willReturn(response);
@@ -81,7 +80,8 @@ class AuthControllerTests {
                 .andExpect(jsonPath("$.code").value(200))
                 .andExpect(jsonPath("$.data.username").value("woods_scout"))
                 .andExpect(jsonPath("$.data.status").value("PENDING"))
-                .andExpect(jsonPath("$.data.mailSent").value(true));
+                .andExpect(jsonPath("$.data.mailSent").value(true))
+                .andExpect(jsonPath("$.data.devVerificationUrl").doesNotExist());
     }
 
     @Test

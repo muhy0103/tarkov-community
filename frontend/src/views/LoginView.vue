@@ -1,7 +1,6 @@
 <script setup>
 import { reactive, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { Message } from '@element-plus/icons-vue'
 import { login, register } from '../api/authApi'
 import { useUserStore } from '../stores/userStore'
 
@@ -54,15 +53,6 @@ async function submitRegister() {
   } finally {
     loading.value = false
   }
-}
-
-function openDevVerification() {
-  if (!registerResult.value?.devVerificationUrl) {
-    return
-  }
-
-  const url = new URL(registerResult.value.devVerificationUrl, window.location.origin)
-  router.push(`${url.pathname}${url.search}`)
 }
 
 function resolveRedirect() {
@@ -134,17 +124,8 @@ function resolveError(error, fallback) {
       >
         <div class="auth-success-body">
           <p>
-            账号 {{ registerResult.username }} 已创建，当前状态为待邮箱验证。完成确认后再回到登录页即可进入社区。
+            账号 {{ registerResult.username }} 已创建，当前状态为待邮箱验证。请打开邮箱中的确认链接，完成后再回到登录页进入社区。
           </p>
-          <el-button
-            v-if="registerResult.devVerificationUrl"
-            type="primary"
-            plain
-            :icon="Message"
-            @click="openDevVerification"
-          >
-            打开本地验证链接
-          </el-button>
         </div>
       </el-alert>
 

@@ -6,7 +6,6 @@ public record RegisterResponse(
         String email,
         String status,
         String message,
-        Boolean mailSent,
-        String devVerificationUrl
+        Boolean mailSent
 ) {
 }

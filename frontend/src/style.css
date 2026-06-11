@@ -190,10 +190,6 @@ a {
   line-height: 1.7;
 }
 
-.auth-success-body .el-button {
-  width: fit-content;
-}
-
 .email-verify-view {
   display: grid;
   min-height: 420px;

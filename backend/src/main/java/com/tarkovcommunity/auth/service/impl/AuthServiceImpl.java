@@ -73,11 +73,8 @@ public class AuthServiceImpl implements AuthService {
                 user.getUsername(),
                 user.getEmail(),
                 user.getStatus(),
+                "\u6ce8\u518c\u6210\u529f\uff0c\u8bf7\u524d\u5f80\u90ae\u7bb1\u70b9\u51fb\u786e\u8ba4\u94fe\u63a5",
                 verification.mailSent()
-                        ? "\u6ce8\u518c\u6210\u529f\uff0c\u8bf7\u524d\u5f80\u90ae\u7bb1\u70b9\u51fb\u786e\u8ba4\u94fe\u63a5"
-                        : "\u6ce8\u518c\u6210\u529f\uff0c\u5f53\u524d\u90ae\u4ef6\u670d\u52a1\u672a\u53d1\u9001\uff0c\u53ef\u4f7f\u7528\u5f00\u53d1\u9a8c\u8bc1\u94fe\u63a5",
-                verification.mailSent(),
-                verification.devVerificationUrl()
         );
     }
 

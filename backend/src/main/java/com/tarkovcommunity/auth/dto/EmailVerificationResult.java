@@ -1,7 +1,6 @@
 package com.tarkovcommunity.auth.dto;
 
 public record EmailVerificationResult(
-        Boolean mailSent,
-        String devVerificationUrl
+        Boolean mailSent
 ) {
 }

@@ -11,6 +11,7 @@ import com.tarkovcommunity.user.mapper.SysUserMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
+import org.springframework.mail.MailException;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.stereotype.Service;
@@ -55,16 +56,17 @@ public class EmailVerificationService {
         record.setExpiresAt(LocalDateTime.now().plusMinutes(Math.max(5, properties.getTokenMinutes())));
         tokenMapper.insert(record);
 
-        boolean mailSent = false;
-        if (properties.isEnabled() && StringUtils.hasText(mailPassword)) {
-            sendVerificationMail(user, verificationUrl);
-            mailSent = true;
+        if (!properties.isEnabled() || !StringUtils.hasText(mailPassword)) {
+            throw new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE, "邮箱验证服务未配置，请联系管理员");
         }
 
-        return new EmailVerificationResult(
-                mailSent,
-                properties.isDevLinkEnabled() ? verificationUrl : null
-        );
+        try {
+            sendVerificationMail(user, verificationUrl);
+        } catch (MailException exception) {
+            throw new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE, "验证邮件暂时无法发送，请稍后再试", exception);
+        }
+
+        return new EmailVerificationResult(true);
     }
 
     @Transactional

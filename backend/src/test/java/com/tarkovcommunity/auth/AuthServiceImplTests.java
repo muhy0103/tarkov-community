@@ -55,7 +55,7 @@ class AuthServiceImplTests {
             return 1;
         }).given(userMapper).insert(any(SysUser.class));
         given(emailVerificationService.createAndSendVerification(any(SysUser.class)))
-                .willReturn(new EmailVerificationResult(false, "http://127.0.0.1:5173/verify-email?token=dev"));
+                .willReturn(new EmailVerificationResult(true));
 
         RegisterResponse response = service.register(request);
 
@@ -70,8 +70,7 @@ class AuthServiceImplTests {
         verify(emailVerificationService).createAndSendVerification(savedUser);
         assertThat(response.userId()).isEqualTo(9L);
         assertThat(response.status()).isEqualTo("PENDING");
-        assertThat(response.mailSent()).isFalse();
-        assertThat(response.devVerificationUrl()).contains("/verify-email?token=dev");
+        assertThat(response.mailSent()).isTrue();
     }
 
     @Test

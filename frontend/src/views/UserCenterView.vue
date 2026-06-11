@@ -1,12 +1,13 @@
 <script setup>
 import { computed, onMounted, ref } from 'vue'
-import { ElMessage } from 'element-plus'
+import { ElMessage, ElMessageBox } from 'element-plus'
 import { useRouter } from 'vue-router'
 import {
   Bell,
   ChatLineRound,
   CircleCheck,
   Collection,
+  Delete,
   EditPen,
   Lock,
   MessageBox,
@@ -27,6 +28,7 @@ import {
   updateMyPassword,
   updateMyProfile,
 } from '../api/userCenterApi'
+import { withdrawComment } from '../api/postApi'
 import { useUserStore } from '../stores/userStore'
 
 const router = useRouter()
@@ -231,6 +233,10 @@ function statusType(status) {
   return 'info'
 }
 
+function canWithdrawComment(comment) {
+  return comment?.status === 'NORMAL' && Boolean(comment.postId) && Boolean(comment.id)
+}
+
 function formatDate(value) {
   if (!value) {
     return '暂无记录'
@@ -294,6 +300,42 @@ async function loadComments(page = commentsPage.value.page) {
     commentsPage.value = await fetchMyComments({ page, size: commentsPage.value.size })
   } catch (error) {
     errorMessage.value = resolveError(error, '我的评论暂时无法加载')
+  } finally {
+    sectionLoading.value = ''
+  }
+}
+
+async function handleWithdrawComment(comment) {
+  if (!canWithdrawComment(comment)) {
+    return
+  }
+
+  const confirmed = await ElMessageBox.confirm(
+    '撤回后其他玩家将无法继续看到这条评论，后台仍会保留审核记录。确定要撤回吗？',
+    '撤回评论',
+    {
+      confirmButtonText: '确认撤回',
+      cancelButtonText: '取消',
+      type: 'warning',
+    }
+  ).then(() => true).catch(() => false)
+
+  if (!confirmed) {
+    return
+  }
+
+  sectionLoading.value = 'comments'
+
+  try {
+    await withdrawComment(comment.postId, comment.id)
+    summary.value.commentCount = Math.max(0, (summary.value.commentCount || 0) - 1)
+    const nextPage = commentsPage.value.records.length <= 1 && commentsPage.value.page > 1
+      ? commentsPage.value.page - 1
+      : commentsPage.value.page
+    ElMessage.success('评论已撤回')
+    await loadComments(nextPage)
+  } catch (error) {
+    ElMessage.error(resolveError(error, '评论撤回失败'))
   } finally {
     sectionLoading.value = ''
   }
@@ -609,6 +651,16 @@ onMounted(loadAll)
                       </el-tag>
                       <span>点赞 {{ comment.likeCount }}</span>
                       <span>{{ formatDate(comment.createdAt) }}</span>
+                      <el-button
+                        v-if="canWithdrawComment(comment)"
+                        text
+                        size="small"
+                        type="warning"
+                        :icon="Delete"
+                        @click="handleWithdrawComment(comment)"
+                      >
+                        撤回
+                      </el-button>
                     </div>
                     <RouterLink
                       class="post-title-link"

@@ -959,15 +959,23 @@
 - `feat: add frontend report entrypoints`
 - `feat: add public announcement API`
 - `feat: show announcements on home`
+- `feat: notify comment authors about likes`
+- `feat: let authors withdraw comments`
+- `feat: withdraw comments from user center`
+- `feat: let authors edit comments`
+- `feat: edit comments from user center`
+- `feat: polish post board filters`
+- `feat: remove favorites from user center`
+- `feat: collapse admin navigation`
 
 ## 下一阶段建议
 
 优先级从高到低：
 
-1. 资料维护模块：地图、商人、任务、装备、弹药、Boss、藏身处的后台维护页面
-2. 资料维护模块：地图、商人、任务、装备、弹药、Boss、藏身处的后台维护页面
-3. 搜索筛选增强：帖子关键词、分区、类型、推荐、热度和时间排序
-4. 课程报告材料：系统架构图、数据库 ER 图、接口说明、功能截图
+1. 演示数据补充：为地图、商人、任务、装备、弹药、Boss、藏身处和社区帖子补足更像真实项目的样例数据。
+2. 课程报告材料：整理系统架构图、数据库 ER 图、接口说明、功能截图和核心流程说明。
+3. 展示体验打磨：继续检查移动端布局、后台页面文案、空状态和关键操作反馈。
+4. 可选增强：将课程演示级 token 逐步升级为更完整的 JWT 或 Spring Security 鉴权链路。
 
 ## 当前注意点
 

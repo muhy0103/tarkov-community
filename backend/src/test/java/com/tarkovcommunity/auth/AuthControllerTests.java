@@ -4,8 +4,10 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.tarkovcommunity.auth.controller.AuthController;
 import com.tarkovcommunity.auth.dto.AuthResponse;
 import com.tarkovcommunity.auth.dto.AuthUserResponse;
+import com.tarkovcommunity.auth.dto.EmailVerificationResponse;
 import com.tarkovcommunity.auth.dto.LoginRequest;
 import com.tarkovcommunity.auth.dto.RegisterRequest;
+import com.tarkovcommunity.auth.dto.RegisterResponse;
 import com.tarkovcommunity.auth.service.AuthService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,6 +18,7 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -59,9 +62,14 @@ class AuthControllerTests {
                 "森林侦察员",
                 "woods@example.com"
         );
-        AuthResponse response = new AuthResponse(
-                "register-token",
-                new AuthUserResponse(9L, "woods_scout", "森林侦察员", "USER", 0)
+        RegisterResponse response = new RegisterResponse(
+                9L,
+                "woods_scout",
+                "woods@example.com",
+                "PENDING",
+                "注册成功，请前往邮箱点击确认链接",
+                true,
+                null
         );
 
         given(authService.register(any(RegisterRequest.class))).willReturn(response);
@@ -71,7 +79,29 @@ class AuthControllerTests {
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.code").value(200))
-                .andExpect(jsonPath("$.data.user.nickname").value("森林侦察员"));
+                .andExpect(jsonPath("$.data.username").value("woods_scout"))
+                .andExpect(jsonPath("$.data.status").value("PENDING"))
+                .andExpect(jsonPath("$.data.mailSent").value(true));
+    }
+
+    @Test
+    void verifiesEmailToken() throws Exception {
+        EmailVerificationResponse response = new EmailVerificationResponse(
+                9L,
+                "woods_scout",
+                "woods@example.com",
+                "NORMAL",
+                "邮箱验证成功，现在可以登录"
+        );
+
+        given(authService.verifyEmail("demo-token")).willReturn(response);
+
+        mockMvc.perform(get("/api/auth/verify-email")
+                        .param("token", "demo-token"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.code").value(200))
+                .andExpect(jsonPath("$.data.username").value("woods_scout"))
+                .andExpect(jsonPath("$.data.status").value("NORMAL"));
     }
 
     @Test
@@ -84,5 +114,22 @@ class AuthControllerTests {
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.code").value(400))
                 .andExpect(jsonPath("$.message").exists());
+    }
+
+    @Test
+    void rejectsRegisterRequestWithoutEmail() throws Exception {
+        mockMvc.perform(post("/api/auth/register")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "username": "woods_scout",
+                                  "password": "123456",
+                                  "nickname": "森林侦察员",
+                                  "email": ""
+                                }
+                                """))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value(400))
+                .andExpect(jsonPath("$.message").value("邮箱不能为空"));
     }
 }

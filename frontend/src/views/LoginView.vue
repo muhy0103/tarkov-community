@@ -1,6 +1,7 @@
 <script setup>
 import { reactive, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import { Message } from '@element-plus/icons-vue'
 import { login, register } from '../api/authApi'
 import { useUserStore } from '../stores/userStore'
 
@@ -10,6 +11,7 @@ const userStore = useUserStore()
 const activeTab = ref('login')
 const loading = ref(false)
 const errorMessage = ref('')
+const registerResult = ref(null)
 
 const loginForm = reactive({
   username: '',
@@ -24,29 +26,43 @@ const registerForm = reactive({
 })
 
 async function submitLogin() {
-  await submitAuth(() => login(loginForm))
-}
-
-async function submitRegister() {
-  await submitAuth(() => register(registerForm))
-}
-
-async function submitAuth(action) {
   loading.value = true
   errorMessage.value = ''
+  registerResult.value = null
 
   try {
-    const auth = await action()
+    const auth = await login(loginForm)
     userStore.setAuth(auth.token, auth.user)
     router.push(resolveRedirect())
   } catch (error) {
-    errorMessage.value =
-      error?.response?.data?.message ||
-      error?.message ||
-      '请求失败，请稍后重试。'
+    errorMessage.value = resolveError(error, '登录失败，请检查用户名、密码或邮箱验证状态。')
   } finally {
     loading.value = false
   }
+}
+
+async function submitRegister() {
+  loading.value = true
+  errorMessage.value = ''
+  registerResult.value = null
+
+  try {
+    registerResult.value = await register(registerForm)
+    registerForm.password = ''
+  } catch (error) {
+    errorMessage.value = resolveError(error, '注册失败，请稍后重试。')
+  } finally {
+    loading.value = false
+  }
+}
+
+function openDevVerification() {
+  if (!registerResult.value?.devVerificationUrl) {
+    return
+  }
+
+  const url = new URL(registerResult.value.devVerificationUrl, window.location.origin)
+  router.push(`${url.pathname}${url.search}`)
 }
 
 function resolveRedirect() {
@@ -58,13 +74,17 @@ function resolveRedirect() {
 
   return '/'
 }
+
+function resolveError(error, fallback) {
+  return error?.response?.data?.message || error?.message || fallback
+}
 </script>
 
 <template>
   <section class="auth-layout">
     <div class="auth-copy">
       <h2>进入社区身份系统</h2>
-      <p>登录后前端会保存后端返回的 token 和用户信息，后续发帖、评论、点赞和后台管理都可以接入这个用户状态。</p>
+      <p>注册后需要先完成邮箱确认，账号才会转为可登录状态。确认后即可参与发帖、评论、收藏和个人中心功能。</p>
     </div>
 
     <div class="auth-panel">
@@ -98,11 +118,35 @@ function resolveRedirect() {
               <el-input v-model="registerForm.password" type="password" show-password />
             </el-form-item>
             <el-button type="primary" :loading="loading" @click="submitRegister">
-              注册并登录
+              注册并发送验证邮件
             </el-button>
           </el-form>
         </el-tab-pane>
       </el-tabs>
+
+      <el-alert
+        v-if="registerResult"
+        :title="registerResult.message || '注册成功，请查收邮箱'"
+        type="success"
+        show-icon
+        class="auth-alert auth-success"
+        :closable="false"
+      >
+        <div class="auth-success-body">
+          <p>
+            账号 {{ registerResult.username }} 已创建，当前状态为待邮箱验证。完成确认后再回到登录页即可进入社区。
+          </p>
+          <el-button
+            v-if="registerResult.devVerificationUrl"
+            type="primary"
+            plain
+            :icon="Message"
+            @click="openDevVerification"
+          >
+            打开本地验证链接
+          </el-button>
+        </div>
+      </el-alert>
 
       <el-alert
         v-if="errorMessage"

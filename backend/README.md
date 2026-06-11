@@ -11,6 +11,7 @@
 - Validation
 - Actuator
 - Lombok
+- Spring Mail
 - MyBatis-Plus
 - MySQL Driver
 
@@ -43,9 +44,12 @@ $env:Path="$env:JAVA_HOME\bin;$env:Path"
 
 ```text
 GET /api/health
+POST /api/auth/register
+POST /api/auth/login
+GET /api/auth/verify-email?token=...
 ```
 
-用于确认后端服务已经启动。
+健康检查用于确认后端服务已经启动，认证接口负责注册、登录和邮箱确认。
 
 ## 数据库环境变量
 
@@ -58,3 +62,23 @@ $env:DB_PASSWORD="你的 MySQL 密码"
 ```
 
 如果暂时没有配置密码，项目仍可启动，但真正访问数据库接口时需要正确的 MySQL 账号。
+
+## 邮箱验证环境变量
+
+注册接口会创建待验证账号，并向用户邮箱发送确认链接。邮件授权码只建议通过环境变量传入，不要写入配置文件或提交到仓库。
+
+```powershell
+$env:MAIL_HOST="smtp.sina.com"
+$env:MAIL_PORT="465"
+$env:MAIL_USERNAME="nzdyhbzx@sina.com"
+$env:MAIL_PASSWORD="你的邮箱授权码"
+$env:MAIL_FROM="nzdyhbzx@sina.com"
+$env:APP_FRONTEND_URL="http://127.0.0.1:5173"
+```
+
+开发阶段如暂时不发送真实邮件，可以关闭发送并使用接口返回的本地验证链接：
+
+```powershell
+$env:MAIL_ENABLED="false"
+$env:MAIL_DEV_LINK_ENABLED="true"
+```

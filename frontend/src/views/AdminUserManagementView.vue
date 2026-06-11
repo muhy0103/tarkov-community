@@ -31,6 +31,7 @@ const roleOptions = [
 
 const statusOptions = [
   { label: '正常', value: 'NORMAL' },
+  { label: '待验证', value: 'PENDING' },
   { label: '禁用', value: 'DISABLED' },
   { label: '封禁', value: 'BANNED' },
 ]
@@ -60,6 +61,9 @@ function statusLabel(status) {
 function statusType(status) {
   if (status === 'NORMAL') {
     return 'success'
+  }
+  if (status === 'PENDING') {
+    return 'warning'
   }
   if (status === 'BANNED') {
     return 'danger'

@@ -9,6 +9,7 @@ import org.springframework.context.annotation.Configuration;
 
 @Configuration
 @MapperScan({
+        "com.tarkovcommunity.auth.mapper",
         "com.tarkovcommunity.meta.mapper",
         "com.tarkovcommunity.tarkov.mapper",
         "com.tarkovcommunity.user.mapper",

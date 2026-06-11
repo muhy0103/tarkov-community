@@ -4,3 +4,6 @@ export const login = (payload) => request.post('/auth/login', payload).then((res
 
 export const register = (payload) =>
   request.post('/auth/register', payload).then((response) => response?.data)
+
+export const verifyEmail = (token) =>
+  request.get('/auth/verify-email', { params: { token } }).then((response) => response?.data)

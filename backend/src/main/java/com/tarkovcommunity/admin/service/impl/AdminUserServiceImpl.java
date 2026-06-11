@@ -23,7 +23,7 @@ public class AdminUserServiceImpl implements AdminUserService {
 
     private static final int MAX_PAGE_SIZE = 50;
     private static final Set<String> ALLOWED_ROLES = Set.of("USER", "MODERATOR", "ADMIN");
-    private static final Set<String> ALLOWED_STATUSES = Set.of("NORMAL", "DISABLED", "BANNED");
+    private static final Set<String> ALLOWED_STATUSES = Set.of("NORMAL", "PENDING", "DISABLED", "BANNED");
 
     private final SysUserMapper userMapper;
 

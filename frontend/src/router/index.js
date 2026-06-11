@@ -22,6 +22,7 @@ import AdminTagManagementView from '../views/AdminTagManagementView.vue'
 import AdminTraderManagementView from '../views/AdminTraderManagementView.vue'
 import AdminUserManagementView from '../views/AdminUserManagementView.vue'
 import AdminWeaponManagementView from '../views/AdminWeaponManagementView.vue'
+import EmailVerifyView from '../views/EmailVerifyView.vue'
 import LoginView from '../views/LoginView.vue'
 import PostBoardView from '../views/PostBoardView.vue'
 import PostCreateView from '../views/PostCreateView.vue'
@@ -43,6 +44,14 @@ const routes = [
     component: LoginView,
     meta: {
       title: '登录注册',
+    },
+  },
+  {
+    path: '/verify-email',
+    name: 'verify-email',
+    component: EmailVerifyView,
+    meta: {
+      title: '邮箱验证',
     },
   },
   {

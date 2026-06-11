@@ -17,6 +17,7 @@ public record RegisterRequest(
         @Size(max = 50, message = "昵称不能超过50个字符")
         String nickname,
 
+        @NotBlank(message = "邮箱不能为空")
         @Email(message = "邮箱格式不正确")
         @Size(max = 120, message = "邮箱不能超过120个字符")
         String email

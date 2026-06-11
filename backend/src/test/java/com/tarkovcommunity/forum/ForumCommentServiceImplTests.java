@@ -4,6 +4,8 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.tarkovcommunity.common.PageResponse;
 import com.tarkovcommunity.forum.dto.CommentCreateRequest;
 import com.tarkovcommunity.forum.dto.CommentResponse;
+import com.tarkovcommunity.forum.dto.CommentUpdateRequest;
+import com.tarkovcommunity.forum.dto.CommentUpdatedResponse;
 import com.tarkovcommunity.forum.dto.CommentWithdrawResponse;
 import com.tarkovcommunity.forum.entity.CommentLike;
 import com.tarkovcommunity.forum.entity.Post;
@@ -172,6 +174,69 @@ class ForumCommentServiceImplTests {
         ArgumentCaptor<Post> postCaptor = ArgumentCaptor.forClass(Post.class);
         verify(postMapper).updateById(postCaptor.capture());
         assertThat(postCaptor.getValue().getCommentCount()).isEqualTo(2);
+    }
+
+    @Test
+    void updatesOwnNormalCommentContent() {
+        ForumCommentServiceImpl service = service();
+        given(postMapper.selectById(9L)).willReturn(normalPost());
+        given(postCommentMapper.selectById(21L)).willReturn(normalComment());
+
+        CommentUpdatedResponse response = service.updateComment(
+                9L,
+                21L,
+                new CommentUpdateRequest("Updated route timing after another raid."),
+                normalUser()
+        );
+
+        assertThat(response.id()).isEqualTo(21L);
+        assertThat(response.postId()).isEqualTo(9L);
+        assertThat(response.content()).isEqualTo("Updated route timing after another raid.");
+        assertThat(response.updatedAt()).isNotNull();
+        ArgumentCaptor<PostComment> commentCaptor = ArgumentCaptor.forClass(PostComment.class);
+        verify(postCommentMapper).updateById(commentCaptor.capture());
+        assertThat(commentCaptor.getValue().getContent()).isEqualTo("Updated route timing after another raid.");
+        assertThat(commentCaptor.getValue().getUpdatedAt()).isNotNull();
+    }
+
+    @Test
+    void rejectsUpdatingOtherUsersComment() {
+        ForumCommentServiceImpl service = service();
+        PostComment comment = normalComment();
+        comment.setUserId(8L);
+        given(postMapper.selectById(9L)).willReturn(normalPost());
+        given(postCommentMapper.selectById(21L)).willReturn(comment);
+
+        assertThatThrownBy(() -> service.updateComment(
+                9L,
+                21L,
+                new CommentUpdateRequest("Updated route timing after another raid."),
+                normalUser()
+        ))
+                .isInstanceOf(ResponseStatusException.class)
+                .satisfies(error -> assertThat(((ResponseStatusException) error).getStatusCode())
+                        .isEqualTo(HttpStatus.FORBIDDEN));
+        verify(postCommentMapper, never()).updateById(any(PostComment.class));
+    }
+
+    @Test
+    void rejectsUpdatingHiddenComment() {
+        ForumCommentServiceImpl service = service();
+        PostComment comment = normalComment();
+        comment.setStatus("HIDDEN");
+        given(postMapper.selectById(9L)).willReturn(normalPost());
+        given(postCommentMapper.selectById(21L)).willReturn(comment);
+
+        assertThatThrownBy(() -> service.updateComment(
+                9L,
+                21L,
+                new CommentUpdateRequest("Updated route timing after another raid."),
+                normalUser()
+        ))
+                .isInstanceOf(ResponseStatusException.class)
+                .satisfies(error -> assertThat(((ResponseStatusException) error).getStatusCode())
+                        .isEqualTo(HttpStatus.CONFLICT));
+        verify(postCommentMapper, never()).updateById(any(PostComment.class));
     }
 
     @Test

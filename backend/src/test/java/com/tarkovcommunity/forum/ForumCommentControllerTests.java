@@ -7,6 +7,8 @@ import com.tarkovcommunity.forum.controller.ForumCommentController;
 import com.tarkovcommunity.forum.dto.CommentCreateRequest;
 import com.tarkovcommunity.forum.dto.CommentCreatedResponse;
 import com.tarkovcommunity.forum.dto.CommentResponse;
+import com.tarkovcommunity.forum.dto.CommentUpdateRequest;
+import com.tarkovcommunity.forum.dto.CommentUpdatedResponse;
 import com.tarkovcommunity.forum.dto.CommentWithdrawResponse;
 import com.tarkovcommunity.forum.service.ForumCommentService;
 import com.tarkovcommunity.user.entity.SysUser;
@@ -29,6 +31,7 @@ import static org.mockito.Mockito.verify;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -147,6 +150,53 @@ class ForumCommentControllerTests {
                 .andExpect(jsonPath("$.data.postCommentCount").value(2));
 
         verify(forumCommentService).withdrawComment(9L, 21L, user);
+    }
+
+    @Test
+    void updatesOwnComment() throws Exception {
+        SysUser user = normalUser();
+        CommentUpdateRequest request = new CommentUpdateRequest("Updated route timing after another raid.");
+        given(authTokenService.resolveUser(eq("Bearer user-token"))).willReturn(Optional.of(user));
+        given(forumCommentService.updateComment(eq(9L), eq(21L), any(CommentUpdateRequest.class), eq(user)))
+                .willReturn(new CommentUpdatedResponse(
+                        21L,
+                        9L,
+                        "Updated route timing after another raid.",
+                        LocalDateTime.of(2026, 6, 11, 14, 20)
+                ));
+
+        mockMvc.perform(put("/api/posts/9/comments/21")
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer user-token")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.code").value(200))
+                .andExpect(jsonPath("$.data.id").value(21L))
+                .andExpect(jsonPath("$.data.content").value("Updated route timing after another raid."));
+    }
+
+    @Test
+    void rejectsInvalidCommentUpdateRequest() throws Exception {
+        given(authTokenService.resolveUser(eq("Bearer user-token"))).willReturn(Optional.of(normalUser()));
+        CommentUpdateRequest request = new CommentUpdateRequest("短");
+
+        mockMvc.perform(put("/api/posts/9/comments/21")
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer user-token")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value(400));
+    }
+
+    @Test
+    void rejectsUpdateCommentWithoutLogin() throws Exception {
+        CommentUpdateRequest request = new CommentUpdateRequest("Updated route timing after another raid.");
+
+        mockMvc.perform(put("/api/posts/9/comments/21")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.code").value(401));
     }
 
     @Test

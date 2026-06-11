@@ -6,6 +6,8 @@ import com.tarkovcommunity.common.PageResponse;
 import com.tarkovcommunity.forum.dto.CommentCreateRequest;
 import com.tarkovcommunity.forum.dto.CommentCreatedResponse;
 import com.tarkovcommunity.forum.dto.CommentResponse;
+import com.tarkovcommunity.forum.dto.CommentUpdateRequest;
+import com.tarkovcommunity.forum.dto.CommentUpdatedResponse;
 import com.tarkovcommunity.forum.dto.CommentWithdrawResponse;
 import com.tarkovcommunity.forum.service.ForumCommentService;
 import com.tarkovcommunity.user.entity.SysUser;
@@ -18,6 +20,7 @@ import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -50,6 +53,16 @@ public class ForumCommentController {
             @Valid @RequestBody CommentCreateRequest request
     ) {
         return ApiResponse.success(forumCommentService.createComment(postId, request, requireUser(authorization)));
+    }
+
+    @PutMapping("/{commentId}")
+    public ApiResponse<CommentUpdatedResponse> updateComment(
+            @PathVariable Long postId,
+            @PathVariable Long commentId,
+            @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authorization,
+            @Valid @RequestBody CommentUpdateRequest request
+    ) {
+        return ApiResponse.success(forumCommentService.updateComment(postId, commentId, request, requireUser(authorization)));
     }
 
     @DeleteMapping("/{commentId}")

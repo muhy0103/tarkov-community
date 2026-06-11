@@ -22,6 +22,7 @@ import {
   toggleCommentLike,
   togglePostFavorite,
   togglePostLike,
+  updateComment,
   withdrawComment,
   withdrawPost,
 } from '../api/postApi'
@@ -338,6 +339,61 @@ async function handleCommentLike(comment) {
   }
 }
 
+async function handleEditComment(comment) {
+  if (!isOwnComment(comment)) {
+    return
+  }
+
+  const promptResult = await ElMessageBox.prompt(
+    '修改评论内容',
+    '编辑评论',
+    {
+      confirmButtonText: '保存修改',
+      cancelButtonText: '取消',
+      inputType: 'textarea',
+      inputValue: comment.content || '',
+      inputValidator: (value) => {
+        const content = value.trim()
+        if (content.length < 5) {
+          return '评论至少需要 5 个字'
+        }
+        if (content.length > 1000) {
+          return '评论不能超过 1000 个字符'
+        }
+        return true
+      },
+    }
+  ).catch(() => null)
+
+  if (!promptResult) {
+    return
+  }
+
+  const content = promptResult.value.trim()
+  actionLoading.value = `comment-edit-${comment.id}`
+
+  try {
+    const result = await updateComment(postId.value, comment.id, { content })
+    commentsPage.value = {
+      ...commentsPage.value,
+      records: comments.value.map((item) => (
+        item.id === comment.id ? { ...item, content: result.content } : item
+      )),
+    }
+    if (replyTarget.value?.id === comment.id) {
+      replyTarget.value = {
+        ...replyTarget.value,
+        content: result.content,
+      }
+    }
+    ElMessage.success('评论已更新')
+  } catch (error) {
+    ElMessage.error(resolveError(error, '评论更新失败'))
+  } finally {
+    actionLoading.value = ''
+  }
+}
+
 async function handleWithdrawComment(comment) {
   if (!isOwnComment(comment)) {
     return
@@ -611,6 +667,17 @@ onMounted(loadDetail)
                   @click="openReportDialog('COMMENT', comment.id, commentReportTitle(comment))"
                 >
                   举报
+                </el-button>
+                <el-button
+                  v-if="isOwnComment(comment)"
+                  text
+                  size="small"
+                  :icon="EditPen"
+                  :loading="actionLoading === `comment-edit-${comment.id}`"
+                  class="comment-report-button"
+                  @click="handleEditComment(comment)"
+                >
+                  编辑
                 </el-button>
                 <el-button
                   v-if="isOwnComment(comment)"

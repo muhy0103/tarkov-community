@@ -46,6 +46,10 @@ export function createPostComment(id, payload) {
   return request.post(`/posts/${id}/comments`, payload).then(unwrapData)
 }
 
+export function updateComment(postId, commentId, payload) {
+  return request.put(`/posts/${postId}/comments/${commentId}`, payload).then(unwrapData)
+}
+
 export function togglePostLike(id) {
   return request.post(`/posts/${id}/likes/toggle`).then(unwrapData)
 }

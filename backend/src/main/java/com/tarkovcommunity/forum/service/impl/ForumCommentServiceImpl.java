@@ -6,6 +6,8 @@ import com.tarkovcommunity.common.PageResponse;
 import com.tarkovcommunity.forum.dto.CommentCreateRequest;
 import com.tarkovcommunity.forum.dto.CommentCreatedResponse;
 import com.tarkovcommunity.forum.dto.CommentResponse;
+import com.tarkovcommunity.forum.dto.CommentUpdateRequest;
+import com.tarkovcommunity.forum.dto.CommentUpdatedResponse;
 import com.tarkovcommunity.forum.dto.CommentWithdrawResponse;
 import com.tarkovcommunity.forum.entity.CommentLike;
 import com.tarkovcommunity.forum.entity.Post;
@@ -108,8 +110,35 @@ public class ForumCommentServiceImpl implements ForumCommentService {
 
     @Override
     @Transactional
+    public CommentUpdatedResponse updateComment(Long postId, Long commentId, CommentUpdateRequest request, SysUser author) {
+        requireNormalPost(postId);
+        PostComment comment = requireEditableComment(postId, commentId, author);
+
+        LocalDateTime updatedAt = LocalDateTime.now();
+        String content = request.content().trim();
+        comment.setContent(content);
+        comment.setUpdatedAt(updatedAt);
+        postCommentMapper.updateById(comment);
+
+        return new CommentUpdatedResponse(comment.getId(), postId, content, updatedAt);
+    }
+
+    @Override
+    @Transactional
     public CommentWithdrawResponse withdrawComment(Long postId, Long commentId, SysUser author) {
         Post post = requireNormalPost(postId);
+        PostComment comment = requireEditableComment(postId, commentId, author);
+        comment.setStatus("HIDDEN");
+        postCommentMapper.updateById(comment);
+
+        int commentCount = Math.max(0, valueOrZero(post.getCommentCount()) - 1);
+        post.setCommentCount(commentCount);
+        postMapper.updateById(post);
+
+        return new CommentWithdrawResponse(comment.getId(), postId, comment.getStatus(), commentCount);
+    }
+
+    private PostComment requireEditableComment(Long postId, Long commentId, SysUser author) {
         PostComment comment = postCommentMapper.selectById(commentId);
         if (comment == null || !Objects.equals(comment.getPostId(), postId)) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "\u8bc4\u8bba\u4e0d\u5b58\u5728");
@@ -120,17 +149,10 @@ public class ForumCommentServiceImpl implements ForumCommentService {
         }
 
         if (!"NORMAL".equals(comment.getStatus())) {
-            throw new ResponseStatusException(HttpStatus.CONFLICT, "\u8bc4\u8bba\u5df2\u4e0d\u53ef\u64a4\u56de");
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "\u8bc4\u8bba\u5f53\u524d\u4e0d\u53ef\u64cd\u4f5c");
         }
 
-        comment.setStatus("HIDDEN");
-        postCommentMapper.updateById(comment);
-
-        int commentCount = Math.max(0, valueOrZero(post.getCommentCount()) - 1);
-        post.setCommentCount(commentCount);
-        postMapper.updateById(post);
-
-        return new CommentWithdrawResponse(comment.getId(), postId, comment.getStatus(), commentCount);
+        return comment;
     }
 
     private void createInteractionNotification(Post post, PostComment parent, CommentCreateRequest request, SysUser author) {

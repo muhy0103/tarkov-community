@@ -1,10 +1,37 @@
 <script setup>
 import { useRouter } from 'vue-router'
-import { SwitchButton } from '@element-plus/icons-vue'
+import { ArrowDown, Setting, SwitchButton } from '@element-plus/icons-vue'
 import { useUserStore } from './stores/userStore'
 
 const router = useRouter()
 const userStore = useUserStore()
+
+const adminLinks = [
+  { label: '后台概览', to: '/admin/dashboard' },
+  { label: '帖子审核', to: '/admin/posts' },
+  { label: '用户管理', to: '/admin/users' },
+  { label: '评论审核', to: '/admin/comments' },
+  { label: '举报管理', to: '/admin/reports' },
+  { label: '公告管理', to: '/admin/announcements' },
+  { label: '分区管理', to: '/admin/categories' },
+  { label: '标签管理', to: '/admin/tags' },
+  { label: '地图管理', to: '/admin/maps' },
+  { label: '撤离点管理', to: '/admin/map-extracts' },
+  { label: '资源点管理', to: '/admin/map-loot-areas' },
+  { label: '商人管理', to: '/admin/traders' },
+  { label: '任务管理', to: '/admin/quests' },
+  { label: '任务链管理', to: '/admin/quest-prerequisites' },
+  { label: '物品管理', to: '/admin/items' },
+  { label: '武器管理', to: '/admin/weapons' },
+  { label: '弹药管理', to: '/admin/ammo' },
+  { label: '藏身处管理', to: '/admin/hideout/stations' },
+  { label: '升级管理', to: '/admin/hideout/upgrades' },
+  { label: 'Boss 管理', to: '/admin/bosses' },
+]
+
+function goAdmin(path) {
+  router.push(path)
+}
 
 function logout() {
   userStore.clearAuth()
@@ -23,26 +50,30 @@ function logout() {
         <RouterLink to="/">社区概览</RouterLink>
         <RouterLink to="/posts">情报广场</RouterLink>
         <RouterLink v-if="userStore.isLoggedIn" to="/me">用户中心</RouterLink>
-        <RouterLink v-if="userStore.isAdmin" to="/admin/dashboard">后台概览</RouterLink>
-        <RouterLink v-if="userStore.isAdmin" to="/admin/posts">帖子审核</RouterLink>
-        <RouterLink v-if="userStore.isAdmin" to="/admin/users">用户管理</RouterLink>
-        <RouterLink v-if="userStore.isAdmin" to="/admin/comments">评论审核</RouterLink>
-        <RouterLink v-if="userStore.isAdmin" to="/admin/reports">举报管理</RouterLink>
-        <RouterLink v-if="userStore.isAdmin" to="/admin/announcements">公告管理</RouterLink>
-        <RouterLink v-if="userStore.isAdmin" to="/admin/categories">分区管理</RouterLink>
-        <RouterLink v-if="userStore.isAdmin" to="/admin/tags">标签管理</RouterLink>
-        <RouterLink v-if="userStore.isAdmin" to="/admin/maps">地图管理</RouterLink>
-        <RouterLink v-if="userStore.isAdmin" to="/admin/map-extracts">撤离点管理</RouterLink>
-        <RouterLink v-if="userStore.isAdmin" to="/admin/map-loot-areas">资源点管理</RouterLink>
-        <RouterLink v-if="userStore.isAdmin" to="/admin/traders">商人管理</RouterLink>
-        <RouterLink v-if="userStore.isAdmin" to="/admin/quests">任务管理</RouterLink>
-        <RouterLink v-if="userStore.isAdmin" to="/admin/quest-prerequisites">任务链管理</RouterLink>
-        <RouterLink v-if="userStore.isAdmin" to="/admin/items">物品管理</RouterLink>
-        <RouterLink v-if="userStore.isAdmin" to="/admin/weapons">武器管理</RouterLink>
-        <RouterLink v-if="userStore.isAdmin" to="/admin/ammo">弹药管理</RouterLink>
-        <RouterLink v-if="userStore.isAdmin" to="/admin/hideout/stations">藏身处管理</RouterLink>
-        <RouterLink v-if="userStore.isAdmin" to="/admin/hideout/upgrades">升级管理</RouterLink>
-        <RouterLink v-if="userStore.isAdmin" to="/admin/bosses">Boss管理</RouterLink>
+        <el-dropdown
+          v-if="userStore.isAdmin"
+          trigger="click"
+          class="admin-dropdown"
+          @command="goAdmin"
+        >
+          <el-button class="admin-dropdown-trigger" :icon="Setting">
+            后台管理
+            <el-icon class="admin-dropdown-arrow">
+              <ArrowDown />
+            </el-icon>
+          </el-button>
+          <template #dropdown>
+            <el-dropdown-menu>
+              <el-dropdown-item
+                v-for="link in adminLinks"
+                :key="link.to"
+                :command="link.to"
+              >
+                {{ link.label }}
+              </el-dropdown-item>
+            </el-dropdown-menu>
+          </template>
+        </el-dropdown>
         <RouterLink v-if="!userStore.isLoggedIn" to="/login">登录注册</RouterLink>
         <div v-else class="user-chip">
           <span>{{ userStore.userInfo?.nickname }}</span>

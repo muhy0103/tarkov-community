@@ -58,6 +58,10 @@ export function toggleCommentLike(postId, commentId) {
   return request.post(`/posts/${postId}/comments/${commentId}/likes/toggle`).then(unwrapData)
 }
 
+export function withdrawComment(postId, commentId) {
+  return request.delete(`/posts/${postId}/comments/${commentId}`).then(unwrapData)
+}
+
 export function createReport(payload) {
   return request.post('/reports', payload).then(unwrapData)
 }

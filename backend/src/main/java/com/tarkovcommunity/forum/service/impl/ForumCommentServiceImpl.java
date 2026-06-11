@@ -6,6 +6,7 @@ import com.tarkovcommunity.common.PageResponse;
 import com.tarkovcommunity.forum.dto.CommentCreateRequest;
 import com.tarkovcommunity.forum.dto.CommentCreatedResponse;
 import com.tarkovcommunity.forum.dto.CommentResponse;
+import com.tarkovcommunity.forum.dto.CommentWithdrawResponse;
 import com.tarkovcommunity.forum.entity.CommentLike;
 import com.tarkovcommunity.forum.entity.Post;
 import com.tarkovcommunity.forum.entity.PostComment;
@@ -103,6 +104,33 @@ public class ForumCommentServiceImpl implements ForumCommentService {
         createInteractionNotification(post, parent, request, author);
 
         return new CommentCreatedResponse(comment.getId());
+    }
+
+    @Override
+    @Transactional
+    public CommentWithdrawResponse withdrawComment(Long postId, Long commentId, SysUser author) {
+        Post post = requireNormalPost(postId);
+        PostComment comment = postCommentMapper.selectById(commentId);
+        if (comment == null || !Objects.equals(comment.getPostId(), postId)) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "\u8bc4\u8bba\u4e0d\u5b58\u5728");
+        }
+
+        if (!Objects.equals(comment.getUserId(), author.getId())) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "\u53ea\u80fd\u64a4\u56de\u81ea\u5df1\u7684\u8bc4\u8bba");
+        }
+
+        if (!"NORMAL".equals(comment.getStatus())) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "\u8bc4\u8bba\u5df2\u4e0d\u53ef\u64a4\u56de");
+        }
+
+        comment.setStatus("HIDDEN");
+        postCommentMapper.updateById(comment);
+
+        int commentCount = Math.max(0, valueOrZero(post.getCommentCount()) - 1);
+        post.setCommentCount(commentCount);
+        postMapper.updateById(post);
+
+        return new CommentWithdrawResponse(comment.getId(), postId, comment.getStatus(), commentCount);
     }
 
     private void createInteractionNotification(Post post, PostComment parent, CommentCreateRequest request, SysUser author) {

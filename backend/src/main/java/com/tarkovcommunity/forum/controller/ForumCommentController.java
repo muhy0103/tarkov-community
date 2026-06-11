@@ -6,6 +6,7 @@ import com.tarkovcommunity.common.PageResponse;
 import com.tarkovcommunity.forum.dto.CommentCreateRequest;
 import com.tarkovcommunity.forum.dto.CommentCreatedResponse;
 import com.tarkovcommunity.forum.dto.CommentResponse;
+import com.tarkovcommunity.forum.dto.CommentWithdrawResponse;
 import com.tarkovcommunity.forum.service.ForumCommentService;
 import com.tarkovcommunity.user.entity.SysUser;
 import jakarta.validation.Valid;
@@ -13,6 +14,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.util.StringUtils;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -48,6 +50,15 @@ public class ForumCommentController {
             @Valid @RequestBody CommentCreateRequest request
     ) {
         return ApiResponse.success(forumCommentService.createComment(postId, request, requireUser(authorization)));
+    }
+
+    @DeleteMapping("/{commentId}")
+    public ApiResponse<CommentWithdrawResponse> withdrawComment(
+            @PathVariable Long postId,
+            @PathVariable Long commentId,
+            @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authorization
+    ) {
+        return ApiResponse.success(forumCommentService.withdrawComment(postId, commentId, requireUser(authorization)));
     }
 
     private SysUser requireUser(String authorization) {

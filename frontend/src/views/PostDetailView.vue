@@ -22,6 +22,7 @@ import {
   toggleCommentLike,
   togglePostFavorite,
   togglePostLike,
+  withdrawComment,
   withdrawPost,
 } from '../api/postApi'
 import { useUserStore } from '../stores/userStore'
@@ -154,6 +155,10 @@ function targetTypeLabel(targetType) {
 function commentReportTitle(comment) {
   const content = comment.content || '评论内容'
   return content.length > 42 ? `${content.slice(0, 42)}...` : content
+}
+
+function isOwnComment(comment) {
+  return canInteract.value && Number(comment?.userId) === Number(currentUserId.value)
 }
 
 function applyPostState(postData) {
@@ -328,6 +333,47 @@ async function handleCommentLike(comment) {
     likedCommentIds.value = nextLiked
   } catch (error) {
     ElMessage.error(resolveError(error, '评论点赞失败'))
+  } finally {
+    actionLoading.value = ''
+  }
+}
+
+async function handleWithdrawComment(comment) {
+  if (!isOwnComment(comment)) {
+    return
+  }
+
+  const confirmed = await ElMessageBox.confirm(
+    '撤回后其他玩家将无法继续看到这条评论，后台仍会保留审核记录。确定要撤回吗？',
+    '撤回评论',
+    {
+      confirmButtonText: '确认撤回',
+      cancelButtonText: '取消',
+      type: 'warning',
+    }
+  ).then(() => true).catch(() => false)
+
+  if (!confirmed) {
+    return
+  }
+
+  actionLoading.value = `comment-withdraw-${comment.id}`
+
+  try {
+    const result = await withdrawComment(postId.value, comment.id)
+    if (post.value) {
+      post.value.commentCount = result.postCommentCount
+    }
+    if (replyTarget.value?.id === comment.id) {
+      replyTarget.value = null
+    }
+    const nextPage = comments.value.length <= 1 && commentsPage.value.page > 1
+      ? commentsPage.value.page - 1
+      : commentsPage.value.page
+    ElMessage.success('评论已撤回')
+    await loadComments(nextPage)
+  } catch (error) {
+    ElMessage.error(resolveError(error, '评论撤回失败'))
   } finally {
     actionLoading.value = ''
   }
@@ -565,6 +611,18 @@ onMounted(loadDetail)
                   @click="openReportDialog('COMMENT', comment.id, commentReportTitle(comment))"
                 >
                   举报
+                </el-button>
+                <el-button
+                  v-if="isOwnComment(comment)"
+                  text
+                  size="small"
+                  type="warning"
+                  :icon="Delete"
+                  :loading="actionLoading === `comment-withdraw-${comment.id}`"
+                  class="comment-report-button"
+                  @click="handleWithdrawComment(comment)"
+                >
+                  撤回
                 </el-button>
               </div>
               <p>{{ comment.content }}</p>

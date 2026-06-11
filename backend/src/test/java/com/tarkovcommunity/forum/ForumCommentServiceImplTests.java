@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.tarkovcommunity.common.PageResponse;
 import com.tarkovcommunity.forum.dto.CommentCreateRequest;
 import com.tarkovcommunity.forum.dto.CommentResponse;
+import com.tarkovcommunity.forum.dto.CommentWithdrawResponse;
 import com.tarkovcommunity.forum.entity.CommentLike;
 import com.tarkovcommunity.forum.entity.Post;
 import com.tarkovcommunity.forum.entity.PostComment;
@@ -151,6 +152,58 @@ class ForumCommentServiceImplTests {
         verify(postCommentMapper, never()).insert(any(PostComment.class));
         verify(postMapper, never()).updateById(any(Post.class));
         verify(notificationMapper, never()).insert(any(Notification.class));
+    }
+
+    @Test
+    void withdrawsOwnNormalCommentAndUpdatesPostCount() {
+        ForumCommentServiceImpl service = service();
+        given(postMapper.selectById(9L)).willReturn(normalPost());
+        given(postCommentMapper.selectById(21L)).willReturn(normalComment());
+
+        CommentWithdrawResponse response = service.withdrawComment(9L, 21L, normalUser());
+
+        assertThat(response.id()).isEqualTo(21L);
+        assertThat(response.postId()).isEqualTo(9L);
+        assertThat(response.status()).isEqualTo("HIDDEN");
+        assertThat(response.postCommentCount()).isEqualTo(2);
+        ArgumentCaptor<PostComment> commentCaptor = ArgumentCaptor.forClass(PostComment.class);
+        verify(postCommentMapper).updateById(commentCaptor.capture());
+        assertThat(commentCaptor.getValue().getStatus()).isEqualTo("HIDDEN");
+        ArgumentCaptor<Post> postCaptor = ArgumentCaptor.forClass(Post.class);
+        verify(postMapper).updateById(postCaptor.capture());
+        assertThat(postCaptor.getValue().getCommentCount()).isEqualTo(2);
+    }
+
+    @Test
+    void rejectsWithdrawingOtherUsersComment() {
+        ForumCommentServiceImpl service = service();
+        PostComment comment = normalComment();
+        comment.setUserId(8L);
+        given(postMapper.selectById(9L)).willReturn(normalPost());
+        given(postCommentMapper.selectById(21L)).willReturn(comment);
+
+        assertThatThrownBy(() -> service.withdrawComment(9L, 21L, normalUser()))
+                .isInstanceOf(ResponseStatusException.class)
+                .satisfies(error -> assertThat(((ResponseStatusException) error).getStatusCode())
+                        .isEqualTo(HttpStatus.FORBIDDEN));
+        verify(postCommentMapper, never()).updateById(any(PostComment.class));
+        verify(postMapper, never()).updateById(any(Post.class));
+    }
+
+    @Test
+    void rejectsWithdrawingHiddenCommentAgain() {
+        ForumCommentServiceImpl service = service();
+        PostComment comment = normalComment();
+        comment.setStatus("HIDDEN");
+        given(postMapper.selectById(9L)).willReturn(normalPost());
+        given(postCommentMapper.selectById(21L)).willReturn(comment);
+
+        assertThatThrownBy(() -> service.withdrawComment(9L, 21L, normalUser()))
+                .isInstanceOf(ResponseStatusException.class)
+                .satisfies(error -> assertThat(((ResponseStatusException) error).getStatusCode())
+                        .isEqualTo(HttpStatus.CONFLICT));
+        verify(postCommentMapper, never()).updateById(any(PostComment.class));
+        verify(postMapper, never()).updateById(any(Post.class));
     }
 
     private ForumCommentServiceImpl service() {

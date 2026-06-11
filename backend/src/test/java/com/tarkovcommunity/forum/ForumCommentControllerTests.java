@@ -7,6 +7,7 @@ import com.tarkovcommunity.forum.controller.ForumCommentController;
 import com.tarkovcommunity.forum.dto.CommentCreateRequest;
 import com.tarkovcommunity.forum.dto.CommentCreatedResponse;
 import com.tarkovcommunity.forum.dto.CommentResponse;
+import com.tarkovcommunity.forum.dto.CommentWithdrawResponse;
 import com.tarkovcommunity.forum.service.ForumCommentService;
 import com.tarkovcommunity.user.entity.SysUser;
 import org.junit.jupiter.api.Test;
@@ -24,6 +25,8 @@ import java.util.Optional;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.verify;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -124,6 +127,31 @@ class ForumCommentControllerTests {
         mockMvc.perform(post("/api/posts/9/comments")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.code").value(401));
+    }
+
+    @Test
+    void withdrawsOwnComment() throws Exception {
+        SysUser user = normalUser();
+        given(authTokenService.resolveUser(eq("Bearer user-token"))).willReturn(Optional.of(user));
+        given(forumCommentService.withdrawComment(9L, 21L, user))
+                .willReturn(new CommentWithdrawResponse(21L, 9L, "HIDDEN", 2));
+
+        mockMvc.perform(delete("/api/posts/9/comments/21")
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer user-token"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.code").value(200))
+                .andExpect(jsonPath("$.data.id").value(21L))
+                .andExpect(jsonPath("$.data.status").value("HIDDEN"))
+                .andExpect(jsonPath("$.data.postCommentCount").value(2));
+
+        verify(forumCommentService).withdrawComment(9L, 21L, user);
+    }
+
+    @Test
+    void rejectsWithdrawCommentWithoutLogin() throws Exception {
+        mockMvc.perform(delete("/api/posts/9/comments/21"))
                 .andExpect(status().isUnauthorized())
                 .andExpect(jsonPath("$.code").value(401));
     }

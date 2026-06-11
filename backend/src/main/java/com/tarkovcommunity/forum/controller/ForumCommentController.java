@@ -12,6 +12,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -34,9 +35,10 @@ public class ForumCommentController {
     public ApiResponse<PageResponse<CommentResponse>> listComments(
             @PathVariable Long postId,
             @RequestParam(defaultValue = "1") int page,
-            @RequestParam(defaultValue = "20") int size
+            @RequestParam(defaultValue = "20") int size,
+            @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authorization
     ) {
-        return ApiResponse.success(forumCommentService.listComments(postId, page, size));
+        return ApiResponse.success(forumCommentService.listComments(postId, page, size, resolveOptionalUser(authorization)));
     }
 
     @PostMapping
@@ -51,5 +53,12 @@ public class ForumCommentController {
     private SysUser requireUser(String authorization) {
         return authTokenService.resolveUser(authorization)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Please login first"));
+    }
+
+    private SysUser resolveOptionalUser(String authorization) {
+        if (!StringUtils.hasText(authorization)) {
+            return null;
+        }
+        return authTokenService.resolveUser(authorization).orElse(null);
     }
 }

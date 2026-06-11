@@ -4,6 +4,8 @@ import com.tarkovcommunity.forum.dto.PostDetailResponse;
 import com.tarkovcommunity.forum.dto.PostCreatedResponse;
 import com.tarkovcommunity.forum.dto.PostUpdateRequest;
 import com.tarkovcommunity.forum.entity.Post;
+import com.tarkovcommunity.forum.mapper.FavoriteMapper;
+import com.tarkovcommunity.forum.mapper.PostLikeMapper;
 import com.tarkovcommunity.forum.mapper.PostMapper;
 import com.tarkovcommunity.forum.service.impl.ForumPostServiceImpl;
 import com.tarkovcommunity.meta.entity.Category;
@@ -36,6 +38,12 @@ class ForumPostServiceImplTests {
     @Mock
     private SysUserMapper sysUserMapper;
 
+    @Mock
+    private PostLikeMapper postLikeMapper;
+
+    @Mock
+    private FavoriteMapper favoriteMapper;
+
     @Test
     void incrementsViewCountWhenGettingDetail() {
         ForumPostServiceImpl service = service();
@@ -47,12 +55,33 @@ class ForumPostServiceImplTests {
         given(categoryMapper.selectById(2L)).willReturn(enabledCategory());
         given(sysUserMapper.selectById(7L)).willReturn(owner());
 
-        PostDetailResponse response = service.getPost(9L);
+        PostDetailResponse response = service.getPost(9L, null);
 
         ArgumentCaptor<Post> postCaptor = ArgumentCaptor.forClass(Post.class);
         verify(postMapper).updateById(postCaptor.capture());
         assertThat(postCaptor.getValue().getViewCount()).isEqualTo(13);
         assertThat(response.viewCount()).isEqualTo(13);
+    }
+
+    @Test
+    void returnsViewerReactionStateWhenGettingDetail() {
+        ForumPostServiceImpl service = service();
+        Post post = post();
+        post.setViewCount(12);
+        post.setLikeCount(3);
+        post.setFavoriteCount(5);
+        post.setCommentCount(2);
+        given(postMapper.selectOne(any())).willReturn(post);
+        given(categoryMapper.selectById(2L)).willReturn(enabledCategory());
+        given(sysUserMapper.selectById(7L)).willReturn(owner());
+        given(postLikeMapper.selectCount(any())).willReturn(1L);
+        given(favoriteMapper.selectCount(any())).willReturn(1L);
+
+        PostDetailResponse response = service.getPost(9L, normalViewer());
+
+        assertThat(response.favoriteCount()).isEqualTo(5);
+        assertThat(response.likedByCurrentUser()).isTrue();
+        assertThat(response.favoritedByCurrentUser()).isTrue();
     }
 
     @Test
@@ -130,7 +159,7 @@ class ForumPostServiceImplTests {
     }
 
     private ForumPostServiceImpl service() {
-        return new ForumPostServiceImpl(postMapper, categoryMapper, sysUserMapper);
+        return new ForumPostServiceImpl(postMapper, categoryMapper, sysUserMapper, postLikeMapper, favoriteMapper);
     }
 
     private static PostUpdateRequest request() {
@@ -177,6 +206,15 @@ class ForumPostServiceImplTests {
         SysUser user = new SysUser();
         user.setId(8L);
         user.setUsername("other");
+        user.setRole("USER");
+        user.setStatus("NORMAL");
+        return user;
+    }
+
+    private static SysUser normalViewer() {
+        SysUser user = new SysUser();
+        user.setId(11L);
+        user.setUsername("viewer");
         user.setRole("USER");
         user.setStatus("NORMAL");
         return user;

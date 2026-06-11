@@ -46,6 +46,7 @@ class ForumCommentControllerTests {
 
     @Test
     void listsCommentsByPost() throws Exception {
+        SysUser user = normalUser();
         CommentResponse comment = new CommentResponse(
                 1L,
                 9L,
@@ -55,18 +56,22 @@ class ForumCommentControllerTests {
                 null,
                 "这条路线适合单人做任务，建议带耳机听脚步。",
                 3,
-                LocalDateTime.of(2026, 6, 4, 19, 10)
+                LocalDateTime.of(2026, 6, 4, 19, 10),
+                true
         );
 
-        given(forumCommentService.listComments(9L, 1, 20))
+        given(authTokenService.resolveUser(eq("Bearer user-token"))).willReturn(Optional.of(user));
+        given(forumCommentService.listComments(9L, 1, 20, user))
                 .willReturn(PageResponse.of(1, 20, 1, List.of(comment)));
 
         mockMvc.perform(get("/api/posts/9/comments")
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer user-token")
                         .param("page", "1")
                         .param("size", "20"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.code").value(200))
                 .andExpect(jsonPath("$.data.total").value(1))
+                .andExpect(jsonPath("$.data.records[0].likedByCurrentUser").value(true))
                 .andExpect(jsonPath("$.data.records[0].authorNickname").value("夜莺"));
     }
 

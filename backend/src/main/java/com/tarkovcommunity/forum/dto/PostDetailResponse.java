@@ -16,6 +16,9 @@ public record PostDetailResponse(
         Integer viewCount,
         Integer likeCount,
         Integer commentCount,
-        LocalDateTime createdAt
+        LocalDateTime createdAt,
+        Integer favoriteCount,
+        Boolean likedByCurrentUser,
+        Boolean favoritedByCurrentUser
 ) {
 }

@@ -14,6 +14,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -56,8 +57,11 @@ public class ForumPostController {
     }
 
     @GetMapping("/{id}")
-    public ApiResponse<PostDetailResponse> getPost(@PathVariable Long id) {
-        return ApiResponse.success(forumPostService.getPost(id));
+    public ApiResponse<PostDetailResponse> getPost(
+            @PathVariable Long id,
+            @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authorization
+    ) {
+        return ApiResponse.success(forumPostService.getPost(id, resolveOptionalUser(authorization)));
     }
 
     @PostMapping
@@ -88,5 +92,12 @@ public class ForumPostController {
     private SysUser requireUser(String authorization) {
         return authTokenService.resolveUser(authorization)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Please login first"));
+    }
+
+    private SysUser resolveOptionalUser(String authorization) {
+        if (!StringUtils.hasText(authorization)) {
+            return null;
+        }
+        return authTokenService.resolveUser(authorization).orElse(null);
     }
 }

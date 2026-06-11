@@ -11,6 +11,7 @@ public record CommentResponse(
         Long replyToUserId,
         String content,
         Integer likeCount,
-        LocalDateTime createdAt
+        LocalDateTime createdAt,
+        Boolean likedByCurrentUser
 ) {
 }

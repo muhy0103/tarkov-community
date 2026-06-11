@@ -20,7 +20,7 @@ public interface ForumPostService {
             int size
     );
 
-    PostDetailResponse getPost(Long id);
+    PostDetailResponse getPost(Long id, SysUser viewer);
 
     PostCreatedResponse createPost(PostCreateRequest request, SysUser author);
 

@@ -1,8 +1,13 @@
 package com.tarkovcommunity.forum;
 
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.tarkovcommunity.common.PageResponse;
 import com.tarkovcommunity.forum.dto.CommentCreateRequest;
+import com.tarkovcommunity.forum.dto.CommentResponse;
+import com.tarkovcommunity.forum.entity.CommentLike;
 import com.tarkovcommunity.forum.entity.Post;
 import com.tarkovcommunity.forum.entity.PostComment;
+import com.tarkovcommunity.forum.mapper.CommentLikeMapper;
 import com.tarkovcommunity.forum.mapper.PostCommentMapper;
 import com.tarkovcommunity.forum.mapper.PostMapper;
 import com.tarkovcommunity.forum.service.impl.ForumCommentServiceImpl;
@@ -17,6 +22,8 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.server.ResponseStatusException;
+
+import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -39,6 +46,26 @@ class ForumCommentServiceImplTests {
 
     @Mock
     private NotificationMapper notificationMapper;
+
+    @Mock
+    private CommentLikeMapper commentLikeMapper;
+
+    @Test
+    void marksCommentsLikedByCurrentUser() {
+        ForumCommentServiceImpl service = service();
+        Page<PostComment> page = new Page<>(1, 20);
+        page.setTotal(1);
+        page.setRecords(List.of(normalComment()));
+        given(postMapper.selectById(9L)).willReturn(normalPost());
+        given(postCommentMapper.selectPage(any(), any())).willReturn(page);
+        given(sysUserMapper.selectBatchIds(any())).willReturn(List.of(normalUser()));
+        given(commentLikeMapper.selectList(any())).willReturn(List.of(existingCommentLike()));
+
+        PageResponse<CommentResponse> response = service.listComments(9L, 1, 20, normalUser());
+
+        assertThat(response.records()).hasSize(1);
+        assertThat(response.records().get(0).likedByCurrentUser()).isTrue();
+    }
 
     @Test
     void notifiesPostAuthorWhenNewCommentCreatedByOtherUser() {
@@ -127,7 +154,7 @@ class ForumCommentServiceImplTests {
     }
 
     private ForumCommentServiceImpl service() {
-        return new ForumCommentServiceImpl(postCommentMapper, postMapper, sysUserMapper, notificationMapper);
+        return new ForumCommentServiceImpl(postCommentMapper, postMapper, sysUserMapper, notificationMapper, commentLikeMapper);
     }
 
     private Post normalPost() {
@@ -147,6 +174,25 @@ class ForumCommentServiceImplTests {
         comment.setUserId(8L);
         comment.setStatus(status);
         return comment;
+    }
+
+    private PostComment normalComment() {
+        PostComment comment = new PostComment();
+        comment.setId(21L);
+        comment.setPostId(9L);
+        comment.setUserId(7L);
+        comment.setContent("Detailed route note.");
+        comment.setLikeCount(2);
+        comment.setStatus("NORMAL");
+        return comment;
+    }
+
+    private CommentLike existingCommentLike() {
+        CommentLike like = new CommentLike();
+        like.setId(31L);
+        like.setCommentId(21L);
+        like.setUserId(7L);
+        return like;
     }
 
     private SysUser replyTargetUser() {

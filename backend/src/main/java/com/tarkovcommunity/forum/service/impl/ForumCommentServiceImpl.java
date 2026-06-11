@@ -6,8 +6,10 @@ import com.tarkovcommunity.common.PageResponse;
 import com.tarkovcommunity.forum.dto.CommentCreateRequest;
 import com.tarkovcommunity.forum.dto.CommentCreatedResponse;
 import com.tarkovcommunity.forum.dto.CommentResponse;
+import com.tarkovcommunity.forum.entity.CommentLike;
 import com.tarkovcommunity.forum.entity.Post;
 import com.tarkovcommunity.forum.entity.PostComment;
+import com.tarkovcommunity.forum.mapper.CommentLikeMapper;
 import com.tarkovcommunity.forum.mapper.PostCommentMapper;
 import com.tarkovcommunity.forum.mapper.PostMapper;
 import com.tarkovcommunity.forum.service.ForumCommentService;
@@ -26,6 +28,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -43,9 +46,10 @@ public class ForumCommentServiceImpl implements ForumCommentService {
     private final PostMapper postMapper;
     private final SysUserMapper sysUserMapper;
     private final NotificationMapper notificationMapper;
+    private final CommentLikeMapper commentLikeMapper;
 
     @Override
-    public PageResponse<CommentResponse> listComments(Long postId, int page, int size) {
+    public PageResponse<CommentResponse> listComments(Long postId, int page, int size, SysUser viewer) {
         requireNormalPost(postId);
 
         int safePage = Math.max(page, 1);
@@ -63,7 +67,7 @@ public class ForumCommentServiceImpl implements ForumCommentService {
                 safePage,
                 safeSize,
                 commentPage.getTotal(),
-                toResponses(commentPage.getRecords())
+                toResponses(commentPage.getRecords(), viewer)
         );
     }
 
@@ -142,7 +146,7 @@ public class ForumCommentServiceImpl implements ForumCommentService {
         return post;
     }
 
-    private List<CommentResponse> toResponses(List<PostComment> comments) {
+    private List<CommentResponse> toResponses(List<PostComment> comments, SysUser viewer) {
         if (comments.isEmpty()) {
             return List.of();
         }
@@ -151,6 +155,7 @@ public class ForumCommentServiceImpl implements ForumCommentService {
                 .map(PostComment::getUserId)
                 .filter(Objects::nonNull)
                 .toList());
+        Set<Long> likedCommentIds = selectLikedCommentIds(comments, viewer);
 
         return comments.stream()
                 .map(comment -> new CommentResponse(
@@ -162,9 +167,32 @@ public class ForumCommentServiceImpl implements ForumCommentService {
                         comment.getReplyToUserId(),
                         comment.getContent(),
                         valueOrZero(comment.getLikeCount()),
-                        comment.getCreatedAt()
+                        comment.getCreatedAt(),
+                        likedCommentIds.contains(comment.getId())
                 ))
                 .toList();
+    }
+
+    private Set<Long> selectLikedCommentIds(List<PostComment> comments, SysUser viewer) {
+        if (viewer == null || viewer.getId() == null || comments.isEmpty()) {
+            return Collections.emptySet();
+        }
+
+        List<Long> commentIds = comments.stream()
+                .map(PostComment::getId)
+                .filter(Objects::nonNull)
+                .distinct()
+                .toList();
+        if (commentIds.isEmpty()) {
+            return Collections.emptySet();
+        }
+
+        return commentLikeMapper.selectList(new LambdaQueryWrapper<CommentLike>()
+                        .eq(CommentLike::getUserId, viewer.getId())
+                        .in(CommentLike::getCommentId, commentIds))
+                .stream()
+                .map(CommentLike::getCommentId)
+                .collect(Collectors.toSet());
     }
 
     private Map<Long, SysUser> selectUsers(List<Long> ids) {

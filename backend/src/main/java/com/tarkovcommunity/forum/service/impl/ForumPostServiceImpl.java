@@ -8,7 +8,11 @@ import com.tarkovcommunity.forum.dto.PostCreatedResponse;
 import com.tarkovcommunity.forum.dto.PostDetailResponse;
 import com.tarkovcommunity.forum.dto.PostSummaryResponse;
 import com.tarkovcommunity.forum.dto.PostUpdateRequest;
+import com.tarkovcommunity.forum.entity.Favorite;
 import com.tarkovcommunity.forum.entity.Post;
+import com.tarkovcommunity.forum.entity.PostLike;
+import com.tarkovcommunity.forum.mapper.FavoriteMapper;
+import com.tarkovcommunity.forum.mapper.PostLikeMapper;
 import com.tarkovcommunity.forum.mapper.PostMapper;
 import com.tarkovcommunity.forum.service.ForumPostService;
 import com.tarkovcommunity.meta.entity.Category;
@@ -37,6 +41,8 @@ public class ForumPostServiceImpl implements ForumPostService {
     private final PostMapper postMapper;
     private final CategoryMapper categoryMapper;
     private final SysUserMapper sysUserMapper;
+    private final PostLikeMapper postLikeMapper;
+    private final FavoriteMapper favoriteMapper;
 
     @Override
     public PageResponse<PostSummaryResponse> listPosts(
@@ -87,7 +93,7 @@ public class ForumPostServiceImpl implements ForumPostService {
     }
 
     @Override
-    public PostDetailResponse getPost(Long id) {
+    public PostDetailResponse getPost(Long id, SysUser viewer) {
         Post post = postMapper.selectOne(new LambdaQueryWrapper<Post>()
                 .eq(Post::getId, id)
                 .eq(Post::getStatus, "NORMAL"));
@@ -116,7 +122,10 @@ public class ForumPostServiceImpl implements ForumPostService {
                 valueOrZero(post.getViewCount()),
                 valueOrZero(post.getLikeCount()),
                 valueOrZero(post.getCommentCount()),
-                post.getCreatedAt()
+                post.getCreatedAt(),
+                valueOrZero(post.getFavoriteCount()),
+                hasPostLike(post.getId(), viewer),
+                hasFavorite(post.getId(), viewer)
         );
     }
 
@@ -274,8 +283,32 @@ public class ForumPostServiceImpl implements ForumPostService {
         return author == null ? "未知玩家" : author.getNickname();
     }
 
+    private boolean hasPostLike(Long postId, SysUser viewer) {
+        if (postId == null || viewer == null || viewer.getId() == null) {
+            return false;
+        }
+        Long count = postLikeMapper.selectCount(new LambdaQueryWrapper<PostLike>()
+                .eq(PostLike::getPostId, postId)
+                .eq(PostLike::getUserId, viewer.getId()));
+        return hasRecords(count);
+    }
+
+    private boolean hasFavorite(Long postId, SysUser viewer) {
+        if (postId == null || viewer == null || viewer.getId() == null) {
+            return false;
+        }
+        Long count = favoriteMapper.selectCount(new LambdaQueryWrapper<Favorite>()
+                .eq(Favorite::getPostId, postId)
+                .eq(Favorite::getUserId, viewer.getId()));
+        return hasRecords(count);
+    }
+
     private static boolean isRecommended(Post post) {
         return post.getRecommended() != null && post.getRecommended() == 1;
+    }
+
+    private static boolean hasRecords(Long count) {
+        return count != null && count > 0;
     }
 
     private static int valueOrZero(Integer value) {

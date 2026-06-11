@@ -25,6 +25,7 @@ import java.util.Optional;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.BDDMockito.given;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -87,7 +88,9 @@ class ForumPostControllerTests {
 
     @Test
     void getsPostDetail() throws Exception {
-        given(forumPostService.getPost(1L))
+        SysUser user = normalUser();
+        given(authTokenService.resolveUser(eq("Bearer user-token"))).willReturn(Optional.of(user));
+        given(forumPostService.getPost(eq(1L), eq(user)))
                 .willReturn(new PostDetailResponse(
                         1L,
                         7L,
@@ -102,21 +105,28 @@ class ForumPostControllerTests {
                         31,
                         8,
                         4,
-                        LocalDateTime.of(2026, 6, 4, 18, 5)
+                        LocalDateTime.of(2026, 6, 4, 18, 5),
+                        6,
+                        true,
+                        true
                 ));
 
-        mockMvc.perform(get("/api/posts/1"))
+        mockMvc.perform(get("/api/posts/1")
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer user-token"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.code").value(200))
                 .andExpect(jsonPath("$.data.title").value("工厂近距离配装讨论"))
                 .andExpect(jsonPath("$.data.authorId").value(7L))
                 .andExpect(jsonPath("$.data.categoryId").value(2L))
+                .andExpect(jsonPath("$.data.favoriteCount").value(6))
+                .andExpect(jsonPath("$.data.likedByCurrentUser").value(true))
+                .andExpect(jsonPath("$.data.favoritedByCurrentUser").value(true))
                 .andExpect(jsonPath("$.data.content").value("预算有限时可以优先保证耳机、护甲和高穿弹药。"));
     }
 
     @Test
     void returnsUnifiedNotFoundResponse() throws Exception {
-        given(forumPostService.getPost(404L))
+        given(forumPostService.getPost(eq(404L), isNull()))
                 .willThrow(new ResponseStatusException(HttpStatus.NOT_FOUND, "帖子不存在"));
 
         mockMvc.perform(get("/api/posts/404"))

@@ -8,7 +8,7 @@ import com.tarkovcommunity.user.entity.SysUser;
 
 public interface ForumCommentService {
 
-    PageResponse<CommentResponse> listComments(Long postId, int page, int size);
+    PageResponse<CommentResponse> listComments(Long postId, int page, int size, SysUser viewer);
 
     CommentCreatedResponse createComment(Long postId, CommentCreateRequest request, SysUser author);
 }

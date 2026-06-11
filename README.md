@@ -4,6 +4,7 @@
 
 ## 当前进度
 
+- 已增强帖子详情互动状态，登录用户刷新页面后可保留帖子点赞、收藏和评论点赞按钮状态
 - 已完成项目需求与构建计划文档：`tarkov-community-requirements-plan.md`
 - 已完成 Vue 3 前端基础工程，使用 JavaScript、Vue Router、Pinia、Axios、Element Plus
 - 已完成 Spring Boot 后端基础工程，接入 MySQL、MyBatis-Plus、统一响应和统一异常处理

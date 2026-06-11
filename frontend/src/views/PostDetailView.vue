@@ -156,6 +156,28 @@ function commentReportTitle(comment) {
   return content.length > 42 ? `${content.slice(0, 42)}...` : content
 }
 
+function applyPostState(postData) {
+  post.value = postData
+  likeActive.value = Boolean(postData?.likedByCurrentUser)
+  favoriteActive.value = Boolean(postData?.favoritedByCurrentUser)
+  favoriteCount.value = postData?.favoriteCount ?? null
+}
+
+function applyCommentsPage(pageData, options = {}) {
+  commentsPage.value = pageData
+  const nextLiked = options.resetLikedState ? new Set() : new Set(likedCommentIds.value)
+
+  ;(pageData?.records ?? []).forEach((comment) => {
+    if (comment.likedByCurrentUser) {
+      nextLiked.add(comment.id)
+    } else {
+      nextLiked.delete(comment.id)
+    }
+  })
+
+  likedCommentIds.value = nextLiked
+}
+
 async function loadDetail() {
   if (!Number.isFinite(postId.value)) {
     errorMessage.value = '帖子地址不正确'
@@ -170,8 +192,8 @@ async function loadDetail() {
       fetchPostDetail(postId.value),
       fetchPostComments(postId.value, { page: 1, size: commentsPage.value.size }),
     ])
-    post.value = postData
-    commentsPage.value = commentData
+    applyPostState(postData)
+    applyCommentsPage(commentData, { resetLikedState: true })
   } catch (error) {
     errorMessage.value = resolveError(error, '帖子详情暂时无法加载')
   } finally {
@@ -188,10 +210,11 @@ async function loadComments(page = commentsPage.value.page) {
   commentsPage.value.page = page
 
   try {
-    commentsPage.value = await fetchPostComments(postId.value, {
+    const commentData = await fetchPostComments(postId.value, {
       page,
       size: commentsPage.value.size,
     })
+    applyCommentsPage(commentData)
   } catch (error) {
     ElMessage.error(resolveError(error, '评论暂时无法加载'))
   } finally {

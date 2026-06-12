@@ -8,6 +8,7 @@ import com.tarkovcommunity.meta.dto.TagResponse;
 import com.tarkovcommunity.meta.service.CommunityMetaService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -37,5 +38,10 @@ public class CommunityMetaController {
             @RequestParam(defaultValue = "5") int size
     ) {
         return ApiResponse.success(communityMetaService.listPublishedAnnouncements(page, size));
+    }
+
+    @GetMapping("/announcements/{id}")
+    public ApiResponse<AnnouncementResponse> getAnnouncement(@PathVariable Long id) {
+        return ApiResponse.success(communityMetaService.getPublishedAnnouncement(id));
     }
 }

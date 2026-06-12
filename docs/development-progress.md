@@ -944,6 +944,13 @@
   - 390px 移动端视口下页面无横向溢出，超长公告标题可正常换行
   - 浏览器控制台无相关错误
   - 测试后已清理临时公告
+- 首页预览入口详情页验证：
+  - 社区公告卡片可进入 `/announcements/{id}` 公告详情页
+  - 社区分区卡片可进入情报广场，并通过 `categoryCode` 自动筛选对应分区
+  - 塔科夫资料预览条目可进入 `/catalog/{kind}/{id}` 资料详情页
+  - 后端新增公开公告详情接口 `GET /api/announcements/{id}`，只返回已发布公告
+  - 本地数据库连接问题定位为后端启动时缺少正确 `DB_PASSWORD` 环境变量，已在运行说明中补充
+  - 浏览器控制台无相关错误
 - 所有临时测试用户、测试帖子、测试评论、点赞收藏数据均已清理
 
 已推送到 GitHub 的近期提交：
@@ -1012,6 +1019,7 @@
 - `feat: enrich tarkov demo data`
 - `feat: enrich profiles and demo data`
 - `feat: add user center follow lists`
+- `feat: link home preview details`
 
 ## 下一阶段建议
 
@@ -1027,4 +1035,5 @@
 - 认证 token 已具备签名和过期校验，后续如需生产化可继续接入 Spring Security 标准过滤链。
 - 前端当前使用 JavaScript，不使用 TypeScript，符合项目要求。
 - 演示数据已能支撑首页、情报广场和公开玩家主页展示，后续可继续补撤离点、资源点和任务链。
+- 本地启动后端前需要在同一个 PowerShell 窗口配置正确的 `DB_USERNAME` 和 `DB_PASSWORD`，否则数据库接口会超时或返回服务器错误。
 - 前端页面保持清爽社区风格，不走传统塔科夫 wiki 的密集资料堆叠路线。

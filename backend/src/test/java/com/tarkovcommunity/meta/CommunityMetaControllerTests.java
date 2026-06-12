@@ -70,4 +70,23 @@ class CommunityMetaControllerTests {
                 .andExpect(jsonPath("$.data.records[0].title").value("社区维护提醒"))
                 .andExpect(jsonPath("$.data.records[0].content").value("今晚 23:00 会短暂维护。"));
     }
+
+    @Test
+    void getsPublishedAnnouncementDetail() throws Exception {
+        given(communityMetaService.getPublishedAnnouncement(3L))
+                .willReturn(new AnnouncementResponse(
+                        3L,
+                        "Patch Notes",
+                        "Only published announcements should be readable by visitors.",
+                        LocalDateTime.of(2026, 6, 12, 9, 54),
+                        LocalDateTime.of(2026, 6, 12, 9, 54)
+                ));
+
+        mockMvc.perform(get("/api/announcements/3"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.code").value(200))
+                .andExpect(jsonPath("$.data.id").value(3))
+                .andExpect(jsonPath("$.data.title").value("Patch Notes"))
+                .andExpect(jsonPath("$.data.content").value("Only published announcements should be readable by visitors."));
+    }
 }

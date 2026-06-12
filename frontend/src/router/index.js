@@ -22,6 +22,8 @@ import AdminTagManagementView from '../views/AdminTagManagementView.vue'
 import AdminTraderManagementView from '../views/AdminTraderManagementView.vue'
 import AdminUserManagementView from '../views/AdminUserManagementView.vue'
 import AdminWeaponManagementView from '../views/AdminWeaponManagementView.vue'
+import AnnouncementDetailView from '../views/AnnouncementDetailView.vue'
+import CatalogDetailView from '../views/CatalogDetailView.vue'
 import EmailVerifyView from '../views/EmailVerifyView.vue'
 import LoginView from '../views/LoginView.vue'
 import PostBoardView from '../views/PostBoardView.vue'
@@ -78,6 +80,22 @@ const routes = [
     component: UserPublicView,
     meta: {
       title: '玩家主页',
+    },
+  },
+  {
+    path: '/announcements/:id',
+    name: 'announcement-detail',
+    component: AnnouncementDetailView,
+    meta: {
+      title: '公告详情',
+    },
+  },
+  {
+    path: '/catalog/:kind/:id',
+    name: 'catalog-detail',
+    component: CatalogDetailView,
+    meta: {
+      title: '资料详情',
     },
   },
   {

@@ -14,7 +14,9 @@ import com.tarkovcommunity.meta.mapper.CategoryMapper;
 import com.tarkovcommunity.meta.mapper.TagMapper;
 import com.tarkovcommunity.meta.service.CommunityMetaService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 
@@ -87,6 +89,25 @@ public class CommunityMetaServiceImpl implements CommunityMetaService {
                                 announcement.getUpdatedAt()
                         ))
                         .toList()
+        );
+    }
+
+    @Override
+    public AnnouncementResponse getPublishedAnnouncement(Long id) {
+        Announcement announcement = announcementMapper.selectOne(new LambdaQueryWrapper<Announcement>()
+                .eq(Announcement::getId, id)
+                .eq(Announcement::getStatus, "PUBLISHED"));
+
+        if (announcement == null) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "公告不存在或未发布");
+        }
+
+        return new AnnouncementResponse(
+                announcement.getId(),
+                announcement.getTitle(),
+                announcement.getContent(),
+                announcement.getCreatedAt(),
+                announcement.getUpdatedAt()
         );
     }
 }

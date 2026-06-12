@@ -13,4 +13,6 @@ public interface CommunityMetaService {
     List<TagResponse> listTags();
 
     PageResponse<AnnouncementResponse> listPublishedAnnouncements(int page, int size);
+
+    AnnouncementResponse getPublishedAnnouncement(Long id);
 }

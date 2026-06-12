@@ -1,6 +1,6 @@
 <script setup>
-import { computed, onMounted, ref } from 'vue'
-import { useRouter } from 'vue-router'
+import { computed, onMounted, ref, watch } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 import {
   ChatLineRound,
   EditPen,
@@ -15,6 +15,7 @@ import { fetchPosts } from '../api/postApi'
 import { useUserStore } from '../stores/userStore'
 
 const router = useRouter()
+const route = useRoute()
 const userStore = useUserStore()
 
 const loading = ref(false)
@@ -50,6 +51,8 @@ const sortOptions = [
   { label: '点赞最多', value: 'MOST_LIKED' },
 ]
 
+const routeSortValues = new Set(sortOptions.map((option) => option.value))
+
 const postTypeLabelMap = postTypeOptions.reduce((map, option) => {
   map[option.value] = option.label
   return map
@@ -67,6 +70,23 @@ const queryParams = computed(() => ({
 
 function resolveError(error, fallback) {
   return error?.response?.data?.message || error?.message || fallback
+}
+
+function stringQueryValue(value) {
+  return typeof value === 'string' ? value : ''
+}
+
+function applyRouteQuery() {
+  const sort = stringQueryValue(route.query.sort)
+
+  filters.value = {
+    ...filters.value,
+    keyword: stringQueryValue(route.query.keyword),
+    categoryCode: stringQueryValue(route.query.categoryCode),
+    postType: stringQueryValue(route.query.postType),
+    sort: routeSortValues.has(sort) ? sort : 'LATEST',
+    recommended: route.query.recommended === 'true',
+  }
 }
 
 function postTypeLabel(type) {
@@ -100,6 +120,10 @@ function resetFilters() {
     sort: 'LATEST',
     recommended: false,
   }
+  if (Object.keys(route.query).length) {
+    router.replace({ name: 'post-board' })
+    return
+  }
   loadBoard(1)
 }
 
@@ -110,7 +134,18 @@ function goCreatePost() {
   )
 }
 
-onMounted(() => loadBoard(1))
+watch(
+  () => route.query,
+  () => {
+    applyRouteQuery()
+    loadBoard(1)
+  }
+)
+
+onMounted(() => {
+  applyRouteQuery()
+  loadBoard(1)
+})
 </script>
 
 <template>

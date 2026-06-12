@@ -105,7 +105,9 @@ const quickCatalogGroups = computed(() => [
     title: '地图情报',
     icon: MapLocation,
     items: catalog.value.maps.map((item) => ({
+      key: `map-${item.id}`,
       id: item.id,
+      kind: 'maps',
       name: item.nameZh,
       meta: `${item.nameEn} · ${item.difficulty || '未知难度'}`,
     })),
@@ -114,7 +116,9 @@ const quickCatalogGroups = computed(() => [
     title: '商人任务线',
     icon: Collection,
     items: catalog.value.traders.map((item) => ({
+      key: `trader-${item.id}`,
       id: item.id,
+      kind: 'traders',
       name: item.nameEn,
       meta: item.unlockCondition || item.nameEn,
     })),
@@ -124,12 +128,16 @@ const quickCatalogGroups = computed(() => [
     icon: DataAnalysis,
     items: [
       ...catalog.value.weapons.map((item) => ({
-        id: `weapon-${item.id}`,
+        key: `weapon-${item.id}`,
+        id: item.id,
+        kind: 'weapons',
         name: item.nameZh,
         meta: `${item.weaponType} · ${item.caliber}`,
       })),
       ...catalog.value.ammo.map((item) => ({
-        id: `ammo-${item.id}`,
+        key: `ammo-${item.id}`,
+        id: item.id,
+        kind: 'ammo',
         name: item.nameZh,
         meta: `${item.caliber} · 穿透 ${item.penetration}`,
       })),
@@ -140,12 +148,16 @@ const quickCatalogGroups = computed(() => [
     icon: Connection,
     items: [
       ...catalog.value.bosses.map((item) => ({
-        id: `boss-${item.id}`,
+        key: `boss-${item.id}`,
+        id: item.id,
+        kind: 'bosses',
         name: item.nameEn,
         meta: 'Boss 情报',
       })),
       ...catalog.value.hideoutStations.map((item) => ({
-        id: `hideout-${item.id}`,
+        key: `hideout-${item.id}`,
+        id: item.id,
+        kind: 'hideout',
         name: item.nameZh,
         meta: '藏身处设施',
       })),
@@ -249,10 +261,11 @@ onMounted(loadCatalog)
         </div>
 
         <div class="announcement-list">
-          <article
+          <RouterLink
             v-for="announcement in announcements"
             :key="announcement.id"
             class="announcement-item"
+            :to="{ name: 'announcement-detail', params: { id: announcement.id } }"
           >
             <Bell />
             <div>
@@ -262,7 +275,7 @@ onMounted(loadCatalog)
               </div>
               <p>{{ announcement.content }}</p>
             </div>
-          </article>
+          </RouterLink>
         </div>
       </section>
 
@@ -328,10 +341,11 @@ onMounted(loadCatalog)
         </div>
 
         <div class="category-grid">
-          <article
+          <RouterLink
             v-for="category in catalog.categories"
             :key="category.id"
             class="category-card"
+            :to="{ name: 'post-board', query: { categoryCode: category.code } }"
           >
             <component
               :is="categoryIconMap[category.code] || Collection"
@@ -342,7 +356,7 @@ onMounted(loadCatalog)
               <p>{{ category.description }}</p>
               <el-tag size="small" effect="plain">{{ category.code }}</el-tag>
             </div>
-          </article>
+          </RouterLink>
         </div>
       </section>
 
@@ -363,9 +377,14 @@ onMounted(loadCatalog)
               <h4>{{ group.title }}</h4>
             </div>
             <ul>
-              <li v-for="item in group.items.slice(0, 4)" :key="item.id">
-                <span>{{ item.name }}</span>
-                <small>{{ item.meta }}</small>
+              <li v-for="item in group.items.slice(0, 4)" :key="item.key">
+                <RouterLink
+                  class="catalog-item-link"
+                  :to="{ name: 'catalog-detail', params: { kind: item.kind, id: item.id } }"
+                >
+                  <span>{{ item.name }}</span>
+                  <small>{{ item.meta }}</small>
+                </RouterLink>
               </li>
             </ul>
           </article>

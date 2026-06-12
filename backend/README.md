@@ -61,7 +61,7 @@ $env:DB_USERNAME="root"
 $env:DB_PASSWORD="你的 MySQL 密码"
 ```
 
-如果暂时没有配置密码，项目仍可启动，但真正访问数据库接口时需要正确的 MySQL 账号。
+请在同一个 PowerShell 窗口中先设置以上环境变量，再执行 `.\mvnw spring-boot:run`。如果没有配置正确密码，项目可能仍能启动，但真正访问公告、分区、塔科夫资料等数据库接口时会超时或返回服务器错误。
 
 ## 认证 Token 环境变量
 

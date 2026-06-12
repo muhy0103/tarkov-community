@@ -17,6 +17,9 @@ export const fetchAnnouncements = (params = {}) =>
     })
     .then((response) => response?.data ?? { page: 1, size: 3, total: 0, pages: 0, records: [] })
 
+export const fetchAnnouncement = (id) =>
+  request.get(`/announcements/${id}`).then((response) => response?.data)
+
 export const fetchMaps = () => request.get('/tarkov/maps').then(unwrapList)
 
 export const fetchTraders = () => request.get('/tarkov/traders').then(unwrapList)

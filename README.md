@@ -70,6 +70,7 @@
 - 已完成作者编辑帖子前端流程，可从帖子详情和用户中心进入编辑页并保存修改
 - 已完成作者下架帖子前端流程，可在帖子详情页确认下架并回到用户中心
 - 已完成首页公告展示，可读取公开公告接口并只展示已发布公告
+- 已完成首页公告、社区分区和塔科夫资料预览点击入口，可进入公告详情、分区筛选和资料详情页
 - 已完成前端个人资料编辑弹窗，可在用户中心修改昵称、邮箱和头像并同步登录态
 - 已完成前端修改密码弹窗，保存成功后退出登录并引导使用新密码重新进入
 - 已完成前端写操作请求精简，发帖、评论、点赞和收藏不再向后端提交 `userId`
@@ -105,6 +106,9 @@
 
 ```powershell
 cd C:\Users\muhy\Desktop\Study\tarkov-community\backend
+$env:DB_URL="jdbc:mysql://localhost:3306/tarkov_community?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai&useSSL=false&allowPublicKeyRetrieval=true"
+$env:DB_USERNAME="root"
+$env:DB_PASSWORD="你的 MySQL 密码"
 .\mvnw spring-boot:run
 ```
 

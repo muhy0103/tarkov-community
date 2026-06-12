@@ -6,6 +6,7 @@ target/
 dist/
 build/
 out/
+.worktrees/
 
 # Logs
 *.log

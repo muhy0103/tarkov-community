@@ -12,5 +12,6 @@ public class Boss {
     private Long mapId;
     private String description;
     private String equipmentSummary;
+    private String imageUrl;
     private String status;
 }

@@ -4,6 +4,7 @@ public record BossResponse(
         Long id,
         String nameEn,
         String nameZh,
-        Long mapId
+        Long mapId,
+        String imageUrl
 ) {
 }

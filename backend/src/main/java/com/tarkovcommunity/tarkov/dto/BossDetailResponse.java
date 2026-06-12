@@ -7,6 +7,7 @@ public record BossDetailResponse(
         Long mapId,
         String description,
         String equipmentSummary,
+        String imageUrl,
         TarkovMapResponse map
 ) {
 }

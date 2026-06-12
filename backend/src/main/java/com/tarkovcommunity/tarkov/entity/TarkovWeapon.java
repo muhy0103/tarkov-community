@@ -12,5 +12,6 @@ public class TarkovWeapon {
     private String weaponType;
     private String caliber;
     private String description;
+    private String imageUrl;
     private String status;
 }

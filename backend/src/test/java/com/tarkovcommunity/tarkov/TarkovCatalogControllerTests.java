@@ -34,24 +34,26 @@ class TarkovCatalogControllerTests {
     @Test
     void listsMaps() throws Exception {
         given(tarkovCatalogService.listMaps())
-                .willReturn(List.of(new TarkovMapResponse(1L, "Customs", "海关", "中等", "1+")));
+                .willReturn(List.of(new TarkovMapResponse(1L, "Customs", "海关", "中等", "1+", "https://assets.tarkov.dev/customs.webp")));
 
         mockMvc.perform(get("/api/tarkov/maps"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.code").value(200))
-                .andExpect(jsonPath("$.data[0].nameEn").value("Customs"));
+                .andExpect(jsonPath("$.data[0].nameEn").value("Customs"))
+                .andExpect(jsonPath("$.data[0].imageUrl").value("https://assets.tarkov.dev/customs.webp"));
     }
 
     @Test
     void listsTraders() throws Exception {
         given(tarkovCatalogService.listTraders())
-                .willReturn(List.of(new TraderResponse(1L, "Prapor", null, "默认解锁")));
+                .willReturn(List.of(new TraderResponse(1L, "Prapor", null, "默认解锁", "https://assets.tarkov.dev/prapor.webp")));
 
         mockMvc.perform(get("/api/tarkov/traders"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.code").value(200))
                 .andExpect(jsonPath("$.data[0].nameEn").value("Prapor"))
-                .andExpect(jsonPath("$.data[0].nameZh").doesNotExist());
+                .andExpect(jsonPath("$.data[0].nameZh").doesNotExist())
+                .andExpect(jsonPath("$.data[0].avatar").value("https://assets.tarkov.dev/prapor.webp"));
     }
 
     @Test
@@ -64,6 +66,7 @@ class TarkovCatalogControllerTests {
                         "中等",
                         "任务密集、撤离选择多。",
                         "1+",
+                        "https://assets.tarkov.dev/customs.webp",
                         List.of(new MapExtractResponse(1L, "Crossroads", "SCAV/PMC", "默认开启", "西侧撤离点")),
                         List.of(new MapLootAreaResponse(1L, "宿舍楼", "钥匙房/保险箱", "高", "Boss 与玩家交火高发区")),
                         List.of(),
@@ -74,6 +77,7 @@ class TarkovCatalogControllerTests {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.code").value(200))
                 .andExpect(jsonPath("$.data.nameEn").value("Customs"))
+                .andExpect(jsonPath("$.data.imageUrl").value("https://assets.tarkov.dev/customs.webp"))
                 .andExpect(jsonPath("$.data.extracts[0].name").value("Crossroads"))
                 .andExpect(jsonPath("$.data.lootAreas[0].riskLevel").value("高"));
     }

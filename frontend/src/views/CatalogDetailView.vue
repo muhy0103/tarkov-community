@@ -112,6 +112,29 @@ const config = computed(() => catalogConfig[route.params.kind] || null)
 const title = computed(() => detail.value?.nameZh || detail.value?.nameEn || config.value?.label || '资料详情')
 const subtitle = computed(() => detail.value?.nameEn || config.value?.label || 'Tarkov Catalog')
 const description = computed(() => detail.value?.description || detail.value?.equipmentSummary || '')
+const mediaFailed = ref(false)
+const mediaUrl = computed(() => detail.value?.imageUrl || detail.value?.avatar || '')
+const mediaAlt = computed(() => `${title.value} ${config.value?.label || '资料图片'}`)
+const mediaLabel = computed(() => {
+  const kind = route.params.kind
+  if (kind === 'maps') {
+    return '地图预览'
+  }
+  if (kind === 'traders') {
+    return '商人头像'
+  }
+  if (kind === 'bosses') {
+    return 'Boss 肖像'
+  }
+  if (kind === 'weapons') {
+    return '武器图鉴'
+  }
+  if (kind === 'ammo') {
+    return '弹药图鉴'
+  }
+  return '资料图片'
+})
+const mediaClass = computed(() => `detail-media-${route.params.kind}`)
 
 const fieldRows = computed(() => {
   if (!detail.value || !config.value) {
@@ -149,6 +172,7 @@ const relationSections = computed(() => {
       relationSection('相关 Boss', '出现于该地图的威胁情报', value.bosses, (item) => ({
         title: item.nameEn,
         meta: 'Boss 情报',
+        media: mediaFor(item),
         to: catalogRoute('bosses', item.id),
       }), '暂无 Boss 数据'),
       relationSection('相关任务', '可在该地图完成或推进的任务', value.quests, questCard, '暂无任务数据'),
@@ -166,6 +190,7 @@ const relationSections = computed(() => {
       relationSection('任务来源', '商人与地图关联', compactText([value.trader, value.map]), (item) => ({
         title: item.nameZh || item.nameEn,
         meta: item.unlockCondition || item.difficulty || '关联资料',
+        media: mediaFor(item),
         to: catalogRoute(item.unlockCondition !== undefined ? 'traders' : 'maps', item.id),
       }), '暂无来源数据'),
       relationSection('前置任务', '开始前建议先完成', value.prerequisites, questCard, '暂无前置任务'),
@@ -177,6 +202,7 @@ const relationSections = computed(() => {
       relationSection('可用弹药', '同口径弹药对比', value.compatibleAmmo, (item) => ({
         title: item.nameZh || item.nameEn,
         meta: `${item.caliber} · 肉伤 ${item.damage} · 穿透 ${item.penetration}`,
+        media: mediaFor(item),
         to: catalogRoute('ammo', item.id),
       }), '暂无同口径弹药'),
     ])
@@ -187,6 +213,7 @@ const relationSections = computed(() => {
       relationSection('可用武器', '使用该口径的武器', value.compatibleWeapons, (item) => ({
         title: item.nameZh || item.nameEn,
         meta: `${item.weaponType} · ${item.caliber}`,
+        media: mediaFor(item),
         to: catalogRoute('weapons', item.id),
       }), '暂无同口径武器'),
     ])
@@ -197,6 +224,7 @@ const relationSections = computed(() => {
       relationSection('出现地图', '进入地图详情查看撤离和资源点', compactText([value.map]), (item) => ({
         title: item.nameZh || item.nameEn,
         meta: `${item.nameEn} · ${item.difficulty || '未知难度'}`,
+        media: mediaFor(item),
         to: catalogRoute('maps', item.id),
       }), '暂无地图关联'),
       relationSection('装备摘要', '演示数据中的威胁特征', compactText([value.equipmentSummary]), (item) => ({
@@ -248,6 +276,18 @@ function catalogRoute(kind, id) {
   return { name: 'catalog-detail', params: { kind, id } }
 }
 
+function mediaFor(value) {
+  return value?.imageUrl || value?.avatar || ''
+}
+
+function markMediaFailed() {
+  mediaFailed.value = true
+}
+
+function hideBrokenImage(event) {
+  event.target.style.display = 'none'
+}
+
 function formatValue(value) {
   if (typeof value === 'boolean') {
     return value ? '是' : '否'
@@ -272,6 +312,7 @@ async function loadDetail() {
   detail.value = null
 
   try {
+    mediaFailed.value = false
     detail.value = await fetchCatalogDetail(route.params.kind, route.params.id)
   } catch (error) {
     detail.value = null
@@ -291,7 +332,10 @@ function goDiscussion() {
 
 watch(
   () => [route.params.kind, route.params.id],
-  () => loadDetail()
+  () => {
+    mediaFailed.value = false
+    loadDetail()
+  }
 )
 
 onMounted(loadDetail)
@@ -325,6 +369,26 @@ onMounted(loadDetail)
         </div>
       </div>
 
+      <div v-if="mediaUrl" class="detail-media-panel" :class="mediaClass">
+        <div class="detail-media-frame">
+          <img
+            v-if="!mediaFailed"
+            :src="mediaUrl"
+            :alt="mediaAlt"
+            loading="lazy"
+            @error="markMediaFailed"
+          />
+          <div v-else class="detail-media-fallback">
+            <component :is="config.icon || Connection" />
+          </div>
+        </div>
+        <div class="detail-media-copy">
+          <span>{{ mediaLabel }}</span>
+          <strong>{{ title }}</strong>
+          <p>{{ subtitle }}</p>
+        </div>
+      </div>
+
       <div class="detail-meta-grid">
         <article v-for="row in fieldRows" :key="row.label">
           <span>{{ row.label }}</span>
@@ -352,9 +416,14 @@ onMounted(loadDetail)
               class="detail-relation-item"
               :to="item.to"
             >
-              <strong>{{ item.title }}</strong>
-              <span v-if="item.meta">{{ item.meta }}</span>
-              <p v-if="item.description">{{ item.description }}</p>
+              <div v-if="item.media" class="detail-relation-thumb">
+                <img :src="item.media" :alt="item.title" loading="lazy" @error="hideBrokenImage" />
+              </div>
+              <div class="detail-relation-content">
+                <strong>{{ item.title }}</strong>
+                <span v-if="item.meta">{{ item.meta }}</span>
+                <p v-if="item.description">{{ item.description }}</p>
+              </div>
             </component>
           </div>
           <p v-else class="detail-empty-text">{{ section.emptyText }}</p>

@@ -4,6 +4,7 @@ public record TraderResponse(
         Long id,
         String nameEn,
         String nameZh,
-        String unlockCondition
+        String unlockCondition,
+        String avatar
 ) {
 }

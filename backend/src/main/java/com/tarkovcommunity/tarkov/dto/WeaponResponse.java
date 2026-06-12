@@ -5,6 +5,7 @@ public record WeaponResponse(
         String nameEn,
         String nameZh,
         String weaponType,
-        String caliber
+        String caliber,
+        String imageUrl
 ) {
 }

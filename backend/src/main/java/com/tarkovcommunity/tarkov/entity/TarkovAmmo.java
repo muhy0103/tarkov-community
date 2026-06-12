@@ -14,5 +14,6 @@ public class TarkovAmmo {
     private Integer penetration;
     private Integer armorDamage;
     private String description;
+    private String imageUrl;
     private String status;
 }

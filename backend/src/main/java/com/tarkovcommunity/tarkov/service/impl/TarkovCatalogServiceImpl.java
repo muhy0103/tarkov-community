@@ -75,7 +75,7 @@ public class TarkovCatalogServiceImpl implements TarkovCatalogService {
     public List<TarkovMapResponse> listMaps() {
         return mapMapper.selectList(enabled(TarkovMap::getStatus).orderByAsc(TarkovMap::getId))
                 .stream()
-                .map(map -> new TarkovMapResponse(map.getId(), map.getNameEn(), map.getNameZh(), map.getDifficulty(), map.getRecommendedLevel()))
+                .map(this::toMapResponse)
                 .toList();
     }
 
@@ -83,7 +83,7 @@ public class TarkovCatalogServiceImpl implements TarkovCatalogService {
     public List<TraderResponse> listTraders() {
         return traderMapper.selectList(enabled(TarkovTrader::getStatus).orderByAsc(TarkovTrader::getId))
                 .stream()
-                .map(trader -> new TraderResponse(trader.getId(), trader.getNameEn(), null, trader.getUnlockCondition()))
+                .map(this::toTraderResponse)
                 .toList();
     }
 
@@ -107,7 +107,7 @@ public class TarkovCatalogServiceImpl implements TarkovCatalogService {
     public List<WeaponResponse> listWeapons() {
         return weaponMapper.selectList(enabled(TarkovWeapon::getStatus).orderByAsc(TarkovWeapon::getId))
                 .stream()
-                .map(weapon -> new WeaponResponse(weapon.getId(), weapon.getNameEn(), weapon.getNameZh(), weapon.getWeaponType(), weapon.getCaliber()))
+                .map(this::toWeaponResponse)
                 .toList();
     }
 
@@ -115,7 +115,7 @@ public class TarkovCatalogServiceImpl implements TarkovCatalogService {
     public List<AmmoResponse> listAmmo() {
         return ammoMapper.selectList(enabled(TarkovAmmo::getStatus).orderByAsc(TarkovAmmo::getId))
                 .stream()
-                .map(ammo -> new AmmoResponse(ammo.getId(), ammo.getNameEn(), ammo.getNameZh(), ammo.getCaliber(), ammo.getDamage(), ammo.getPenetration()))
+                .map(this::toAmmoResponse)
                 .toList();
     }
 
@@ -131,7 +131,7 @@ public class TarkovCatalogServiceImpl implements TarkovCatalogService {
     public List<BossResponse> listBosses() {
         return bossMapper.selectList(enabled(Boss::getStatus).orderByAsc(Boss::getId))
                 .stream()
-                .map(boss -> new BossResponse(boss.getId(), boss.getNameEn(), null, boss.getMapId()))
+                .map(this::toBossResponse)
                 .toList();
     }
 
@@ -171,6 +171,7 @@ public class TarkovCatalogServiceImpl implements TarkovCatalogService {
                 map.getDifficulty(),
                 map.getDescription(),
                 map.getRecommendedLevel(),
+                map.getImageUrl(),
                 extracts,
                 lootAreas,
                 bosses,
@@ -269,6 +270,7 @@ public class TarkovCatalogServiceImpl implements TarkovCatalogService {
                 weapon.getWeaponType(),
                 weapon.getCaliber(),
                 weapon.getDescription(),
+                weapon.getImageUrl(),
                 compatibleAmmo
         );
     }
@@ -292,6 +294,7 @@ public class TarkovCatalogServiceImpl implements TarkovCatalogService {
                 ammo.getPenetration(),
                 ammo.getArmorDamage(),
                 ammo.getDescription(),
+                ammo.getImageUrl(),
                 compatibleWeapons
         );
     }
@@ -327,6 +330,7 @@ public class TarkovCatalogServiceImpl implements TarkovCatalogService {
                 boss.getMapId(),
                 boss.getDescription(),
                 boss.getEquipmentSummary(),
+                boss.getImageUrl(),
                 map
         );
     }
@@ -362,11 +366,11 @@ public class TarkovCatalogServiceImpl implements TarkovCatalogService {
     }
 
     private TarkovMapResponse toMapResponse(TarkovMap map) {
-        return new TarkovMapResponse(map.getId(), map.getNameEn(), map.getNameZh(), map.getDifficulty(), map.getRecommendedLevel());
+        return new TarkovMapResponse(map.getId(), map.getNameEn(), map.getNameZh(), map.getDifficulty(), map.getRecommendedLevel(), map.getImageUrl());
     }
 
     private TraderResponse toTraderResponse(TarkovTrader trader) {
-        return new TraderResponse(trader.getId(), trader.getNameEn(), null, trader.getUnlockCondition());
+        return new TraderResponse(trader.getId(), trader.getNameEn(), null, trader.getUnlockCondition(), trader.getAvatar());
     }
 
     private QuestResponse toQuestResponse(TarkovQuest quest) {
@@ -374,15 +378,15 @@ public class TarkovCatalogServiceImpl implements TarkovCatalogService {
     }
 
     private WeaponResponse toWeaponResponse(TarkovWeapon weapon) {
-        return new WeaponResponse(weapon.getId(), weapon.getNameEn(), weapon.getNameZh(), weapon.getWeaponType(), weapon.getCaliber());
+        return new WeaponResponse(weapon.getId(), weapon.getNameEn(), weapon.getNameZh(), weapon.getWeaponType(), weapon.getCaliber(), weapon.getImageUrl());
     }
 
     private AmmoResponse toAmmoResponse(TarkovAmmo ammo) {
-        return new AmmoResponse(ammo.getId(), ammo.getNameEn(), ammo.getNameZh(), ammo.getCaliber(), ammo.getDamage(), ammo.getPenetration());
+        return new AmmoResponse(ammo.getId(), ammo.getNameEn(), ammo.getNameZh(), ammo.getCaliber(), ammo.getDamage(), ammo.getPenetration(), ammo.getImageUrl());
     }
 
     private BossResponse toBossResponse(Boss boss) {
-        return new BossResponse(boss.getId(), boss.getNameEn(), null, boss.getMapId());
+        return new BossResponse(boss.getId(), boss.getNameEn(), null, boss.getMapId(), boss.getImageUrl());
     }
 
     private MapExtractResponse toExtractResponse(MapExtract extract) {

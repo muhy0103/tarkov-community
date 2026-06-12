@@ -12,5 +12,6 @@ public class TarkovMap {
     private String difficulty;
     private String description;
     private String recommendedLevel;
+    private String imageUrl;
     private String status;
 }

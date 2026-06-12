@@ -9,6 +9,7 @@ public record TarkovMapDetailResponse(
         String difficulty,
         String description,
         String recommendedLevel,
+        String imageUrl,
         List<MapExtractResponse> extracts,
         List<MapLootAreaResponse> lootAreas,
         List<BossResponse> bosses,

@@ -171,6 +171,91 @@ VALUES
   (13, 'Partisan', NULL, NULL, '可在多地图活动的威胁目标，适合社区持续记录。', '突击武器、特殊行为逻辑。', 'ENABLED')
 ON DUPLICATE KEY UPDATE name_zh = VALUES(name_zh), map_id = VALUES(map_id), description = VALUES(description), equipment_summary = VALUES(equipment_summary), status = VALUES(status);
 
+UPDATE tarkov_map
+SET image_url = CASE name_en
+  WHEN 'Customs' THEN 'https://static.wikia.nocookie.net/escapefromtarkov_gamepedia/images/6/67/Customs_Showcase_1.png/revision/latest/scale-to-width-down/800?cb=20250316152159'
+  WHEN 'Factory' THEN 'https://static.wikia.nocookie.net/escapefromtarkov_gamepedia/images/f/f1/Factory_Showcase_1.png/revision/latest/scale-to-width-down/800?cb=20240825122753'
+  WHEN 'Woods' THEN 'https://static.wikia.nocookie.net/escapefromtarkov_gamepedia/images/4/46/Woods_Showcase_1.png/revision/latest/scale-to-width-down/800?cb=20230730012947'
+  WHEN 'Reserve' THEN 'https://static.wikia.nocookie.net/escapefromtarkov_gamepedia/images/0/02/Reserve_Showcase_1.png/revision/latest/scale-to-width-down/800?cb=20230730025742'
+  WHEN 'Streets of Tarkov' THEN 'https://static.wikia.nocookie.net/escapefromtarkov_gamepedia/images/c/c1/Streets_of_Tarkov_Showcase_1.png/revision/latest/scale-to-width-down/800?cb=20230903143522'
+  WHEN 'Shoreline' THEN 'https://static.wikia.nocookie.net/escapefromtarkov_gamepedia/images/d/dc/Shoreline_Showcase_1.png/revision/latest/scale-to-width-down/800?cb=20230730014748'
+  WHEN 'Interchange' THEN 'https://static.wikia.nocookie.net/escapefromtarkov_gamepedia/images/7/7d/Interchange_Showcase_1.png/revision/latest/scale-to-width-down/800?cb=20230730021446'
+  WHEN 'Lighthouse' THEN 'https://static.wikia.nocookie.net/escapefromtarkov_gamepedia/images/2/2e/Lighthouse_Showcase_1.png/revision/latest/scale-to-width-down/800?cb=20230730032105'
+  WHEN 'Ground Zero' THEN 'https://static.wikia.nocookie.net/escapefromtarkov_gamepedia/images/b/bc/Ground_Zero_Showcase_1.png/revision/latest/scale-to-width-down/800?cb=20240121131611'
+  WHEN 'The Lab' THEN 'https://static.wikia.nocookie.net/escapefromtarkov_gamepedia/images/5/5e/The_Lab_Showcase_1.png/revision/latest/scale-to-width-down/800?cb=20230730023546'
+  WHEN 'The Labyrinth' THEN 'https://static.wikia.nocookie.net/escapefromtarkov_gamepedia/images/b/be/The_Labyrinth_Transit_Map.png/revision/latest/scale-to-width-down/800?cb=20250328020348'
+  WHEN 'Terminal' THEN 'https://static.wikia.nocookie.net/escapefromtarkov_gamepedia/images/c/c0/Terminal_Showcase_1.jpg/revision/latest/scale-to-width-down/800?cb=20240826021257'
+  WHEN 'Icebreaker' THEN 'https://static.wikia.nocookie.net/escapefromtarkov_gamepedia/images/1/10/Icebreaker_Showcase_1.png/revision/latest/scale-to-width-down/800?cb=20260513144923'
+  ELSE image_url
+END
+WHERE name_en IN ('Customs', 'Factory', 'Woods', 'Reserve', 'Streets of Tarkov', 'Shoreline', 'Interchange', 'Lighthouse', 'Ground Zero', 'The Lab', 'The Labyrinth', 'Terminal', 'Icebreaker');
+
+UPDATE tarkov_trader
+SET avatar = CASE name_en
+  WHEN 'Prapor' THEN 'https://assets.tarkov.dev/54cb50c76803fa8b248b4571.webp'
+  WHEN 'Therapist' THEN 'https://assets.tarkov.dev/54cb57776803fa99248b456e.webp'
+  WHEN 'Skier' THEN 'https://assets.tarkov.dev/58330581ace78e27b8b10cee.webp'
+  WHEN 'Mechanic' THEN 'https://assets.tarkov.dev/5a7c2eca46aef81a7ca2145d.webp'
+  WHEN 'Ragman' THEN 'https://assets.tarkov.dev/5ac3b934156ae10c4430e83c.webp'
+  WHEN 'Fence' THEN 'https://assets.tarkov.dev/579dc571d53a0658a154fbec.webp'
+  WHEN 'Peacekeeper' THEN 'https://assets.tarkov.dev/5935c25fb3acc3127c3d8cd9.webp'
+  WHEN 'Jaeger' THEN 'https://assets.tarkov.dev/5c0647fdd443bc2504c2d371.webp'
+  WHEN 'Lightkeeper' THEN 'https://assets.tarkov.dev/638f541a29ffd1183d187f57.webp'
+  WHEN 'Ref' THEN 'https://assets.tarkov.dev/6617beeaa9cfa777ca915b7c.webp'
+  WHEN 'BTR Driver' THEN 'https://assets.tarkov.dev/656f0f98d80a697f855d34b1.webp'
+  ELSE avatar
+END
+WHERE name_en IN ('Prapor', 'Therapist', 'Skier', 'Mechanic', 'Ragman', 'Fence', 'Peacekeeper', 'Jaeger', 'Lightkeeper', 'Ref', 'BTR Driver');
+
+UPDATE tarkov_weapon
+SET image_url = CASE name_en
+  WHEN 'AK-74N' THEN 'https://assets.tarkov.dev/5644bd2b4bdc2d3b4c8b4572-512.webp'
+  WHEN 'M4A1' THEN 'https://assets.tarkov.dev/5447a9cd4bdc2dbd208b4567-512.webp'
+  WHEN 'MP-153' THEN 'https://assets.tarkov.dev/56dee2bdd2720bc8328b4567-512.webp'
+  WHEN 'AKS-74U' THEN 'https://assets.tarkov.dev/57dc2fa62459775949412633-512.webp'
+  WHEN 'OP-SKS' THEN 'https://assets.tarkov.dev/587e02ff24597743df3deaeb-512.webp'
+  WHEN 'Mosin' THEN 'https://assets.tarkov.dev/5ae08f0a5acfc408fb1398a1-512.webp'
+  WHEN 'PP-19-01 Vityaz' THEN 'https://assets.tarkov.dev/59984ab886f7743e98271174-512.webp'
+  WHEN 'RFB' THEN 'https://assets.tarkov.dev/5f2a9575926fd9352339381f-512.webp'
+  ELSE image_url
+END
+WHERE name_en IN ('AK-74N', 'M4A1', 'MP-153', 'AKS-74U', 'OP-SKS', 'Mosin', 'PP-19-01 Vityaz', 'RFB');
+
+UPDATE tarkov_ammo
+SET image_url = CASE name_en
+  WHEN '5.45x39mm BP gs' THEN 'https://assets.tarkov.dev/56dfef82d2720bbd668b4567-512.webp'
+  WHEN '5.45x39mm BP' THEN 'https://assets.tarkov.dev/56dfef82d2720bbd668b4567-512.webp'
+  WHEN '5.56x45mm M855A1' THEN 'https://assets.tarkov.dev/54527ac44bdc2d36668b4567-512.webp'
+  WHEN '7.62x39mm PS gzh' THEN 'https://assets.tarkov.dev/5656d7c34bdc2d9d198b4587-512.webp'
+  WHEN '7.62x39mm PS' THEN 'https://assets.tarkov.dev/5656d7c34bdc2d9d198b4587-512.webp'
+  WHEN '9x19mm Pst gzh' THEN 'https://assets.tarkov.dev/56d59d3ad2720bdb418b4577-512.webp'
+  WHEN '7.62x51mm M80' THEN 'https://assets.tarkov.dev/58dd3ad986f77403051cba8f-512.webp'
+  WHEN '7.62x54mm R SNB gzh' THEN 'https://assets.tarkov.dev/560d61e84bdc2da74d8b4571-512.webp'
+  WHEN '12/70 flechette' THEN 'https://assets.tarkov.dev/5d6e6911a4b9361bd5780d52-512.webp'
+  WHEN '.300 Blackout CBJ' THEN 'https://assets.tarkov.dev/64b8725c4b75259c590fa899-512.webp'
+  ELSE image_url
+END
+WHERE name_en IN ('5.45x39mm BP gs', '5.45x39mm BP', '5.56x45mm M855A1', '7.62x39mm PS gzh', '7.62x39mm PS', '9x19mm Pst gzh', '7.62x51mm M80', '7.62x54mm R SNB gzh', '12/70 flechette', '.300 Blackout CBJ');
+
+UPDATE boss
+SET image_url = CASE name_en
+  WHEN 'Reshala' THEN 'https://assets.tarkov.dev/reshala-portrait.webp'
+  WHEN 'Tagilla' THEN 'https://assets.tarkov.dev/tagilla-portrait.png'
+  WHEN 'Glukhar' THEN 'https://assets.tarkov.dev/glukhar-portrait.png'
+  WHEN 'Shturman' THEN 'https://assets.tarkov.dev/shturman-portrait.png'
+  WHEN 'Sanitar' THEN 'https://assets.tarkov.dev/sanitar-portrait.png'
+  WHEN 'Killa' THEN 'https://assets.tarkov.dev/killa-portrait.png'
+  WHEN 'Kaban' THEN 'https://assets.tarkov.dev/kaban-portrait.png'
+  WHEN 'Kollontay' THEN 'https://assets.tarkov.dev/kollontay-portrait.png'
+  WHEN 'Zryachiy' THEN 'https://assets.tarkov.dev/zryachiy-portrait.png'
+  WHEN 'Knight' THEN 'https://assets.tarkov.dev/knight-portrait.png'
+  WHEN 'Big Pipe' THEN 'https://assets.tarkov.dev/big-pipe-portrait.png'
+  WHEN 'Birdeye' THEN 'https://assets.tarkov.dev/birdeye-portrait.png'
+  WHEN 'Partisan' THEN 'https://assets.tarkov.dev/partisan-portrait.png'
+  ELSE image_url
+END
+WHERE name_en IN ('Reshala', 'Tagilla', 'Glukhar', 'Shturman', 'Sanitar', 'Killa', 'Kaban', 'Kollontay', 'Zryachiy', 'Knight', 'Big Pipe', 'Birdeye', 'Partisan');
+
 INSERT INTO post (id, user_id, category_id, title, content, post_type, cover_image, map_id, trader_id, quest_id, item_id, weapon_id, ammo_id, risk_level, intel_status, view_count, like_count, favorite_count, comment_count, status, pinned, recommended, created_at)
 VALUES
   (1, 2, 1, '海关新手任务路线：避开 Dorms 正面交火', '这条路线适合刚开始做 Prapor 和 Therapist 任务的玩家。出生在 Trailer Park 一侧时，先确认 Big Red 周边声音，再沿外墙绕向河道；如果 Dorms 已经有枪声，不建议直接穿中路，可以先走 Power line 附近确认 Scav，再从 ZB-1011 方向撤离。重点是不要贪 Dorms，先把任务物品带出去。', 'ROUTE', NULL, 1, 1, 1, NULL, NULL, NULL, 'LOW', 'VERIFIED', 186, 12, 5, 2, 'NORMAL', 1, 1, '2026-06-05 20:12:00'),

@@ -9,6 +9,7 @@ public record WeaponDetailResponse(
         String weaponType,
         String caliber,
         String description,
+        String imageUrl,
         List<AmmoResponse> compatibleAmmo
 ) {
 }

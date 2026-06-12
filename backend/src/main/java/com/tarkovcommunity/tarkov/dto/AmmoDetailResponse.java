@@ -11,6 +11,7 @@ public record AmmoDetailResponse(
         Integer penetration,
         Integer armorDamage,
         String description,
+        String imageUrl,
         List<WeaponResponse> compatibleWeapons
 ) {
 }

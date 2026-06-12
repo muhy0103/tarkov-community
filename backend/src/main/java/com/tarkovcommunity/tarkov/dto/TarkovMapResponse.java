@@ -5,6 +5,7 @@ public record TarkovMapResponse(
         String nameEn,
         String nameZh,
         String difficulty,
-        String recommendedLevel
+        String recommendedLevel,
+        String imageUrl
 ) {
 }

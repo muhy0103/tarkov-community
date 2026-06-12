@@ -326,6 +326,19 @@ CREATE TABLE IF NOT EXISTS post (
   CONSTRAINT fk_post_ammo FOREIGN KEY (ammo_id) REFERENCES tarkov_ammo (id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
+CREATE TABLE IF NOT EXISTS post_catalog_relation (
+  id BIGINT PRIMARY KEY AUTO_INCREMENT,
+  post_id BIGINT NOT NULL,
+  catalog_type VARCHAR(30) NOT NULL,
+  catalog_id BIGINT NOT NULL,
+  relation_note VARCHAR(120),
+  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  UNIQUE KEY uk_post_catalog_relation (post_id, catalog_type, catalog_id),
+  KEY idx_post_catalog_relation_catalog (catalog_type, catalog_id, created_at),
+  KEY idx_post_catalog_relation_post (post_id),
+  CONSTRAINT fk_post_catalog_relation_post FOREIGN KEY (post_id) REFERENCES post (id)
+);
+
 CREATE TABLE IF NOT EXISTS post_tag (
   id BIGINT PRIMARY KEY AUTO_INCREMENT,
   post_id BIGINT NOT NULL,

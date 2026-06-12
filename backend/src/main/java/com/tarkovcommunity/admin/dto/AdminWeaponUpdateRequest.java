@@ -21,6 +21,9 @@ public record AdminWeaponUpdateRequest(
         @Size(max = 500, message = "武器说明不能超过500个字符")
         String description,
 
+        @Size(max = 500, message = "Image URL cannot exceed 500 characters")
+        String imageUrl,
+
         @NotBlank(message = "武器状态不能为空")
         @Pattern(regexp = "ENABLED|DISABLED", message = "武器状态不正确")
         String status

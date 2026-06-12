@@ -69,6 +69,7 @@ public class AdminAmmoServiceImpl implements AdminAmmoService {
         ammo.setPenetration(request.penetration());
         ammo.setArmorDamage(request.armorDamage());
         ammo.setDescription(normalizeNullable(request.description()));
+        ammo.setImageUrl(normalizeNullable(request.imageUrl()));
         ammo.setStatus(request.status());
         ammoMapper.updateById(ammo);
 
@@ -91,6 +92,7 @@ public class AdminAmmoServiceImpl implements AdminAmmoService {
                 ammo.getPenetration(),
                 ammo.getArmorDamage(),
                 ammo.getDescription(),
+                ammo.getImageUrl(),
                 ammo.getStatus()
         );
     }

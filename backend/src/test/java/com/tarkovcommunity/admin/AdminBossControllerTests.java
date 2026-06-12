@@ -26,6 +26,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @WebMvcTest(AdminBossController.class)
 class AdminBossControllerTests {
 
+    private static final String IMAGE_URL = "https://assets.tarkov.dev/reshala.webp";
+
     @Autowired
     private MockMvc mockMvc;
 
@@ -50,6 +52,7 @@ class AdminBossControllerTests {
                 .andExpect(jsonPath("$.code").value(200))
                 .andExpect(jsonPath("$.data.total").value(1))
                 .andExpect(jsonPath("$.data.records[0].nameEn").value("Reshala"))
+                .andExpect(jsonPath("$.data.records[0].imageUrl").value(IMAGE_URL))
                 .andExpect(jsonPath("$.data.records[0].nameZh").doesNotExist())
                 .andExpect(jsonPath("$.data.records[0].mapName").value("海关 / Customs"));
     }
@@ -62,6 +65,7 @@ class AdminBossControllerTests {
                 1L,
                 "Customs boss with multiple guards.",
                 "Rifle, armor and guards.",
+                IMAGE_URL,
                 "ENABLED"
         );
         given(adminBossService.updateBoss(eq(1L), any(AdminBossUpdateRequest.class)))
@@ -84,6 +88,7 @@ class AdminBossControllerTests {
                 1L,
                 "说明",
                 "装备",
+                IMAGE_URL,
                 "UNKNOWN"
         );
 
@@ -103,6 +108,7 @@ class AdminBossControllerTests {
                 "海关 / Customs",
                 "Customs boss with multiple guards.",
                 "Rifle, armor and guards.",
+                IMAGE_URL,
                 "ENABLED"
         );
     }

@@ -29,6 +29,9 @@ public record AdminAmmoUpdateRequest(
         @Size(max = 500, message = "弹药说明不能超过500个字符")
         String description,
 
+        @Size(max = 500, message = "Image URL cannot exceed 500 characters")
+        String imageUrl,
+
         @NotBlank(message = "弹药状态不能为空")
         @Pattern(regexp = "ENABLED|DISABLED", message = "弹药状态不正确")
         String status

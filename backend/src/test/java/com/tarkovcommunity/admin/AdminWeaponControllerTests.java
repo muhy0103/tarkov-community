@@ -26,6 +26,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @WebMvcTest(AdminWeaponController.class)
 class AdminWeaponControllerTests {
 
+    private static final String IMAGE_URL = "https://assets.tarkov.dev/ak-74n.webp";
+
     @Autowired
     private MockMvc mockMvc;
 
@@ -51,6 +53,7 @@ class AdminWeaponControllerTests {
                 .andExpect(jsonPath("$.code").value(200))
                 .andExpect(jsonPath("$.data.total").value(1))
                 .andExpect(jsonPath("$.data.records[0].nameEn").value("AK-74N"))
+                .andExpect(jsonPath("$.data.records[0].imageUrl").value(IMAGE_URL))
                 .andExpect(jsonPath("$.data.records[0].weaponType").value("Assault rifle"))
                 .andExpect(jsonPath("$.data.records[0].caliber").value("5.45x39"));
     }
@@ -63,6 +66,7 @@ class AdminWeaponControllerTests {
                 "Assault rifle",
                 "5.45x39",
                 "Classic early wipe rifle.",
+                IMAGE_URL,
                 "ENABLED"
         );
         given(adminWeaponService.updateWeapon(eq(1L), any(AdminWeaponUpdateRequest.class)))
@@ -85,6 +89,7 @@ class AdminWeaponControllerTests {
                 "Assault rifle",
                 "5.45x39",
                 "说明",
+                IMAGE_URL,
                 "UNKNOWN"
         );
 
@@ -103,6 +108,7 @@ class AdminWeaponControllerTests {
                 "Assault rifle",
                 "5.45x39",
                 "Classic early wipe rifle.",
+                IMAGE_URL,
                 "ENABLED"
         );
     }

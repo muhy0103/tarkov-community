@@ -80,6 +80,7 @@ public class AdminWeaponServiceImpl implements AdminWeaponService {
         weapon.setWeaponType(normalizeNullable(request.weaponType()));
         weapon.setCaliber(normalizeNullable(request.caliber()));
         weapon.setDescription(normalizeNullable(request.description()));
+        weapon.setImageUrl(normalizeNullable(request.imageUrl()));
         weapon.setStatus(request.status());
         weaponMapper.updateById(weapon);
 
@@ -100,6 +101,7 @@ public class AdminWeaponServiceImpl implements AdminWeaponService {
                 weapon.getWeaponType(),
                 weapon.getCaliber(),
                 weapon.getDescription(),
+                weapon.getImageUrl(),
                 weapon.getStatus()
         );
     }

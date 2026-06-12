@@ -8,6 +8,7 @@ public record AdminBossResponse(
         String mapName,
         String description,
         String equipmentSummary,
+        String imageUrl,
         String status
 ) {
 }

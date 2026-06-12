@@ -26,6 +26,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @WebMvcTest(AdminAmmoController.class)
 class AdminAmmoControllerTests {
 
+    private static final String IMAGE_URL = "https://assets.tarkov.dev/545x39mm-bt.webp";
+
     @Autowired
     private MockMvc mockMvc;
 
@@ -50,6 +52,7 @@ class AdminAmmoControllerTests {
                 .andExpect(jsonPath("$.code").value(200))
                 .andExpect(jsonPath("$.data.total").value(1))
                 .andExpect(jsonPath("$.data.records[0].nameEn").value("5.45x39mm BT"))
+                .andExpect(jsonPath("$.data.records[0].imageUrl").value(IMAGE_URL))
                 .andExpect(jsonPath("$.data.records[0].caliber").value("5.45x39"))
                 .andExpect(jsonPath("$.data.records[0].penetration").value(37));
     }
@@ -64,6 +67,7 @@ class AdminAmmoControllerTests {
                 37,
                 49,
                 "Balanced mid-tier rifle ammo.",
+                IMAGE_URL,
                 "ENABLED"
         );
         given(adminAmmoService.updateAmmo(eq(1L), any(AdminAmmoUpdateRequest.class)))
@@ -89,6 +93,7 @@ class AdminAmmoControllerTests {
                 37,
                 49,
                 "说明",
+                IMAGE_URL,
                 "UNKNOWN"
         );
 
@@ -109,6 +114,7 @@ class AdminAmmoControllerTests {
                 37,
                 49,
                 "Balanced mid-tier rifle ammo.",
+                IMAGE_URL,
                 "ENABLED"
         );
     }

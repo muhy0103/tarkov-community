@@ -23,6 +23,8 @@ import static org.mockito.Mockito.verify;
 @ExtendWith(MockitoExtension.class)
 class AdminAmmoServiceImplTests {
 
+    private static final String IMAGE_URL = "https://assets.tarkov.dev/545x39mm-bt.webp";
+
     @Mock
     private TarkovAmmoMapper ammoMapper;
 
@@ -44,6 +46,7 @@ class AdminAmmoServiceImplTests {
                     assertThat(ammo.penetration()).isEqualTo(37);
                     assertThat(ammo.armorDamage()).isEqualTo(49);
                     assertThat(ammo.description()).isEqualTo("Balanced mid-tier rifle ammo.");
+                    assertThat(ammo.imageUrl()).isEqualTo(IMAGE_URL);
                 });
     }
 
@@ -60,6 +63,7 @@ class AdminAmmoServiceImplTests {
                 37,
                 49,
                 " Balanced mid-tier rifle ammo. ",
+                " " + IMAGE_URL + " ",
                 "ENABLED"
         );
 
@@ -75,6 +79,8 @@ class AdminAmmoServiceImplTests {
         assertThat(savedAmmo.getPenetration()).isEqualTo(37);
         assertThat(savedAmmo.getArmorDamage()).isEqualTo(49);
         assertThat(savedAmmo.getDescription()).isEqualTo("Balanced mid-tier rifle ammo.");
+        assertThat(savedAmmo.getImageUrl()).isEqualTo(IMAGE_URL);
+        assertThat(response.imageUrl()).isEqualTo(IMAGE_URL);
         assertThat(response.nameEn()).isEqualTo("5.45x39mm BT");
     }
 
@@ -88,6 +94,7 @@ class AdminAmmoServiceImplTests {
         ammo.setPenetration(37);
         ammo.setArmorDamage(49);
         ammo.setDescription("Balanced mid-tier rifle ammo.");
+        ammo.setImageUrl(IMAGE_URL);
         ammo.setStatus("ENABLED");
         return ammo;
     }

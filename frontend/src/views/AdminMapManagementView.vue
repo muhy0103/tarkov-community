@@ -24,6 +24,7 @@ const mapForm = ref({
   difficulty: '',
   description: '',
   recommendedLevel: '',
+  imageUrl: '',
   status: 'ENABLED',
 })
 const mapsPage = ref({
@@ -57,6 +58,9 @@ const mapRules = {
   recommendedLevel: [
     { max: 50, message: '推荐等级不能超过 50 个字符', trigger: 'blur' },
   ],
+  imageUrl: [
+    { max: 500, message: '图片地址不能超过 500 个字符', trigger: 'blur' },
+  ],
   status: [
     { required: true, message: '请选择地图状态', trigger: 'change' },
   ],
@@ -81,6 +85,7 @@ function toPayload(row, overrides = {}) {
     difficulty: row.difficulty || '',
     description: row.description || '',
     recommendedLevel: row.recommendedLevel || '',
+    imageUrl: row.imageUrl || '',
     status: row.status,
     ...overrides,
   }
@@ -135,6 +140,7 @@ async function submitMap() {
       difficulty: mapForm.value.difficulty.trim(),
       description: mapForm.value.description.trim(),
       recommendedLevel: mapForm.value.recommendedLevel.trim(),
+      imageUrl: mapForm.value.imageUrl.trim(),
     })
     Object.assign(editingRow.value, updated)
     ElMessage.success('地图资料已更新')
@@ -228,7 +234,14 @@ onMounted(() => loadMaps(1))
         <el-table-column label="地图" min-width="320">
           <template #default="{ row }">
             <div class="admin-map-cell">
-              <MapLocation />
+              <img
+                v-if="row.imageUrl"
+                class="admin-media-thumb"
+                :src="row.imageUrl"
+                :alt="row.nameZh || row.nameEn"
+                loading="lazy"
+              />
+              <MapLocation v-else />
               <div>
                 <strong>{{ row.nameZh }} / {{ row.nameEn }}</strong>
                 <span>{{ row.description || '暂无说明' }}</span>
@@ -316,6 +329,17 @@ onMounted(() => loadMaps(1))
         <el-form-item label="推荐等级" prop="recommendedLevel">
           <el-input v-model="mapForm.recommendedLevel" maxlength="50" show-word-limit />
         </el-form-item>
+        <el-form-item label="图片地址" prop="imageUrl">
+          <el-input
+            v-model="mapForm.imageUrl"
+            maxlength="500"
+            show-word-limit
+            placeholder="https://..."
+          />
+        </el-form-item>
+        <div v-if="mapForm.imageUrl" class="admin-media-preview">
+          <img :src="mapForm.imageUrl" alt="图片预览" />
+        </div>
         <el-form-item label="地图说明" prop="description">
           <el-input
             v-model="mapForm.description"

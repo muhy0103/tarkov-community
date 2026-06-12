@@ -22,6 +22,9 @@ public record AdminMapUpdateRequest(
         @Size(max = 50, message = "推荐等级不能超过50个字符")
         String recommendedLevel,
 
+        @Size(max = 500, message = "Image URL cannot exceed 500 characters")
+        String imageUrl,
+
         @NotBlank(message = "地图状态不能为空")
         @Pattern(regexp = "ENABLED|DISABLED", message = "地图状态不正确")
         String status

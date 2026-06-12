@@ -65,6 +65,7 @@ public class AdminMapServiceImpl implements AdminMapService {
         map.setDifficulty(normalizeNullable(request.difficulty()));
         map.setDescription(normalizeNullable(request.description()));
         map.setRecommendedLevel(normalizeNullable(request.recommendedLevel()));
+        map.setImageUrl(normalizeNullable(request.imageUrl()));
         map.setStatus(request.status());
         mapMapper.updateById(map);
 
@@ -85,6 +86,7 @@ public class AdminMapServiceImpl implements AdminMapService {
                 map.getDifficulty(),
                 map.getDescription(),
                 map.getRecommendedLevel(),
+                map.getImageUrl(),
                 map.getStatus()
         );
     }

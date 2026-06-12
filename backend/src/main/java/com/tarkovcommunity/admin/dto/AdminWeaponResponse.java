@@ -7,6 +7,7 @@ public record AdminWeaponResponse(
         String weaponType,
         String caliber,
         String description,
+        String imageUrl,
         String status
 ) {
 }

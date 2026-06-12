@@ -9,6 +9,7 @@ public record AdminAmmoResponse(
         Integer penetration,
         Integer armorDamage,
         String description,
+        String imageUrl,
         String status
 ) {
 }

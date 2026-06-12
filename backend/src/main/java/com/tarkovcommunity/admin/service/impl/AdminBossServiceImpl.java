@@ -85,6 +85,7 @@ public class AdminBossServiceImpl implements AdminBossService {
         boss.setMapId(request.mapId());
         boss.setDescription(normalizeNullable(request.description()));
         boss.setEquipmentSummary(normalizeNullable(request.equipmentSummary()));
+        boss.setImageUrl(normalizeNullable(request.imageUrl()));
         boss.setStatus(request.status());
         bossMapper.updateById(boss);
 
@@ -112,6 +113,7 @@ public class AdminBossServiceImpl implements AdminBossService {
                 displayName(map == null ? null : map.getNameZh(), map == null ? null : map.getNameEn()),
                 boss.getDescription(),
                 boss.getEquipmentSummary(),
+                boss.getImageUrl(),
                 boss.getStatus()
         );
     }

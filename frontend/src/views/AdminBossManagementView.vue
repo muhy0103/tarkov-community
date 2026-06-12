@@ -25,6 +25,7 @@ const bossForm = ref({
   mapId: null,
   description: '',
   equipmentSummary: '',
+  imageUrl: '',
   status: 'ENABLED',
 })
 const bossesPage = ref({
@@ -50,6 +51,9 @@ const bossRules = {
   ],
   equipmentSummary: [
     { max: 500, message: '装备摘要不能超过 500 个字符', trigger: 'blur' },
+  ],
+  imageUrl: [
+    { max: 500, message: '图片地址不能超过 500 个字符', trigger: 'blur' },
   ],
   status: [
     { required: true, message: '请选择 Boss 状态', trigger: 'change' },
@@ -81,6 +85,7 @@ function toPayload(row, overrides = {}) {
     mapId: row.mapId ?? null,
     description: row.description || '',
     equipmentSummary: row.equipmentSummary || '',
+    imageUrl: row.imageUrl || '',
     status: row.status,
     ...overrides,
   }
@@ -145,6 +150,7 @@ async function submitBoss() {
       mapId: bossForm.value.mapId || null,
       description: bossForm.value.description.trim(),
       equipmentSummary: bossForm.value.equipmentSummary.trim(),
+      imageUrl: bossForm.value.imageUrl.trim(),
     })
     Object.assign(editingRow.value, updated)
     ElMessage.success('Boss 资料已更新')
@@ -249,7 +255,14 @@ onMounted(() => {
         <el-table-column label="Boss" min-width="340">
           <template #default="{ row }">
             <div class="admin-boss-cell">
-              <WarningFilled />
+              <img
+                v-if="row.imageUrl"
+                class="admin-media-thumb"
+                :src="row.imageUrl"
+                :alt="row.nameEn"
+                loading="lazy"
+              />
+              <WarningFilled v-else />
               <div>
                 <strong>{{ row.nameEn }}</strong>
                 <span>{{ row.description || '暂无说明' }}</span>
@@ -338,6 +351,17 @@ onMounted(() => {
             />
           </el-select>
         </el-form-item>
+        <el-form-item label="图片地址" prop="imageUrl">
+          <el-input
+            v-model="bossForm.imageUrl"
+            maxlength="500"
+            show-word-limit
+            placeholder="https://..."
+          />
+        </el-form-item>
+        <div v-if="bossForm.imageUrl" class="admin-media-preview">
+          <img :src="bossForm.imageUrl" alt="图片预览" />
+        </div>
         <el-form-item label="Boss 说明" prop="description">
           <el-input
             v-model="bossForm.description"

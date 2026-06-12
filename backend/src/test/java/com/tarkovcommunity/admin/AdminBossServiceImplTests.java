@@ -25,6 +25,8 @@ import static org.mockito.Mockito.verify;
 @ExtendWith(MockitoExtension.class)
 class AdminBossServiceImplTests {
 
+    private static final String IMAGE_URL = "https://assets.tarkov.dev/reshala.webp";
+
     @Mock
     private BossMapper bossMapper;
 
@@ -50,6 +52,7 @@ class AdminBossServiceImplTests {
                     assertThat(boss.mapName()).isEqualTo("海关 / Customs");
                     assertThat(boss.description()).isEqualTo("Customs boss with multiple guards.");
                     assertThat(boss.equipmentSummary()).isEqualTo("Rifle, armor and guards.");
+                    assertThat(boss.imageUrl()).isEqualTo(IMAGE_URL);
                 });
     }
 
@@ -66,6 +69,7 @@ class AdminBossServiceImplTests {
                 1L,
                 " Customs boss with multiple guards. ",
                 " Rifle, armor and guards. ",
+                " " + IMAGE_URL + " ",
                 "ENABLED"
         );
 
@@ -79,6 +83,8 @@ class AdminBossServiceImplTests {
         assertThat(savedBoss.getMapId()).isEqualTo(1L);
         assertThat(savedBoss.getDescription()).isEqualTo("Customs boss with multiple guards.");
         assertThat(savedBoss.getEquipmentSummary()).isEqualTo("Rifle, armor and guards.");
+        assertThat(savedBoss.getImageUrl()).isEqualTo(IMAGE_URL);
+        assertThat(response.imageUrl()).isEqualTo(IMAGE_URL);
         assertThat(response.mapName()).isEqualTo("海关 / Customs");
     }
 
@@ -90,6 +96,7 @@ class AdminBossServiceImplTests {
         boss.setMapId(1L);
         boss.setDescription("Customs boss with multiple guards.");
         boss.setEquipmentSummary("Rifle, armor and guards.");
+        boss.setImageUrl(IMAGE_URL);
         boss.setStatus("ENABLED");
         return boss;
     }

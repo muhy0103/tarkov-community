@@ -221,7 +221,14 @@ onMounted(() => loadTraders(1))
         <el-table-column label="商人" min-width="320">
           <template #default="{ row }">
             <div class="admin-trader-cell">
-              <Avatar />
+              <img
+                v-if="row.avatar"
+                class="admin-media-thumb"
+                :src="row.avatar"
+                :alt="row.nameEn"
+                loading="lazy"
+              />
+              <Avatar v-else />
               <div>
                 <strong>{{ row.nameEn }}</strong>
                 <span>{{ row.description || '暂无说明' }}</span>
@@ -238,7 +245,9 @@ onMounted(() => loadTraders(1))
 
         <el-table-column label="头像" width="180">
           <template #default="{ row }">
-            <span class="admin-table-muted">{{ row.avatar || '未设置' }}</span>
+            <span class="admin-media-state">
+              {{ row.avatar ? '已设置' : '未设置' }}
+            </span>
           </template>
         </el-table-column>
 
@@ -306,6 +315,9 @@ onMounted(() => loadTraders(1))
         <el-form-item label="头像地址" prop="avatar">
           <el-input v-model="traderForm.avatar" maxlength="500" show-word-limit />
         </el-form-item>
+        <div v-if="traderForm.avatar" class="admin-media-preview">
+          <img :src="traderForm.avatar" alt="头像预览" />
+        </div>
         <el-form-item label="商人说明" prop="description">
           <el-input
             v-model="traderForm.description"

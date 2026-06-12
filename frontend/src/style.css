@@ -1558,6 +1558,45 @@ a {
   background: #ecfeff;
 }
 
+.admin-media-thumb {
+  width: 34px;
+  height: 34px;
+  object-fit: cover;
+  border: 1px solid #dbe7e6;
+  border-radius: 8px;
+  background: #f8fbfb;
+}
+
+.admin-media-state {
+  display: inline-flex;
+  align-items: center;
+  width: fit-content;
+  max-width: 100%;
+  padding: 4px 8px;
+  color: #0f766e;
+  font-size: 12px;
+  font-weight: 700;
+  border: 1px solid #ccfbf1;
+  border-radius: 8px;
+  background: #f0fdfa;
+}
+
+.admin-media-preview {
+  overflow: hidden;
+  width: min(260px, 100%);
+  height: 138px;
+  margin: -4px 0 18px;
+  border: 1px solid #dbe7e6;
+  border-radius: 8px;
+  background: #f8fbfb;
+}
+
+.admin-media-preview img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
 .admin-user-cell > svg {
   width: 34px;
   height: 34px;
@@ -2540,20 +2579,68 @@ a.detail-relation-item:hover {
 
 .catalog-item-link {
   display: grid;
-  gap: 4px;
-  min-height: 48px;
+  grid-template-columns: 54px minmax(0, 1fr);
+  gap: 10px;
+  align-items: center;
+  min-height: 60px;
+  padding: 7px;
   color: inherit;
   text-decoration: none;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  transition: background 0.16s ease, border-color 0.16s ease;
 }
 
-.catalog-item-link:hover span {
+.catalog-item-link:hover {
+  border-color: #ccfbf1;
+  background: #f8ffff;
+}
+
+.catalog-item-link:hover .catalog-item-name {
   color: #0f766e;
 }
 
-.catalog-column span {
+.catalog-item-media {
+  display: grid;
+  overflow: hidden;
+  width: 54px;
+  height: 42px;
+  place-items: center;
+  border: 1px solid #dbe7e6;
+  border-radius: 8px;
+  background: #f8fbfb;
+}
+
+.catalog-item-media img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.catalog-item-media svg {
+  width: 22px;
+  height: 22px;
+  color: #0f766e;
+}
+
+.catalog-item-media--empty {
+  background: #ecfeff;
+}
+
+.catalog-item-copy {
+  display: grid;
+  min-width: 0;
+  gap: 3px;
+}
+
+.catalog-item-name {
+  display: block;
+  overflow: hidden;
   color: #172033;
   font-size: 14px;
   font-weight: 700;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .catalog-column small {

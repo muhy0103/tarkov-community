@@ -23,6 +23,8 @@ import static org.mockito.Mockito.verify;
 @ExtendWith(MockitoExtension.class)
 class AdminWeaponServiceImplTests {
 
+    private static final String IMAGE_URL = "https://assets.tarkov.dev/ak-74n.webp";
+
     @Mock
     private TarkovWeaponMapper weaponMapper;
 
@@ -43,6 +45,7 @@ class AdminWeaponServiceImplTests {
                     assertThat(weapon.weaponType()).isEqualTo("Assault rifle");
                     assertThat(weapon.caliber()).isEqualTo("5.45x39");
                     assertThat(weapon.description()).isEqualTo("Classic early wipe rifle.");
+                    assertThat(weapon.imageUrl()).isEqualTo(IMAGE_URL);
                 });
     }
 
@@ -57,6 +60,7 @@ class AdminWeaponServiceImplTests {
                 " Assault rifle ",
                 " 5.45x39 ",
                 " Classic early wipe rifle. ",
+                " " + IMAGE_URL + " ",
                 "ENABLED"
         );
 
@@ -70,6 +74,8 @@ class AdminWeaponServiceImplTests {
         assertThat(savedWeapon.getWeaponType()).isEqualTo("Assault rifle");
         assertThat(savedWeapon.getCaliber()).isEqualTo("5.45x39");
         assertThat(savedWeapon.getDescription()).isEqualTo("Classic early wipe rifle.");
+        assertThat(savedWeapon.getImageUrl()).isEqualTo(IMAGE_URL);
+        assertThat(response.imageUrl()).isEqualTo(IMAGE_URL);
         assertThat(response.nameEn()).isEqualTo("AK-74N");
     }
 
@@ -81,6 +87,7 @@ class AdminWeaponServiceImplTests {
         weapon.setWeaponType("Assault rifle");
         weapon.setCaliber("5.45x39");
         weapon.setDescription("Classic early wipe rifle.");
+        weapon.setImageUrl(IMAGE_URL);
         weapon.setStatus("ENABLED");
         return weapon;
     }

@@ -26,6 +26,7 @@ const weaponForm = ref({
   weaponType: '',
   caliber: '',
   description: '',
+  imageUrl: '',
   status: 'ENABLED',
 })
 const weaponsPage = ref({
@@ -58,6 +59,9 @@ const weaponRules = {
   description: [
     { max: 500, message: '武器说明不能超过 500 个字符', trigger: 'blur' },
   ],
+  imageUrl: [
+    { max: 500, message: '图片地址不能超过 500 个字符', trigger: 'blur' },
+  ],
   status: [
     { required: true, message: '请选择武器状态', trigger: 'change' },
   ],
@@ -82,6 +86,7 @@ function toPayload(row, overrides = {}) {
     weaponType: row.weaponType || '',
     caliber: row.caliber || '',
     description: row.description || '',
+    imageUrl: row.imageUrl || '',
     status: row.status,
     ...overrides,
   }
@@ -140,6 +145,7 @@ async function submitWeapon() {
       weaponType: weaponForm.value.weaponType.trim(),
       caliber: weaponForm.value.caliber.trim(),
       description: weaponForm.value.description.trim(),
+      imageUrl: weaponForm.value.imageUrl.trim(),
     })
     Object.assign(editingRow.value, updated)
     ElMessage.success('武器资料已更新')
@@ -245,7 +251,14 @@ onMounted(() => loadWeapons(1))
         <el-table-column label="武器" min-width="340">
           <template #default="{ row }">
             <div class="admin-weapon-cell">
-              <Document />
+              <img
+                v-if="row.imageUrl"
+                class="admin-media-thumb"
+                :src="row.imageUrl"
+                :alt="row.nameZh || row.nameEn"
+                loading="lazy"
+              />
+              <Document v-else />
               <div>
                 <strong>{{ row.nameZh || row.nameEn }} / {{ row.nameEn }}</strong>
                 <span>{{ row.description || '暂无说明' }}</span>
@@ -333,6 +346,17 @@ onMounted(() => loadWeapons(1))
         <el-form-item label="口径" prop="caliber">
           <el-input v-model="weaponForm.caliber" maxlength="60" show-word-limit />
         </el-form-item>
+        <el-form-item label="图片地址" prop="imageUrl">
+          <el-input
+            v-model="weaponForm.imageUrl"
+            maxlength="500"
+            show-word-limit
+            placeholder="https://..."
+          />
+        </el-form-item>
+        <div v-if="weaponForm.imageUrl" class="admin-media-preview">
+          <img :src="weaponForm.imageUrl" alt="图片预览" />
+        </div>
         <el-form-item label="武器说明" prop="description">
           <el-input
             v-model="weaponForm.description"

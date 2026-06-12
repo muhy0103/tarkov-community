@@ -26,6 +26,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @WebMvcTest(AdminMapController.class)
 class AdminMapControllerTests {
 
+    private static final String IMAGE_URL = "https://assets.tarkov.dev/woods.webp";
+
     @Autowired
     private MockMvc mockMvc;
 
@@ -49,6 +51,7 @@ class AdminMapControllerTests {
                 .andExpect(jsonPath("$.code").value(200))
                 .andExpect(jsonPath("$.data.total").value(1))
                 .andExpect(jsonPath("$.data.records[0].nameEn").value("Woods"))
+                .andExpect(jsonPath("$.data.records[0].imageUrl").value(IMAGE_URL))
                 .andExpect(jsonPath("$.data.records[0].nameZh").value("森林"));
     }
 
@@ -60,6 +63,7 @@ class AdminMapControllerTests {
                 "中等",
                 "适合任务推进、远距离交战和隐藏物资搜集。",
                 "5+",
+                IMAGE_URL,
                 "ENABLED"
         );
         given(adminMapService.updateMap(eq(1L), any(AdminMapUpdateRequest.class)))
@@ -70,6 +74,7 @@ class AdminMapControllerTests {
                         "中等",
                         "适合任务推进、远距离交战和隐藏物资搜集。",
                         "5+",
+                        IMAGE_URL,
                         "ENABLED"
                 ));
 
@@ -90,6 +95,7 @@ class AdminMapControllerTests {
                 "难度字段过长难度字段过长难度字段过长难度字段过长",
                 "说明",
                 "5+",
+                IMAGE_URL,
                 "UNKNOWN"
         );
 
@@ -108,6 +114,7 @@ class AdminMapControllerTests {
                 "中等",
                 "适合任务推进、远距离交战和隐藏物资搜集。",
                 "5+",
+                IMAGE_URL,
                 "ENABLED"
         );
     }

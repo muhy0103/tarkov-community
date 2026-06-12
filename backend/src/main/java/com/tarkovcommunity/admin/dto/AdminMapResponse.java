@@ -7,6 +7,7 @@ public record AdminMapResponse(
         String difficulty,
         String description,
         String recommendedLevel,
+        String imageUrl,
         String status
 ) {
 }

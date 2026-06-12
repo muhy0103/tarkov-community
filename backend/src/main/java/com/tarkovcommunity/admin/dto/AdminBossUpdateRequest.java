@@ -20,6 +20,9 @@ public record AdminBossUpdateRequest(
         @Size(max = 500, message = "Boss 装备摘要不能超过500个字符")
         String equipmentSummary,
 
+        @Size(max = 500, message = "Image URL cannot exceed 500 characters")
+        String imageUrl,
+
         @NotBlank(message = "Boss 状态不能为空")
         @Pattern(regexp = "ENABLED|DISABLED", message = "Boss 状态不正确")
         String status

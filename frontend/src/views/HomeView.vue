@@ -110,6 +110,7 @@ const quickCatalogGroups = computed(() => [
       kind: 'maps',
       name: item.nameZh,
       meta: `${item.nameEn} · ${item.difficulty || '未知难度'}`,
+      media: item.imageUrl,
     })),
   },
   {
@@ -121,6 +122,7 @@ const quickCatalogGroups = computed(() => [
       kind: 'traders',
       name: item.nameEn,
       meta: item.unlockCondition || item.nameEn,
+      media: item.avatar,
     })),
   },
   {
@@ -133,6 +135,7 @@ const quickCatalogGroups = computed(() => [
         kind: 'weapons',
         name: item.nameZh,
         meta: `${item.weaponType} · ${item.caliber}`,
+        media: item.imageUrl,
       })),
       ...catalog.value.ammo.map((item) => ({
         key: `ammo-${item.id}`,
@@ -140,6 +143,7 @@ const quickCatalogGroups = computed(() => [
         kind: 'ammo',
         name: item.nameZh,
         meta: `${item.caliber} · 穿透 ${item.penetration}`,
+        media: item.imageUrl,
       })),
     ],
   },
@@ -153,6 +157,7 @@ const quickCatalogGroups = computed(() => [
         kind: 'bosses',
         name: item.nameEn,
         meta: 'Boss 情报',
+        media: item.imageUrl,
       })),
       ...catalog.value.hideoutStations.map((item) => ({
         key: `hideout-${item.id}`,
@@ -382,8 +387,22 @@ onMounted(loadCatalog)
                   class="catalog-item-link"
                   :to="{ name: 'catalog-detail', params: { kind: item.kind, id: item.id } }"
                 >
-                  <span>{{ item.name }}</span>
-                  <small>{{ item.meta }}</small>
+                  <span
+                    class="catalog-item-media"
+                    :class="{ 'catalog-item-media--empty': !item.media }"
+                  >
+                    <img
+                      v-if="item.media"
+                      :src="item.media"
+                      :alt="item.name"
+                      loading="lazy"
+                    />
+                    <component v-else :is="group.icon" />
+                  </span>
+                  <span class="catalog-item-copy">
+                    <span class="catalog-item-name">{{ item.name }}</span>
+                    <small>{{ item.meta }}</small>
+                  </span>
                 </RouterLink>
               </li>
             </ul>

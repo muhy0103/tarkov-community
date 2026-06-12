@@ -27,6 +27,7 @@ const ammoForm = ref({
   penetration: null,
   armorDamage: null,
   description: '',
+  imageUrl: '',
   status: 'ENABLED',
 })
 const ammoPage = ref({
@@ -66,6 +67,9 @@ const ammoRules = {
   description: [
     { max: 500, message: '弹药说明不能超过 500 个字符', trigger: 'blur' },
   ],
+  imageUrl: [
+    { max: 500, message: '图片地址不能超过 500 个字符', trigger: 'blur' },
+  ],
   status: [
     { required: true, message: '请选择弹药状态', trigger: 'change' },
   ],
@@ -96,6 +100,7 @@ function toPayload(row, overrides = {}) {
     penetration: row.penetration ?? null,
     armorDamage: row.armorDamage ?? null,
     description: row.description || '',
+    imageUrl: row.imageUrl || '',
     status: row.status,
     ...overrides,
   }
@@ -158,6 +163,7 @@ async function submitAmmo() {
       penetration: normalizeNumber(ammoForm.value.penetration),
       armorDamage: normalizeNumber(ammoForm.value.armorDamage),
       description: ammoForm.value.description.trim(),
+      imageUrl: ammoForm.value.imageUrl.trim(),
     })
     Object.assign(editingRow.value, updated)
     ElMessage.success('弹药资料已更新')
@@ -257,7 +263,14 @@ onMounted(() => loadAmmo(1))
         <el-table-column label="弹药" min-width="340">
           <template #default="{ row }">
             <div class="admin-ammo-cell">
-              <Document />
+              <img
+                v-if="row.imageUrl"
+                class="admin-media-thumb"
+                :src="row.imageUrl"
+                :alt="row.nameZh || row.nameEn"
+                loading="lazy"
+              />
+              <Document v-else />
               <div>
                 <strong>{{ row.nameZh || row.nameEn }} / {{ row.nameEn }}</strong>
                 <span>{{ row.description || '暂无说明' }}</span>
@@ -363,6 +376,17 @@ onMounted(() => loadAmmo(1))
         <el-form-item label="护甲伤害" prop="armorDamage">
           <el-input v-model.number="ammoForm.armorDamage" type="number" min="0" />
         </el-form-item>
+        <el-form-item label="图片地址" prop="imageUrl">
+          <el-input
+            v-model="ammoForm.imageUrl"
+            maxlength="500"
+            show-word-limit
+            placeholder="https://..."
+          />
+        </el-form-item>
+        <div v-if="ammoForm.imageUrl" class="admin-media-preview">
+          <img :src="ammoForm.imageUrl" alt="图片预览" />
+        </div>
         <el-form-item label="弹药说明" prop="description">
           <el-input
             v-model="ammoForm.description"

@@ -9,6 +9,7 @@ import com.tarkovcommunity.user.dto.UserCenterCommentResponse;
 import com.tarkovcommunity.user.dto.UserCenterSummaryResponse;
 import com.tarkovcommunity.user.dto.UserPasswordUpdateRequest;
 import com.tarkovcommunity.user.dto.UserProfileUpdateRequest;
+import com.tarkovcommunity.user.dto.UserRelationResponse;
 import com.tarkovcommunity.user.entity.SysUser;
 import com.tarkovcommunity.user.service.UserCenterService;
 import org.junit.jupiter.api.Test;
@@ -111,6 +112,41 @@ class UserCenterControllerTests {
                 .andExpect(jsonPath("$.code").value(200))
                 .andExpect(jsonPath("$.data.records[0].postTitle").value("Customs dorms route"))
                 .andExpect(jsonPath("$.data.records[0].content").value("Keep a headset and painkillers ready."));
+    }
+
+    @Test
+    void listsCurrentUserFollowing() throws Exception {
+        SysUser user = normalUser();
+        given(authTokenService.resolveUser(eq("Bearer user-token"))).willReturn(Optional.of(user));
+        given(userCenterService.listFollowing(eq(user), eq(1), eq(10)))
+                .willReturn(PageResponse.of(1, 10, 1, List.of(relation(true))));
+
+        mockMvc.perform(get("/api/users/me/following")
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer user-token"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.code").value(200))
+                .andExpect(jsonPath("$.data.total").value(1))
+                .andExpect(jsonPath("$.data.records[0].id").value(9))
+                .andExpect(jsonPath("$.data.records[0].nickname").value("Woods Scout"))
+                .andExpect(jsonPath("$.data.records[0].favoriteMaps").value("Woods,Shoreline"))
+                .andExpect(jsonPath("$.data.records[0].followedByMe").value(true));
+    }
+
+    @Test
+    void listsCurrentUserFollowers() throws Exception {
+        SysUser user = normalUser();
+        given(authTokenService.resolveUser(eq("Bearer user-token"))).willReturn(Optional.of(user));
+        given(userCenterService.listFollowers(eq(user), eq(1), eq(10)))
+                .willReturn(PageResponse.of(1, 10, 1, List.of(relation(false))));
+
+        mockMvc.perform(get("/api/users/me/followers")
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer user-token"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.code").value(200))
+                .andExpect(jsonPath("$.data.records[0].id").value(9))
+                .andExpect(jsonPath("$.data.records[0].followerCount").value(4))
+                .andExpect(jsonPath("$.data.records[0].followingCount").value(2))
+                .andExpect(jsonPath("$.data.records[0].followedByMe").value(false));
     }
 
     @Test
@@ -240,6 +276,23 @@ class UserCenterControllerTests {
                 3,
                 1,
                 LocalDateTime.of(2026, 6, 4, 21, 45)
+        );
+    }
+
+    private static UserRelationResponse relation(boolean followedByMe) {
+        return new UserRelationResponse(
+                9L,
+                "woods_scout",
+                "Woods Scout",
+                "https://example.com/woods.png",
+                "USER",
+                28,
+                "Keeps Woods routes tidy.",
+                "Woods,Shoreline",
+                4L,
+                2L,
+                followedByMe,
+                LocalDateTime.of(2026, 6, 8, 20, 0)
         );
     }
 }

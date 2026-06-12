@@ -8,6 +8,7 @@ import com.tarkovcommunity.user.dto.UserCenterCommentResponse;
 import com.tarkovcommunity.user.dto.UserCenterSummaryResponse;
 import com.tarkovcommunity.user.dto.UserPasswordUpdateRequest;
 import com.tarkovcommunity.user.dto.UserProfileUpdateRequest;
+import com.tarkovcommunity.user.dto.UserRelationResponse;
 import com.tarkovcommunity.user.entity.SysUser;
 import com.tarkovcommunity.user.service.UserCenterService;
 import jakarta.validation.Valid;
@@ -63,6 +64,24 @@ public class UserCenterController {
             @RequestParam(defaultValue = "10") int size
     ) {
         return ApiResponse.success(userCenterService.listFavorites(requireUser(authorization), page, size));
+    }
+
+    @GetMapping("/following")
+    public ApiResponse<PageResponse<UserRelationResponse>> listFollowing(
+            @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authorization,
+            @RequestParam(defaultValue = "1") int page,
+            @RequestParam(defaultValue = "10") int size
+    ) {
+        return ApiResponse.success(userCenterService.listFollowing(requireUser(authorization), page, size));
+    }
+
+    @GetMapping("/followers")
+    public ApiResponse<PageResponse<UserRelationResponse>> listFollowers(
+            @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authorization,
+            @RequestParam(defaultValue = "1") int page,
+            @RequestParam(defaultValue = "10") int size
+    ) {
+        return ApiResponse.success(userCenterService.listFollowers(requireUser(authorization), page, size));
     }
 
     @PutMapping("/profile")

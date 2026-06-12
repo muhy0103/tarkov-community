@@ -12,7 +12,11 @@ import com.tarkovcommunity.meta.mapper.CategoryMapper;
 import com.tarkovcommunity.user.dto.UserCenterSummaryResponse;
 import com.tarkovcommunity.user.dto.UserPasswordUpdateRequest;
 import com.tarkovcommunity.user.entity.SysUser;
+import com.tarkovcommunity.user.entity.UserFollow;
+import com.tarkovcommunity.user.entity.UserProfile;
 import com.tarkovcommunity.user.mapper.SysUserMapper;
+import com.tarkovcommunity.user.mapper.UserFollowMapper;
+import com.tarkovcommunity.user.mapper.UserProfileMapper;
 import com.tarkovcommunity.user.service.impl.UserCenterServiceImpl;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -52,6 +56,12 @@ class UserCenterServiceImplTests {
 
     @Mock
     private SysUserMapper sysUserMapper;
+
+    @Mock
+    private UserFollowMapper userFollowMapper;
+
+    @Mock
+    private UserProfileMapper userProfileMapper;
 
     @Test
     void changesCurrentUserPassword() {
@@ -135,13 +145,61 @@ class UserCenterServiceImplTests {
         verify(favoriteMapper).selectVisiblePostFavoritesPage(any(Page.class), eq(7L));
     }
 
+    @Test
+    void listsFollowingPlayersWithProfileAndCounts() {
+        UserCenterServiceImpl service = service();
+        SysUser user = userWithPassword("OldPass123");
+        Page<UserFollow> followPage = new Page<>(1, 10, 1);
+        followPage.setRecords(List.of(follow(11L, 7L, 9L)));
+
+        given(userFollowMapper.selectPage(any(Page.class), any())).willReturn(followPage);
+        given(sysUserMapper.selectBatchIds(any())).willReturn(List.of(otherUser()));
+        given(userProfileMapper.selectList(any())).willReturn(List.of(otherProfile()));
+        given(userFollowMapper.selectCount(any())).willReturn(4L, 2L);
+
+        var following = service.listFollowing(user, 1, 10);
+
+        assertThat(following.total()).isEqualTo(1L);
+        assertThat(following.records()).hasSize(1);
+        assertThat(following.records().get(0).id()).isEqualTo(9L);
+        assertThat(following.records().get(0).nickname()).isEqualTo("Woods Scout");
+        assertThat(following.records().get(0).bio()).isEqualTo("Keeps Woods routes tidy.");
+        assertThat(following.records().get(0).favoriteMaps()).isEqualTo("Woods,Shoreline");
+        assertThat(following.records().get(0).followerCount()).isEqualTo(4L);
+        assertThat(following.records().get(0).followingCount()).isEqualTo(2L);
+        assertThat(following.records().get(0).followedByMe()).isTrue();
+    }
+
+    @Test
+    void listsFollowerPlayersWithMutualFollowState() {
+        UserCenterServiceImpl service = service();
+        SysUser user = userWithPassword("OldPass123");
+        Page<UserFollow> followPage = new Page<>(1, 10, 1);
+        followPage.setRecords(List.of(follow(11L, 9L, 7L)));
+
+        given(userFollowMapper.selectPage(any(Page.class), any())).willReturn(followPage);
+        given(sysUserMapper.selectBatchIds(any())).willReturn(List.of(otherUser()));
+        given(userProfileMapper.selectList(any())).willReturn(List.of(otherProfile()));
+        given(userFollowMapper.selectCount(any())).willReturn(4L, 2L, 1L);
+
+        var followers = service.listFollowers(user, 1, 10);
+
+        assertThat(followers.total()).isEqualTo(1L);
+        assertThat(followers.records()).hasSize(1);
+        assertThat(followers.records().get(0).id()).isEqualTo(9L);
+        assertThat(followers.records().get(0).followedByMe()).isTrue();
+        assertThat(followers.records().get(0).followedAt()).isEqualTo(LocalDateTime.of(2026, 6, 8, 20, 0));
+    }
+
     private UserCenterServiceImpl service() {
         return new UserCenterServiceImpl(
                 postMapper,
                 postCommentMapper,
                 favoriteMapper,
                 categoryMapper,
-                sysUserMapper
+                sysUserMapper,
+                userFollowMapper,
+                userProfileMapper
         );
     }
 
@@ -201,6 +259,35 @@ class UserCenterServiceImplTests {
         category.setName("Raid Stories");
         category.setCode("raid-stories");
         return category;
+    }
+
+    private UserFollow follow(Long id, Long userId, Long followedUserId) {
+        UserFollow follow = new UserFollow();
+        follow.setId(id);
+        follow.setUserId(userId);
+        follow.setFollowedUserId(followedUserId);
+        follow.setCreatedAt(LocalDateTime.of(2026, 6, 8, 20, 0));
+        return follow;
+    }
+
+    private SysUser otherUser() {
+        SysUser user = new SysUser();
+        user.setId(9L);
+        user.setUsername("woods_scout");
+        user.setNickname("Woods Scout");
+        user.setAvatar("https://example.com/woods.png");
+        user.setRole("USER");
+        user.setStatus("NORMAL");
+        user.setContribution(28);
+        return user;
+    }
+
+    private UserProfile otherProfile() {
+        UserProfile profile = new UserProfile();
+        profile.setUserId(9L);
+        profile.setBio("Keeps Woods routes tidy.");
+        profile.setFavoriteMaps("Woods,Shoreline");
+        return profile;
     }
 
 }

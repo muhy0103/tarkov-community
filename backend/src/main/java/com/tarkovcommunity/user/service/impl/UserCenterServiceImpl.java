@@ -16,8 +16,13 @@ import com.tarkovcommunity.user.dto.UserCenterCommentResponse;
 import com.tarkovcommunity.user.dto.UserCenterSummaryResponse;
 import com.tarkovcommunity.user.dto.UserPasswordUpdateRequest;
 import com.tarkovcommunity.user.dto.UserProfileUpdateRequest;
+import com.tarkovcommunity.user.dto.UserRelationResponse;
 import com.tarkovcommunity.user.entity.SysUser;
+import com.tarkovcommunity.user.entity.UserFollow;
+import com.tarkovcommunity.user.entity.UserProfile;
 import com.tarkovcommunity.user.mapper.SysUserMapper;
+import com.tarkovcommunity.user.mapper.UserFollowMapper;
+import com.tarkovcommunity.user.mapper.UserProfileMapper;
 import com.tarkovcommunity.user.service.UserCenterService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -45,6 +50,8 @@ public class UserCenterServiceImpl implements UserCenterService {
     private final FavoriteMapper favoriteMapper;
     private final CategoryMapper categoryMapper;
     private final SysUserMapper sysUserMapper;
+    private final UserFollowMapper userFollowMapper;
+    private final UserProfileMapper userProfileMapper;
     private final BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
 
     @Override
@@ -133,6 +140,46 @@ public class UserCenterServiceImpl implements UserCenterService {
     }
 
     @Override
+    public PageResponse<UserRelationResponse> listFollowing(SysUser user, int page, int size) {
+        int safePage = safePage(page);
+        int safeSize = safeSize(size);
+        Page<UserFollow> followPage = userFollowMapper.selectPage(
+                new Page<>(safePage, safeSize),
+                new LambdaQueryWrapper<UserFollow>()
+                        .eq(UserFollow::getUserId, user.getId())
+                        .orderByDesc(UserFollow::getCreatedAt)
+                        .orderByDesc(UserFollow::getId)
+        );
+
+        return PageResponse.of(
+                safePage,
+                safeSize,
+                followPage.getTotal(),
+                toRelationResponses(user.getId(), followPage.getRecords(), UserFollow::getFollowedUserId, true)
+        );
+    }
+
+    @Override
+    public PageResponse<UserRelationResponse> listFollowers(SysUser user, int page, int size) {
+        int safePage = safePage(page);
+        int safeSize = safeSize(size);
+        Page<UserFollow> followPage = userFollowMapper.selectPage(
+                new Page<>(safePage, safeSize),
+                new LambdaQueryWrapper<UserFollow>()
+                        .eq(UserFollow::getFollowedUserId, user.getId())
+                        .orderByDesc(UserFollow::getCreatedAt)
+                        .orderByDesc(UserFollow::getId)
+        );
+
+        return PageResponse.of(
+                safePage,
+                safeSize,
+                followPage.getTotal(),
+                toRelationResponses(user.getId(), followPage.getRecords(), UserFollow::getUserId, false)
+        );
+    }
+
+    @Override
     public UserCenterSummaryResponse updateProfile(SysUser user, UserProfileUpdateRequest request) {
         String email = normalizeNullable(request.email());
         if (StringUtils.hasText(email)) {
@@ -192,6 +239,77 @@ public class UserCenterServiceImpl implements UserCenterService {
                     );
                 })
                 .toList();
+    }
+
+    private List<UserRelationResponse> toRelationResponses(
+            Long currentUserId,
+            List<UserFollow> follows,
+            Function<UserFollow, Long> relatedUserIdGetter,
+            boolean alwaysFollowedByMe
+    ) {
+        if (follows.isEmpty()) {
+            return List.of();
+        }
+
+        List<Long> relatedUserIds = follows.stream()
+                .map(relatedUserIdGetter)
+                .filter(Objects::nonNull)
+                .distinct()
+                .toList();
+        Map<Long, SysUser> users = selectByIds(relatedUserIds, sysUserMapper::selectBatchIds, SysUser::getId);
+        Map<Long, UserProfile> profiles = selectProfiles(relatedUserIds);
+
+        return follows.stream()
+                .map(follow -> {
+                    Long relatedUserId = relatedUserIdGetter.apply(follow);
+                    SysUser relatedUser = users.get(relatedUserId);
+                    if (relatedUser == null || !"NORMAL".equals(relatedUser.getStatus())) {
+                        return null;
+                    }
+                    UserProfile profile = profiles.get(relatedUserId);
+                    return new UserRelationResponse(
+                            relatedUser.getId(),
+                            relatedUser.getUsername(),
+                            relatedUser.getNickname(),
+                            relatedUser.getAvatar(),
+                            relatedUser.getRole(),
+                            valueOrZero(relatedUser.getContribution()),
+                            profile == null ? null : profile.getBio(),
+                            profile == null ? null : profile.getFavoriteMaps(),
+                            followerCount(relatedUser.getId()),
+                            followingCount(relatedUser.getId()),
+                            alwaysFollowedByMe || hasFollowed(currentUserId, relatedUser.getId()),
+                            follow.getCreatedAt()
+                    );
+                })
+                .filter(Objects::nonNull)
+                .toList();
+    }
+
+    private Map<Long, UserProfile> selectProfiles(List<Long> userIds) {
+        if (userIds.isEmpty()) {
+            return Collections.emptyMap();
+        }
+        return userProfileMapper.selectList(new LambdaQueryWrapper<UserProfile>()
+                        .in(UserProfile::getUserId, userIds))
+                .stream()
+                .collect(Collectors.toMap(UserProfile::getUserId, Function.identity()));
+    }
+
+    private Long followerCount(Long userId) {
+        return userFollowMapper.selectCount(new LambdaQueryWrapper<UserFollow>()
+                .eq(UserFollow::getFollowedUserId, userId));
+    }
+
+    private Long followingCount(Long userId) {
+        return userFollowMapper.selectCount(new LambdaQueryWrapper<UserFollow>()
+                .eq(UserFollow::getUserId, userId));
+    }
+
+    private boolean hasFollowed(Long currentUserId, Long targetUserId) {
+        return userFollowMapper.selectCount(new LambdaQueryWrapper<UserFollow>()
+                .eq(UserFollow::getUserId, currentUserId)
+                .eq(UserFollow::getFollowedUserId, targetUserId)) > 0;
     }
 
     private List<PostSummaryResponse> toPostSummaries(List<Post> posts) {

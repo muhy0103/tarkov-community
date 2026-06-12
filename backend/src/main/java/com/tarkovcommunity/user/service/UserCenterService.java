@@ -6,6 +6,7 @@ import com.tarkovcommunity.user.dto.UserCenterCommentResponse;
 import com.tarkovcommunity.user.dto.UserCenterSummaryResponse;
 import com.tarkovcommunity.user.dto.UserPasswordUpdateRequest;
 import com.tarkovcommunity.user.dto.UserProfileUpdateRequest;
+import com.tarkovcommunity.user.dto.UserRelationResponse;
 import com.tarkovcommunity.user.entity.SysUser;
 
 public interface UserCenterService {
@@ -17,6 +18,10 @@ public interface UserCenterService {
     PageResponse<UserCenterCommentResponse> listComments(SysUser user, int page, int size);
 
     PageResponse<PostSummaryResponse> listFavorites(SysUser user, int page, int size);
+
+    PageResponse<UserRelationResponse> listFollowing(SysUser user, int page, int size);
+
+    PageResponse<UserRelationResponse> listFollowers(SysUser user, int page, int size);
 
     UserCenterSummaryResponse updateProfile(SysUser user, UserProfileUpdateRequest request);
 

@@ -20,6 +20,8 @@ import {
   fetchMyNotifications,
   fetchMyComments,
   fetchMyFavorites,
+  fetchMyFollowers,
+  fetchMyFollowing,
   fetchMyPosts,
   fetchUnreadNotificationCount,
   fetchUserCenterSummary,
@@ -29,6 +31,7 @@ import {
   updateMyProfile,
 } from '../api/userCenterApi'
 import { togglePostFavorite, updateComment, withdrawComment } from '../api/postApi'
+import { followPublicUser, unfollowPublicUser } from '../api/userPublicApi'
 import { useUserStore } from '../stores/userStore'
 
 const router = useRouter()
@@ -72,10 +75,12 @@ const summary = ref({
 const postsPage = ref(pageState())
 const commentsPage = ref(pageState())
 const favoritesPage = ref(pageState())
+const followingPage = ref(pageState())
+const followersPage = ref(pageState())
 const notificationsPage = ref(pageState(5))
 const unreadNotificationCount = ref(0)
 const notificationReadFilter = ref('ALL')
-const tabNames = new Set(['posts', 'comments', 'favorites', 'notifications'])
+const tabNames = new Set(['posts', 'comments', 'favorites', 'following', 'followers', 'notifications'])
 
 const playerName = computed(() => summary.value.nickname || userStore.userInfo?.nickname || '塔科夫玩家')
 const playerAvatar = computed(() => summary.value.avatar || userStore.userInfo?.avatar || '')
@@ -124,6 +129,8 @@ const summaryStats = computed(() => [
   { label: '我的帖子', value: summary.value.postCount || 0, icon: ChatLineRound },
   { label: '我的评论', value: summary.value.commentCount || 0, icon: Collection },
   { label: '我的收藏', value: summary.value.favoriteCount || 0, icon: Star },
+  { label: '我的关注', value: followingPage.value.total || 0, icon: User },
+  { label: '关注我的', value: followersPage.value.total || 0, icon: Collection },
   { label: '未读通知', value: unreadNotificationCount.value || 0, icon: Bell },
 ])
 
@@ -262,11 +269,22 @@ async function loadAll() {
   errorMessage.value = ''
 
   try {
-    const [summaryData, postData, commentData, favoriteData, notificationData, unreadCount] = await Promise.all([
+    const [
+      summaryData,
+      postData,
+      commentData,
+      favoriteData,
+      followingData,
+      followersData,
+      notificationData,
+      unreadCount,
+    ] = await Promise.all([
       fetchUserCenterSummary(),
       fetchMyPosts({ page: postsPage.value.page, size: postsPage.value.size }),
       fetchMyComments({ page: commentsPage.value.page, size: commentsPage.value.size }),
       fetchMyFavorites({ page: favoritesPage.value.page, size: favoritesPage.value.size }),
+      fetchMyFollowing({ page: followingPage.value.page, size: followingPage.value.size }),
+      fetchMyFollowers({ page: followersPage.value.page, size: followersPage.value.size }),
       fetchMyNotifications(notificationQueryParams(notificationsPage.value.page)),
       fetchUnreadNotificationCount(),
     ])
@@ -276,6 +294,8 @@ async function loadAll() {
     postsPage.value = postData
     commentsPage.value = commentData
     favoritesPage.value = favoriteData
+    followingPage.value = followingData
+    followersPage.value = followersData
     notificationsPage.value = notificationData
     unreadNotificationCount.value = unreadCount
   } catch (error) {
@@ -449,6 +469,99 @@ async function handleRemoveFavorite(post) {
     await loadFavorites(nextPage)
   } catch (error) {
     ElMessage.error(resolveError(error, '取消收藏失败'))
+  } finally {
+    sectionLoading.value = ''
+  }
+}
+
+async function loadFollowing(page = followingPage.value.page) {
+  sectionLoading.value = 'following'
+  followingPage.value.page = page
+
+  try {
+    followingPage.value = await fetchMyFollowing({ page, size: followingPage.value.size })
+  } catch (error) {
+    errorMessage.value = resolveError(error, '我的关注暂时无法加载')
+  } finally {
+    sectionLoading.value = ''
+  }
+}
+
+async function loadFollowers(page = followersPage.value.page) {
+  sectionLoading.value = 'followers'
+  followersPage.value.page = page
+
+  try {
+    followersPage.value = await fetchMyFollowers({ page, size: followersPage.value.size })
+  } catch (error) {
+    errorMessage.value = resolveError(error, '我的粉丝暂时无法加载')
+  } finally {
+    sectionLoading.value = ''
+  }
+}
+
+function goPublicUser(player) {
+  if (!player?.id) {
+    return
+  }
+  router.push({ name: 'user-public', params: { id: player.id } })
+}
+
+async function handleFollowBack(player) {
+  if (!player?.id || player.followedByMe) {
+    return
+  }
+
+  sectionLoading.value = 'followers'
+  try {
+    await followPublicUser(player.id)
+    ElMessage.success('已关注该玩家')
+    await Promise.all([
+      loadFollowers(followersPage.value.page),
+      loadFollowing(1),
+    ])
+  } catch (error) {
+    ElMessage.error(resolveError(error, '关注暂时无法完成'))
+  } finally {
+    sectionLoading.value = ''
+  }
+}
+
+async function handleUnfollowPlayer(player) {
+  if (!player?.id) {
+    return
+  }
+
+  const confirmed = await ElMessageBox.confirm(
+    `取消关注 ${player.nickname || player.username || '该玩家'} 后，对方会从你的关注列表中移除。确定继续吗？`,
+    '取消关注',
+    {
+      confirmButtonText: '取消关注',
+      cancelButtonText: '返回',
+      type: 'warning',
+    }
+  ).then(() => true).catch(() => false)
+
+  if (!confirmed) {
+    return
+  }
+
+  sectionLoading.value = 'following'
+  try {
+    await unfollowPublicUser(player.id)
+    followersPage.value = {
+      ...followersPage.value,
+      records: followersPage.value.records.map((item) => (
+        item.id === player.id ? { ...item, followedByMe: false } : item
+      )),
+    }
+    const nextPage = followingPage.value.records.length <= 1 && followingPage.value.page > 1
+      ? followingPage.value.page - 1
+      : followingPage.value.page
+    ElMessage.success('已取消关注')
+    await loadFollowing(nextPage)
+  } catch (error) {
+    ElMessage.error(resolveError(error, '取消关注暂时无法完成'))
   } finally {
     sectionLoading.value = ''
   }
@@ -883,6 +996,135 @@ onMounted(() => {
                 :page-size="favoritesPage.size"
                 :total="favoritesPage.total"
                 @current-change="loadFavorites"
+              />
+            </div>
+          </el-tab-pane>
+
+          <el-tab-pane label="我的关注" name="following">
+            <div v-loading="sectionLoading === 'following'" class="user-list-wrap">
+              <div v-if="followingPage.records.length" class="relation-list">
+                <article v-for="player in followingPage.records" :key="player.id" class="relation-item">
+                  <div class="user-avatar relation-avatar">
+                    <img v-if="player.avatar" :src="player.avatar" alt="玩家头像" />
+                    <span v-else>{{ (player.nickname || player.username || 'P').slice(0, 1).toUpperCase() }}</span>
+                  </div>
+                  <div class="relation-body">
+                    <div class="post-meta">
+                      <el-tag size="small" effect="plain" type="success">关注中</el-tag>
+                      <span>{{ player.username }}</span>
+                      <span>{{ formatDate(player.followedAt) }}</span>
+                    </div>
+                    <button class="relation-title-button" type="button" @click="goPublicUser(player)">
+                      {{ player.nickname || player.username }}
+                    </button>
+                    <p>{{ player.bio || '这个玩家暂时没有填写个人简介。' }}</p>
+                    <div class="relation-tags">
+                      <span>常用地图：{{ player.favoriteMaps || '暂无' }}</span>
+                      <span>贡献 {{ player.contribution || 0 }}</span>
+                      <span>粉丝 {{ player.followerCount || 0 }}</span>
+                      <span>关注 {{ player.followingCount || 0 }}</span>
+                    </div>
+                  </div>
+                  <div class="relation-actions">
+                    <el-button text type="primary" size="small" :icon="View" @click="goPublicUser(player)">
+                      主页
+                    </el-button>
+                    <el-button
+                      text
+                      type="warning"
+                      size="small"
+                      :icon="Delete"
+                      @click="handleUnfollowPlayer(player)"
+                    >
+                      取消关注
+                    </el-button>
+                  </div>
+                </article>
+              </div>
+
+              <div v-else class="post-empty">
+                <User />
+                <div>
+                  <h4>暂时还没有关注玩家</h4>
+                  <p>可以从帖子作者主页关注稳定分享路线、配装或组队经验的玩家。</p>
+                </div>
+              </div>
+
+              <el-pagination
+                v-if="followingPage.pages > 1"
+                class="board-pagination"
+                background
+                layout="prev, pager, next"
+                :current-page="followingPage.page"
+                :page-size="followingPage.size"
+                :total="followingPage.total"
+                @current-change="loadFollowing"
+              />
+            </div>
+          </el-tab-pane>
+
+          <el-tab-pane label="我的粉丝" name="followers">
+            <div v-loading="sectionLoading === 'followers'" class="user-list-wrap">
+              <div v-if="followersPage.records.length" class="relation-list">
+                <article v-for="player in followersPage.records" :key="player.id" class="relation-item">
+                  <div class="user-avatar relation-avatar">
+                    <img v-if="player.avatar" :src="player.avatar" alt="玩家头像" />
+                    <span v-else>{{ (player.nickname || player.username || 'P').slice(0, 1).toUpperCase() }}</span>
+                  </div>
+                  <div class="relation-body">
+                    <div class="post-meta">
+                      <el-tag size="small" effect="plain" :type="player.followedByMe ? 'success' : 'info'">
+                        {{ player.followedByMe ? '已互关' : '关注了你' }}
+                      </el-tag>
+                      <span>{{ player.username }}</span>
+                      <span>{{ formatDate(player.followedAt) }}</span>
+                    </div>
+                    <button class="relation-title-button" type="button" @click="goPublicUser(player)">
+                      {{ player.nickname || player.username }}
+                    </button>
+                    <p>{{ player.bio || '这个玩家暂时没有填写个人简介。' }}</p>
+                    <div class="relation-tags">
+                      <span>常用地图：{{ player.favoriteMaps || '暂无' }}</span>
+                      <span>贡献 {{ player.contribution || 0 }}</span>
+                      <span>粉丝 {{ player.followerCount || 0 }}</span>
+                      <span>关注 {{ player.followingCount || 0 }}</span>
+                    </div>
+                  </div>
+                  <div class="relation-actions">
+                    <el-button text type="primary" size="small" :icon="View" @click="goPublicUser(player)">
+                      主页
+                    </el-button>
+                    <el-button
+                      v-if="!player.followedByMe"
+                      text
+                      type="primary"
+                      size="small"
+                      :icon="User"
+                      @click="handleFollowBack(player)"
+                    >
+                      回关
+                    </el-button>
+                  </div>
+                </article>
+              </div>
+
+              <div v-else class="post-empty">
+                <Collection />
+                <div>
+                  <h4>暂时还没有粉丝</h4>
+                  <p>持续发布清晰、实用的社区情报后，其他玩家就能从你的主页关注你。</p>
+                </div>
+              </div>
+
+              <el-pagination
+                v-if="followersPage.pages > 1"
+                class="board-pagination"
+                background
+                layout="prev, pager, next"
+                :current-page="followersPage.page"
+                :page-size="followersPage.size"
+                :total="followersPage.total"
+                @current-change="loadFollowers"
               />
             </div>
           </el-tab-pane>

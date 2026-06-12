@@ -56,6 +56,30 @@ export function fetchMyFavorites(params = {}) {
     .then((response) => response?.data ?? pageFallback(params.page, params.size))
 }
 
+export function fetchMyFollowing(params = {}) {
+  return request
+    .get('/users/me/following', {
+      params: {
+        page: 1,
+        size: 6,
+        ...params,
+      },
+    })
+    .then((response) => response?.data ?? pageFallback(params.page, params.size))
+}
+
+export function fetchMyFollowers(params = {}) {
+  return request
+    .get('/users/me/followers', {
+      params: {
+        page: 1,
+        size: 6,
+        ...params,
+      },
+    })
+    .then((response) => response?.data ?? pageFallback(params.page, params.size))
+}
+
 export function fetchMyNotifications(params = {}) {
   return request
     .get('/notifications/me', {

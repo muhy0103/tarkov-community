@@ -868,6 +868,94 @@ a {
   min-height: 180px;
 }
 
+.relation-list {
+  display: grid;
+  gap: 12px;
+}
+
+.relation-item {
+  display: grid;
+  grid-template-columns: 58px minmax(0, 1fr) auto;
+  gap: 14px;
+  align-items: flex-start;
+  padding: 16px;
+  border: 1px solid #dbe7e6;
+  border-radius: 8px;
+  background: #ffffff;
+}
+
+.relation-avatar {
+  width: 52px;
+  height: 52px;
+  flex-basis: 52px;
+  font-size: 20px;
+}
+
+.relation-body {
+  min-width: 0;
+}
+
+.relation-title-button {
+  display: inline-flex;
+  max-width: 100%;
+  margin: 8px 0 0;
+  padding: 0;
+  color: #111827;
+  border: 0;
+  background: transparent;
+  font: inherit;
+  font-size: 17px;
+  font-weight: 900;
+  line-height: 1.35;
+  text-align: left;
+  overflow-wrap: anywhere;
+  cursor: pointer;
+}
+
+.relation-title-button:hover {
+  color: #0f766e;
+}
+
+.relation-body p {
+  margin: 8px 0 0;
+  color: #3f4d5a;
+  font-size: 14px;
+  line-height: 1.7;
+  overflow-wrap: anywhere;
+}
+
+.relation-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.relation-tags span {
+  display: inline-flex;
+  min-height: 26px;
+  align-items: center;
+  padding: 4px 9px;
+  color: #52616d;
+  border: 1px solid #dbe7e6;
+  border-radius: 8px;
+  background: #f8fafc;
+  font-size: 12px;
+  font-weight: 800;
+  line-height: 1.35;
+}
+
+.relation-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  align-items: flex-start;
+}
+
+.relation-actions .el-button {
+  margin-left: 0;
+}
+
 .notification-tab-label {
   display: inline-flex;
   gap: 8px;
@@ -2316,10 +2404,12 @@ a {
     width: 100%;
   }
 
+  .relation-item,
   .user-notification-item {
     grid-template-columns: 42px minmax(0, 1fr);
   }
 
+  .relation-actions,
   .notification-actions {
     grid-column: 2;
     justify-self: flex-start;

@@ -9,6 +9,7 @@ public record PostSummaryResponse(
         String postType,
         String categoryName,
         String categoryCode,
+        Long authorId,
         String authorNickname,
         Boolean recommended,
         Integer viewCount,

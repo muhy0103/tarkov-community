@@ -219,6 +219,7 @@ public class ForumPostServiceImpl implements ForumPostService {
                             post.getPostType(),
                             categoryName(category),
                             categoryCode(category),
+                            post.getUserId(),
                             authorNickname(author),
                             isRecommended(post),
                             valueOrZero(post.getViewCount()),

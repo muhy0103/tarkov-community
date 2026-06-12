@@ -233,6 +233,7 @@ class UserCenterControllerTests {
                 "LOADOUT",
                 "Loadouts",
                 "loadouts",
+                7L,
                 "Rookie",
                 false,
                 12,

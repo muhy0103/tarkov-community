@@ -238,7 +238,14 @@ onMounted(() => loadBoard(1))
           <div class="post-body">
             <div class="post-meta">
               <el-tag size="small" effect="plain">{{ post.categoryName }}</el-tag>
-              <span>{{ post.authorNickname }}</span>
+              <RouterLink
+                v-if="post.authorId"
+                class="author-inline-link"
+                :to="{ name: 'user-public', params: { id: post.authorId } }"
+              >
+                {{ post.authorNickname }}
+              </RouterLink>
+              <span v-else>{{ post.authorNickname }}</span>
               <span>{{ postTypeLabel(post.postType) }}</span>
             </div>
             <RouterLink

@@ -60,6 +60,7 @@ class ForumPostControllerTests {
                 "QUEST_GUIDE",
                 "任务档案",
                 "quests",
+                7L,
                 "夜莺",
                 true,
                 23,

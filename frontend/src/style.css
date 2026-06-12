@@ -596,6 +596,18 @@ a {
   color: #0d9488;
 }
 
+.author-inline-link {
+  display: inline-flex;
+  align-items: center;
+  color: #0f766e;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.author-inline-link:hover {
+  color: #0d9488;
+}
+
 .post-item h4,
 .post-empty h4 {
   margin: 8px 0;
@@ -644,6 +656,11 @@ a {
   gap: 18px;
 }
 
+.user-public-view {
+  display: grid;
+  gap: 18px;
+}
+
 .user-center-hero {
   display: flex;
   gap: 18px;
@@ -654,6 +671,25 @@ a {
   border-radius: 8px;
   background: #ffffff;
   box-shadow: 0 12px 30px rgba(15, 23, 42, 0.04);
+}
+
+.public-profile-hero {
+  display: flex;
+  gap: 18px;
+  align-items: center;
+  justify-content: space-between;
+  padding: 24px;
+  border: 1px solid #dbe7e6;
+  border-radius: 8px;
+  background: #ffffff;
+  box-shadow: 0 12px 30px rgba(15, 23, 42, 0.04);
+}
+
+.public-profile-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: flex-end;
 }
 
 .user-profile-main {
@@ -1907,6 +1943,26 @@ a {
   gap: 10px;
 }
 
+.draft-toolbar {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px;
+  color: #52616d;
+  font-size: 13px;
+  border: 1px solid #dbe7e6;
+  border-radius: 8px;
+  background: #f8fbfb;
+}
+
+.draft-toolbar > div {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: flex-end;
+}
+
 .create-form-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -2121,18 +2177,22 @@ a {
   .board-player-panel,
   .admin-hero,
   .user-center-hero,
+  .public-profile-hero,
   .board-toolbar {
     align-items: flex-start;
     flex-direction: column;
   }
 
-  .user-center-actions {
+  .user-center-actions,
+  .public-profile-actions {
     width: 100%;
     justify-content: flex-start;
   }
 
   .user-center-view,
+  .user-public-view,
   .user-center-hero,
+  .public-profile-hero,
   .user-stat-grid,
   .user-stat-card,
   .user-content-panel {
@@ -2172,6 +2232,16 @@ a {
   .reply-target-bar {
     align-items: flex-start;
     flex-direction: column;
+  }
+
+  .draft-toolbar {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .draft-toolbar > div {
+    width: 100%;
+    justify-content: flex-start;
   }
 
   .notification-toolbar,

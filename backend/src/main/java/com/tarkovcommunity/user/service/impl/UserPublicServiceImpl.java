@@ -4,29 +4,21 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.tarkovcommunity.common.PageResponse;
 import com.tarkovcommunity.forum.dto.PostSummaryResponse;
-import com.tarkovcommunity.forum.entity.Favorite;
 import com.tarkovcommunity.forum.entity.Post;
-import com.tarkovcommunity.forum.entity.PostComment;
-import com.tarkovcommunity.forum.mapper.FavoriteMapper;
 import com.tarkovcommunity.forum.mapper.PostCommentMapper;
 import com.tarkovcommunity.forum.mapper.PostMapper;
 import com.tarkovcommunity.meta.entity.Category;
 import com.tarkovcommunity.meta.mapper.CategoryMapper;
-import com.tarkovcommunity.user.dto.UserCenterCommentResponse;
-import com.tarkovcommunity.user.dto.UserCenterSummaryResponse;
-import com.tarkovcommunity.user.dto.UserPasswordUpdateRequest;
-import com.tarkovcommunity.user.dto.UserProfileUpdateRequest;
+import com.tarkovcommunity.user.dto.PublicUserProfileResponse;
 import com.tarkovcommunity.user.entity.SysUser;
 import com.tarkovcommunity.user.mapper.SysUserMapper;
-import com.tarkovcommunity.user.service.UserCenterService;
+import com.tarkovcommunity.user.service.UserPublicService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 import org.springframework.web.server.ResponseStatusException;
 
-import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -36,43 +28,39 @@ import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
-public class UserCenterServiceImpl implements UserCenterService {
+public class UserPublicServiceImpl implements UserPublicService {
 
     private static final int MAX_PAGE_SIZE = 50;
 
+    private final SysUserMapper sysUserMapper;
     private final PostMapper postMapper;
     private final PostCommentMapper postCommentMapper;
-    private final FavoriteMapper favoriteMapper;
     private final CategoryMapper categoryMapper;
-    private final SysUserMapper sysUserMapper;
-    private final BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
 
     @Override
-    public UserCenterSummaryResponse getSummary(SysUser user) {
+    public PublicUserProfileResponse getProfile(Long userId) {
+        SysUser user = requireNormalUser(userId);
         Long postCount = postMapper.selectCount(new LambdaQueryWrapper<Post>()
                 .eq(Post::getUserId, user.getId())
                 .eq(Post::getStatus, "NORMAL"));
         Long commentCount = postCommentMapper.selectVisiblePostCommentCount(user.getId());
-        Long favoriteCount = favoriteMapper.selectVisiblePostFavoriteCount(user.getId());
 
-        return new UserCenterSummaryResponse(
+        return new PublicUserProfileResponse(
                 user.getId(),
                 user.getUsername(),
                 user.getNickname(),
-                user.getEmail(),
                 user.getAvatar(),
                 user.getRole(),
-                user.getStatus(),
                 valueOrZero(user.getContribution()),
                 postCount,
                 commentCount,
-                favoriteCount,
                 user.getCreatedAt()
         );
     }
 
     @Override
-    public PageResponse<PostSummaryResponse> listPosts(SysUser user, int page, int size) {
+    public PageResponse<PostSummaryResponse> listPosts(Long userId, int page, int size) {
+        SysUser user = requireNormalUser(userId);
         int safePage = safePage(page);
         int safeSize = safeSize(size);
         Page<Post> postPage = postMapper.selectPage(
@@ -92,106 +80,12 @@ public class UserCenterServiceImpl implements UserCenterService {
         );
     }
 
-    @Override
-    public PageResponse<UserCenterCommentResponse> listComments(SysUser user, int page, int size) {
-        int safePage = safePage(page);
-        int safeSize = safeSize(size);
-        Page<PostComment> commentPage = postCommentMapper.selectVisiblePostCommentsPage(new Page<>(safePage, safeSize), user.getId());
-
-        return PageResponse.of(
-                safePage,
-                safeSize,
-                commentPage.getTotal(),
-                toCommentResponses(commentPage.getRecords())
-        );
-    }
-
-    @Override
-    public PageResponse<PostSummaryResponse> listFavorites(SysUser user, int page, int size) {
-        int safePage = safePage(page);
-        int safeSize = safeSize(size);
-        Page<Favorite> favoritePage = favoriteMapper.selectVisiblePostFavoritesPage(new Page<>(safePage, safeSize), user.getId());
-
-        List<Long> postIds = favoritePage.getRecords()
-                .stream()
-                .map(Favorite::getPostId)
-                .filter(Objects::nonNull)
-                .toList();
-        Map<Long, Post> posts = selectByIds(postIds, postMapper::selectBatchIds, Post::getId);
-        List<Post> orderedPosts = postIds.stream()
-                .map(posts::get)
-                .filter(Objects::nonNull)
-                .filter(post -> "NORMAL".equals(post.getStatus()))
-                .toList();
-
-        return PageResponse.of(
-                safePage,
-                safeSize,
-                favoritePage.getTotal(),
-                toPostSummaries(orderedPosts)
-        );
-    }
-
-    @Override
-    public UserCenterSummaryResponse updateProfile(SysUser user, UserProfileUpdateRequest request) {
-        String email = normalizeNullable(request.email());
-        if (StringUtils.hasText(email)) {
-            SysUser existing = sysUserMapper.selectOne(new LambdaQueryWrapper<SysUser>()
-                    .eq(SysUser::getEmail, email));
-            if (existing != null && !Objects.equals(existing.getId(), user.getId())) {
-                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "邮箱已被使用");
-            }
+    private SysUser requireNormalUser(Long userId) {
+        SysUser user = userId == null ? null : sysUserMapper.selectById(userId);
+        if (user == null || !"NORMAL".equals(user.getStatus())) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "玩家不存在");
         }
-
-        user.setNickname(request.nickname().trim());
-        user.setEmail(email);
-        user.setAvatar(normalizeNullable(request.avatar()));
-        user.setUpdatedAt(LocalDateTime.now());
-        sysUserMapper.updateById(user);
-
-        return getSummary(user);
-    }
-
-    @Override
-    public void updatePassword(SysUser user, UserPasswordUpdateRequest request) {
-        if (!StringUtils.hasText(user.getPassword()) || !passwordEncoder.matches(request.currentPassword(), user.getPassword())) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "当前密码不正确");
-        }
-
-        if (passwordEncoder.matches(request.newPassword(), user.getPassword())) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "新密码不能与当前密码相同");
-        }
-
-        user.setPassword(passwordEncoder.encode(request.newPassword()));
-        user.setUpdatedAt(LocalDateTime.now());
-        sysUserMapper.updateById(user);
-    }
-
-    private List<UserCenterCommentResponse> toCommentResponses(List<PostComment> comments) {
-        if (comments.isEmpty()) {
-            return List.of();
-        }
-
-        Map<Long, Post> posts = selectByIds(
-                comments.stream().map(PostComment::getPostId).filter(Objects::nonNull).toList(),
-                postMapper::selectBatchIds,
-                Post::getId
-        );
-
-        return comments.stream()
-                .map(comment -> {
-                    Post post = posts.get(comment.getPostId());
-                    return new UserCenterCommentResponse(
-                            comment.getId(),
-                            comment.getPostId(),
-                            postTitle(post),
-                            comment.getContent(),
-                            comment.getStatus(),
-                            valueOrZero(comment.getLikeCount()),
-                            comment.getCreatedAt()
-                    );
-                })
-                .toList();
+        return user;
     }
 
     private List<PostSummaryResponse> toPostSummaries(List<Post> posts) {
@@ -262,10 +156,6 @@ public class UserCenterServiceImpl implements UserCenterService {
         return normalized.length() > 90 ? normalized.substring(0, 90) + "..." : normalized;
     }
 
-    private static String normalizeNullable(String value) {
-        return StringUtils.hasText(value) ? value.trim() : null;
-    }
-
     private static String categoryName(Category category) {
         return category == null ? "Unknown category" : category.getName();
     }
@@ -276,10 +166,6 @@ public class UserCenterServiceImpl implements UserCenterService {
 
     private static String authorNickname(SysUser author) {
         return author == null ? "Unknown player" : author.getNickname();
-    }
-
-    private static String postTitle(Post post) {
-        return post == null ? "Unknown post" : post.getTitle();
     }
 
     private static boolean isRecommended(Post post) {

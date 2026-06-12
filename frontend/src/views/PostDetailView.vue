@@ -552,7 +552,14 @@ onMounted(loadDetail)
         <h2>{{ post.title }}</h2>
 
         <div class="detail-meta">
-          <span>{{ post.authorNickname }}</span>
+          <RouterLink
+            v-if="post.authorId"
+            class="author-inline-link"
+            :to="{ name: 'user-public', params: { id: post.authorId } }"
+          >
+            {{ post.authorNickname }}
+          </RouterLink>
+          <span v-else>{{ post.authorNickname }}</span>
           <span>{{ formatDate(post.createdAt) }}</span>
           <span>浏览 {{ post.viewCount }}</span>
           <span>评论 {{ post.commentCount }}</span>

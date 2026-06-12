@@ -278,11 +278,18 @@ onMounted(loadCatalog)
               <ChatLineRound />
             </div>
             <div class="post-body">
-              <div class="post-meta">
-                <el-tag size="small" effect="plain">{{ post.categoryName }}</el-tag>
-                <span>{{ post.authorNickname }}</span>
-                <span>{{ postTypeLabel(post.postType) }}</span>
-              </div>
+            <div class="post-meta">
+              <el-tag size="small" effect="plain">{{ post.categoryName }}</el-tag>
+              <RouterLink
+                v-if="post.authorId"
+                class="author-inline-link"
+                :to="{ name: 'user-public', params: { id: post.authorId } }"
+              >
+                {{ post.authorNickname }}
+              </RouterLink>
+              <span v-else>{{ post.authorNickname }}</span>
+              <span>{{ postTypeLabel(post.postType) }}</span>
+            </div>
               <RouterLink
                 class="post-title-link"
                 :to="{ name: 'post-detail', params: { id: post.id } }"

@@ -1,5 +1,5 @@
 <script setup>
-import { computed, onMounted, ref } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import { ArrowLeft, EditPen } from '@element-plus/icons-vue'
@@ -14,6 +14,8 @@ const userStore = useUserStore()
 const loading = ref(false)
 const submitting = ref(false)
 const errorMessage = ref('')
+const draftReady = ref(false)
+const draftSavedAt = ref('')
 const categories = ref([])
 const form = ref({
   categoryId: null,
@@ -35,6 +37,7 @@ const backTarget = computed(() => (
     ? { name: 'post-detail', params: { id: editPostId.value } }
     : { name: 'home' }
 ))
+const draftKey = computed(() => `tarkov-post-draft:${userStore.userInfo?.id || 'guest'}`)
 
 const postTypeOptions = [
   { label: '路线情报', value: 'ROUTE' },
@@ -93,6 +96,9 @@ const canSubmit = computed(() => {
     form.value.content.trim().length >= 10
   )
 })
+const hasDraftContent = computed(() => (
+  form.value.title.trim().length > 0 || form.value.content.trim().length > 0
+))
 
 function resolveError(error, fallback) {
   return error?.response?.data?.message || error?.message || fallback
@@ -118,12 +124,83 @@ async function loadCategories() {
       }
     } else {
       form.value.categoryId = categories.value[0]?.id ?? null
+      restoreDraft()
     }
   } catch (error) {
     errorMessage.value = resolveError(error, isEditMode.value ? '帖子暂时无法加载或没有编辑权限' : '社区分区暂时无法加载')
   } finally {
+    draftReady.value = true
     loading.value = false
   }
+}
+
+function restoreDraft() {
+  if (isEditMode.value || !userStore.isLoggedIn) {
+    return
+  }
+
+  try {
+    const rawDraft = localStorage.getItem(draftKey.value)
+    if (!rawDraft) {
+      return
+    }
+
+    const draft = JSON.parse(rawDraft)
+    form.value = {
+      categoryId: categories.value.some((category) => category.id === draft.categoryId)
+        ? draft.categoryId
+        : categories.value[0]?.id ?? null,
+      postType: draft.postType || 'ROUTE',
+      title: draft.title || '',
+      content: draft.content || '',
+    }
+    draftSavedAt.value = draft.savedAt || ''
+  } catch (error) {
+    localStorage.removeItem(draftKey.value)
+  }
+}
+
+function saveDraft(showMessage = false) {
+  if (!draftReady.value || isEditMode.value || !userStore.isLoggedIn || !hasDraftContent.value) {
+    return
+  }
+
+  const savedAt = new Date().toISOString()
+  localStorage.setItem(draftKey.value, JSON.stringify({
+    categoryId: form.value.categoryId,
+    postType: form.value.postType,
+    title: form.value.title,
+    content: form.value.content,
+    savedAt,
+  }))
+  draftSavedAt.value = savedAt
+
+  if (showMessage) {
+    ElMessage.success('草稿已保存到本机浏览器')
+  }
+}
+
+function clearDraft(showMessage = true) {
+  localStorage.removeItem(draftKey.value)
+  draftSavedAt.value = ''
+
+  if (showMessage) {
+    ElMessage.success('草稿已清空')
+  }
+}
+
+function formatDraftTime(value) {
+  if (!value) {
+    return '尚未保存'
+  }
+
+  return new Date(value).toLocaleString('zh-CN', {
+    hour12: false,
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+  })
 }
 
 async function submitPost() {
@@ -151,6 +228,9 @@ async function submitPost() {
     const result = isEditMode.value
       ? await updatePost(editPostId.value, payload)
       : await createPost(payload)
+    if (!isEditMode.value) {
+      clearDraft(false)
+    }
     ElMessage.success(isEditMode.value ? '情报帖已更新' : '情报帖已发布')
     router.push({ name: 'post-detail', params: { id: result.id } })
   } catch (error) {
@@ -159,6 +239,12 @@ async function submitPost() {
     submitting.value = false
   }
 }
+
+watch(
+  form,
+  () => saveDraft(false),
+  { deep: true }
+)
 
 onMounted(loadCategories)
 </script>
@@ -194,6 +280,18 @@ onMounted(loadCategories)
         />
 
         <el-form label-position="top" class="create-form">
+          <div v-if="!isEditMode && userStore.isLoggedIn" class="draft-toolbar">
+            <span>草稿状态：{{ formatDraftTime(draftSavedAt) }}</span>
+            <div>
+              <el-button size="small" @click="saveDraft(true)">
+                保存草稿
+              </el-button>
+              <el-button size="small" :disabled="!draftSavedAt" @click="clearDraft(true)">
+                清空草稿
+              </el-button>
+            </div>
+          </div>
+
           <div class="create-form-grid">
             <el-form-item label="社区分区">
               <el-select

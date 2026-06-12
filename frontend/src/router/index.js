@@ -28,6 +28,7 @@ import PostBoardView from '../views/PostBoardView.vue'
 import PostCreateView from '../views/PostCreateView.vue'
 import PostDetailView from '../views/PostDetailView.vue'
 import UserCenterView from '../views/UserCenterView.vue'
+import UserPublicView from '../views/UserPublicView.vue'
 
 const routes = [
   {
@@ -69,6 +70,14 @@ const routes = [
     meta: {
       title: '用户中心',
       requiresAuth: true,
+    },
+  },
+  {
+    path: '/users/:id',
+    name: 'user-public',
+    component: UserPublicView,
+    meta: {
+      title: '玩家主页',
     },
   },
   {

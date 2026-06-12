@@ -664,6 +664,12 @@ onMounted(() => {
         </div>
       </div>
       <div class="user-center-actions">
+        <el-button
+          :icon="View"
+          @click="router.push({ name: 'user-public', params: { id: summary.id || userStore.userInfo?.id } })"
+        >
+          公开主页
+        </el-button>
         <el-button :icon="User" @click="openProfileDialog">
           编辑资料
         </el-button>
@@ -723,6 +729,12 @@ onMounted(() => {
                       <span>浏览 {{ post.viewCount }}</span>
                       <span>点赞 {{ post.likeCount }}</span>
                       <span>评论 {{ post.commentCount }}</span>
+                      <RouterLink
+                        class="inline-action-link"
+                        :to="{ name: 'user-public', params: { id: post.authorId || summary.id } }"
+                      >
+                        公开页
+                      </RouterLink>
                       <RouterLink class="inline-action-link" :to="{ name: 'post-edit', params: { id: post.id } }">
                         编辑
                       </RouterLink>

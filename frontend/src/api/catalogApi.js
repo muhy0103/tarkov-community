@@ -22,20 +22,60 @@ export const fetchAnnouncement = (id) =>
 
 export const fetchMaps = () => request.get('/tarkov/maps').then(unwrapList)
 
+export const fetchMapDetail = (id) => request.get(`/tarkov/maps/${id}`).then((response) => response?.data)
+
 export const fetchTraders = () => request.get('/tarkov/traders').then(unwrapList)
+
+export const fetchTraderDetail = (id) =>
+  request.get(`/tarkov/traders/${id}`).then((response) => response?.data)
 
 export const fetchQuests = () => request.get('/tarkov/quests').then(unwrapList)
 
+export const fetchQuestDetail = (id) =>
+  request.get(`/tarkov/quests/${id}`).then((response) => response?.data)
+
 export const fetchItems = () => request.get('/tarkov/items').then(unwrapList)
+
+export const fetchItemDetail = (id) => request.get(`/tarkov/items/${id}`).then((response) => response?.data)
 
 export const fetchWeapons = () => request.get('/tarkov/weapons').then(unwrapList)
 
+export const fetchWeaponDetail = (id) =>
+  request.get(`/tarkov/weapons/${id}`).then((response) => response?.data)
+
 export const fetchAmmo = () => request.get('/tarkov/ammo').then(unwrapList)
+
+export const fetchAmmoDetail = (id) => request.get(`/tarkov/ammo/${id}`).then((response) => response?.data)
 
 export const fetchHideoutStations = () =>
   request.get('/tarkov/hideout/stations').then(unwrapList)
 
+export const fetchHideoutStationDetail = (id) =>
+  request.get(`/tarkov/hideout/stations/${id}`).then((response) => response?.data)
+
 export const fetchBosses = () => request.get('/tarkov/bosses').then(unwrapList)
+
+export const fetchBossDetail = (id) => request.get(`/tarkov/bosses/${id}`).then((response) => response?.data)
+
+export function fetchCatalogDetail(kind, id) {
+  const fetchers = {
+    maps: fetchMapDetail,
+    traders: fetchTraderDetail,
+    quests: fetchQuestDetail,
+    items: fetchItemDetail,
+    weapons: fetchWeaponDetail,
+    ammo: fetchAmmoDetail,
+    bosses: fetchBossDetail,
+    hideout: fetchHideoutStationDetail,
+  }
+
+  const fetcher = fetchers[kind]
+  if (!fetcher) {
+    return Promise.reject(new Error('资料类型不存在'))
+  }
+
+  return fetcher(id)
+}
 
 export async function fetchHomeCatalog() {
   const [

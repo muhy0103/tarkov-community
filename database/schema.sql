@@ -36,6 +36,18 @@ CREATE TABLE IF NOT EXISTS user_profile (
   CONSTRAINT fk_user_profile_user FOREIGN KEY (user_id) REFERENCES sys_user (id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
+CREATE TABLE IF NOT EXISTS user_follow (
+  id BIGINT PRIMARY KEY AUTO_INCREMENT,
+  user_id BIGINT NOT NULL,
+  followed_user_id BIGINT NOT NULL,
+  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  UNIQUE KEY uk_user_follow_pair (user_id, followed_user_id),
+  KEY idx_user_follow_user_id (user_id),
+  KEY idx_user_follow_followed_user_id (followed_user_id),
+  CONSTRAINT fk_user_follow_user FOREIGN KEY (user_id) REFERENCES sys_user (id),
+  CONSTRAINT fk_user_follow_followed_user FOREIGN KEY (followed_user_id) REFERENCES sys_user (id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
 CREATE TABLE IF NOT EXISTS email_verification_token (
   id BIGINT PRIMARY KEY AUTO_INCREMENT,
   user_id BIGINT NOT NULL,

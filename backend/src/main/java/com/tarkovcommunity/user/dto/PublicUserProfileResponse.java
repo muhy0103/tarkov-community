@@ -11,6 +11,14 @@ public record PublicUserProfileResponse(
         Integer contribution,
         Long postCount,
         Long commentCount,
+        String bio,
+        String favoriteMaps,
+        String playStyle,
+        String serverRegion,
+        Long followerCount,
+        Long followingCount,
+        Boolean followedByMe,
+        Boolean ownProfile,
         LocalDateTime createdAt
 ) {
 }

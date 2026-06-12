@@ -45,7 +45,7 @@ class AdminBossServiceImplTests {
         assertThat(response.records()).singleElement()
                 .satisfies(boss -> {
                     assertThat(boss.nameEn()).isEqualTo("Reshala");
-                    assertThat(boss.nameZh()).isEqualTo("雷舍拉");
+                    assertThat(boss.nameZh()).isNull();
                     assertThat(boss.mapId()).isEqualTo(1L);
                     assertThat(boss.mapName()).isEqualTo("海关 / Customs");
                     assertThat(boss.description()).isEqualTo("Customs boss with multiple guards.");
@@ -75,7 +75,7 @@ class AdminBossServiceImplTests {
         verify(bossMapper).updateById(bossCaptor.capture());
         Boss savedBoss = bossCaptor.getValue();
         assertThat(savedBoss.getNameEn()).isEqualTo("Reshala");
-        assertThat(savedBoss.getNameZh()).isEqualTo("雷舍拉");
+        assertThat(savedBoss.getNameZh()).isNull();
         assertThat(savedBoss.getMapId()).isEqualTo(1L);
         assertThat(savedBoss.getDescription()).isEqualTo("Customs boss with multiple guards.");
         assertThat(savedBoss.getEquipmentSummary()).isEqualTo("Rifle, armor and guards.");

@@ -9,7 +9,7 @@ public record AdminBossUpdateRequest(
         @Size(max = 120, message = "Boss 英文名不能超过120个字符")
         String nameEn,
 
-        @Size(max = 120, message = "Boss 中文名不能超过120个字符")
+        @Size(max = 120, message = "Boss 兼容名称不能超过120个字符")
         String nameZh,
 
         Long mapId,

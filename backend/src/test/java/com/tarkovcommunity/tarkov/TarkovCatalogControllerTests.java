@@ -40,11 +40,12 @@ class TarkovCatalogControllerTests {
     @Test
     void listsTraders() throws Exception {
         given(tarkovCatalogService.listTraders())
-                .willReturn(List.of(new TraderResponse(1L, "Prapor", "普拉波", "默认解锁")));
+                .willReturn(List.of(new TraderResponse(1L, "Prapor", null, "默认解锁")));
 
         mockMvc.perform(get("/api/tarkov/traders"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.code").value(200))
-                .andExpect(jsonPath("$.data[0].nameZh").value("普拉波"));
+                .andExpect(jsonPath("$.data[0].nameEn").value("Prapor"))
+                .andExpect(jsonPath("$.data[0].nameZh").doesNotExist());
     }
 }

@@ -22,7 +22,6 @@ const filters = ref({
 })
 const bossForm = ref({
   nameEn: '',
-  nameZh: '',
   mapId: null,
   description: '',
   equipmentSummary: '',
@@ -45,9 +44,6 @@ const bossRules = {
   nameEn: [
     { required: true, message: '请填写 Boss 英文名', trigger: 'blur' },
     { max: 120, message: 'Boss 英文名不能超过 120 个字符', trigger: 'blur' },
-  ],
-  nameZh: [
-    { max: 120, message: 'Boss 中文名不能超过 120 个字符', trigger: 'blur' },
   ],
   description: [
     { max: 500, message: 'Boss 说明不能超过 500 个字符', trigger: 'blur' },
@@ -82,7 +78,6 @@ function optionLabel(item) {
 function toPayload(row, overrides = {}) {
   return {
     nameEn: row.nameEn,
-    nameZh: row.nameZh || '',
     mapId: row.mapId ?? null,
     description: row.description || '',
     equipmentSummary: row.equipmentSummary || '',
@@ -147,7 +142,6 @@ async function submitBoss() {
     const updated = await updateAdminBoss(editingRow.value.id, {
       ...bossForm.value,
       nameEn: bossForm.value.nameEn.trim(),
-      nameZh: bossForm.value.nameZh.trim(),
       mapId: bossForm.value.mapId || null,
       description: bossForm.value.description.trim(),
       equipmentSummary: bossForm.value.equipmentSummary.trim(),
@@ -257,7 +251,7 @@ onMounted(() => {
             <div class="admin-boss-cell">
               <WarningFilled />
               <div>
-                <strong>{{ row.nameZh || row.nameEn }} / {{ row.nameEn }}</strong>
+                <strong>{{ row.nameEn }}</strong>
                 <span>{{ row.description || '暂无说明' }}</span>
               </div>
             </div>
@@ -333,9 +327,6 @@ onMounted(() => {
       >
         <el-form-item label="英文名" prop="nameEn">
           <el-input v-model="bossForm.nameEn" maxlength="120" show-word-limit />
-        </el-form-item>
-        <el-form-item label="中文名" prop="nameZh">
-          <el-input v-model="bossForm.nameZh" maxlength="120" show-word-limit />
         </el-form-item>
         <el-form-item label="所属地图" prop="mapId">
           <el-select v-model="bossForm.mapId" clearable filterable>

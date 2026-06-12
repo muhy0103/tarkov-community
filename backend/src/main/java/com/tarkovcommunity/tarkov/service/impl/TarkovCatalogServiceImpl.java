@@ -56,7 +56,7 @@ public class TarkovCatalogServiceImpl implements TarkovCatalogService {
     public List<TraderResponse> listTraders() {
         return traderMapper.selectList(enabled(TarkovTrader::getStatus).orderByAsc(TarkovTrader::getId))
                 .stream()
-                .map(trader -> new TraderResponse(trader.getId(), trader.getNameEn(), trader.getNameZh(), trader.getUnlockCondition()))
+                .map(trader -> new TraderResponse(trader.getId(), trader.getNameEn(), null, trader.getUnlockCondition()))
                 .toList();
     }
 
@@ -104,7 +104,7 @@ public class TarkovCatalogServiceImpl implements TarkovCatalogService {
     public List<BossResponse> listBosses() {
         return bossMapper.selectList(enabled(Boss::getStatus).orderByAsc(Boss::getId))
                 .stream()
-                .map(boss -> new BossResponse(boss.getId(), boss.getNameEn(), boss.getNameZh(), boss.getMapId()))
+                .map(boss -> new BossResponse(boss.getId(), boss.getNameEn(), null, boss.getMapId()))
                 .toList();
     }
 

@@ -9,8 +9,7 @@ public record AdminTraderUpdateRequest(
         @Size(max = 80, message = "商人英文名不能超过80个字符")
         String nameEn,
 
-        @NotBlank(message = "商人中文名不能为空")
-        @Size(max = 80, message = "商人中文名不能超过80个字符")
+        @Size(max = 80, message = "商人兼容名称不能超过80个字符")
         String nameZh,
 
         @Size(max = 500, message = "商人说明不能超过500个字符")

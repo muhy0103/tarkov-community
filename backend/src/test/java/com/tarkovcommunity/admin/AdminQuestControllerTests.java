@@ -51,7 +51,7 @@ class AdminQuestControllerTests {
                 .andExpect(jsonPath("$.code").value(200))
                 .andExpect(jsonPath("$.data.total").value(1))
                 .andExpect(jsonPath("$.data.records[0].nameEn").value("Debut"))
-                .andExpect(jsonPath("$.data.records[0].traderName").value("普拉波 / Prapor"))
+                .andExpect(jsonPath("$.data.records[0].traderName").value("Prapor"))
                 .andExpect(jsonPath("$.data.records[0].mapName").value("海关 / Customs"));
     }
 
@@ -105,7 +105,7 @@ class AdminQuestControllerTests {
         return new AdminQuestResponse(
                 1L,
                 1L,
-                "普拉波 / Prapor",
+                "Prapor",
                 "Debut",
                 "首秀",
                 "击杀/交付",

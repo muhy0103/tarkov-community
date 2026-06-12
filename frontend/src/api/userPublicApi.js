@@ -12,6 +12,14 @@ export function fetchPublicUserProfile(id) {
   return request.get(`/users/${id}/profile`).then((response) => response?.data)
 }
 
+export function followPublicUser(id) {
+  return request.post(`/users/${id}/follow`).then((response) => response?.data)
+}
+
+export function unfollowPublicUser(id) {
+  return request.delete(`/users/${id}/follow`).then((response) => response?.data)
+}
+
 export function fetchPublicUserPosts(id, params = {}) {
   return request
     .get(`/users/${id}/posts`, {

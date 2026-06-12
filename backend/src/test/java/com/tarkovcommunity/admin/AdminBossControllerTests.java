@@ -50,6 +50,7 @@ class AdminBossControllerTests {
                 .andExpect(jsonPath("$.code").value(200))
                 .andExpect(jsonPath("$.data.total").value(1))
                 .andExpect(jsonPath("$.data.records[0].nameEn").value("Reshala"))
+                .andExpect(jsonPath("$.data.records[0].nameZh").doesNotExist())
                 .andExpect(jsonPath("$.data.records[0].mapName").value("海关 / Customs"));
     }
 
@@ -97,7 +98,7 @@ class AdminBossControllerTests {
         return new AdminBossResponse(
                 1L,
                 "Reshala",
-                "雷舍拉",
+                null,
                 1L,
                 "海关 / Customs",
                 "Customs boss with multiple guards.",

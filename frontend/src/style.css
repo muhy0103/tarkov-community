@@ -692,6 +692,62 @@ a {
   justify-content: flex-end;
 }
 
+.public-profile-info {
+  display: grid;
+  grid-template-columns: minmax(0, 1.35fr) minmax(280px, 1fr);
+  gap: 14px;
+  align-items: stretch;
+  padding: 18px;
+  border: 1px solid #dbe7e6;
+  border-radius: 8px;
+  background: #ffffff;
+  box-shadow: 0 12px 30px rgba(15, 23, 42, 0.04);
+}
+
+.profile-intro {
+  display: grid;
+  gap: 8px;
+  align-content: start;
+}
+
+.profile-intro span,
+.public-profile-tags span {
+  color: #64748b;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.profile-intro p {
+  margin: 0;
+  color: #111827;
+  font-size: 15px;
+  line-height: 1.7;
+}
+
+.public-profile-tags {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.public-profile-tags article {
+  display: grid;
+  gap: 8px;
+  align-content: start;
+  min-width: 0;
+  padding: 14px;
+  border: 1px solid #dbe7e6;
+  border-radius: 8px;
+  background: #f8fafc;
+}
+
+.public-profile-tags strong {
+  color: #0f766e;
+  font-size: 15px;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+}
+
 .user-profile-main {
   display: flex;
   min-width: 0;
@@ -2134,6 +2190,7 @@ a {
   .admin-module-grid,
   .catalog-stat-grid,
   .user-stat-grid,
+  .public-profile-info,
   .create-layout,
   .create-form-grid,
   .hero-summary,
@@ -2193,6 +2250,7 @@ a {
   .user-public-view,
   .user-center-hero,
   .public-profile-hero,
+  .public-profile-info,
   .user-stat-grid,
   .user-stat-card,
   .user-content-panel {
@@ -2202,6 +2260,10 @@ a {
 
   .board-filter-grid {
     width: 100%;
+    grid-template-columns: 1fr;
+  }
+
+  .public-profile-tags {
     grid-template-columns: 1fr;
   }
 

@@ -125,7 +125,7 @@ public class AdminQuestServiceImpl implements AdminQuestService {
         return new AdminQuestResponse(
                 quest.getId(),
                 quest.getTraderId(),
-                displayName(trader == null ? null : trader.getNameZh(), trader == null ? null : trader.getNameEn()),
+                trader == null ? null : trader.getNameEn(),
                 quest.getNameEn(),
                 quest.getNameZh(),
                 quest.getQuestType(),

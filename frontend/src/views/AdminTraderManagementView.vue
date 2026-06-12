@@ -20,7 +20,6 @@ const filters = ref({
 })
 const traderForm = ref({
   nameEn: '',
-  nameZh: '',
   description: '',
   unlockCondition: '',
   avatar: '',
@@ -43,10 +42,6 @@ const traderRules = {
   nameEn: [
     { required: true, message: '请填写商人英文名', trigger: 'blur' },
     { max: 80, message: '商人英文名不能超过 80 个字符', trigger: 'blur' },
-  ],
-  nameZh: [
-    { required: true, message: '请填写商人中文名', trigger: 'blur' },
-    { max: 80, message: '商人中文名不能超过 80 个字符', trigger: 'blur' },
   ],
   description: [
     { max: 500, message: '商人说明不能超过 500 个字符', trigger: 'blur' },
@@ -77,7 +72,6 @@ function statusType(status) {
 function toPayload(row, overrides = {}) {
   return {
     nameEn: row.nameEn,
-    nameZh: row.nameZh,
     description: row.description || '',
     unlockCondition: row.unlockCondition || '',
     avatar: row.avatar || '',
@@ -131,7 +125,6 @@ async function submitTrader() {
     const updated = await updateAdminTrader(editingRow.value.id, {
       ...traderForm.value,
       nameEn: traderForm.value.nameEn.trim(),
-      nameZh: traderForm.value.nameZh.trim(),
       description: traderForm.value.description.trim(),
       unlockCondition: traderForm.value.unlockCondition.trim(),
       avatar: traderForm.value.avatar.trim(),
@@ -230,7 +223,7 @@ onMounted(() => loadTraders(1))
             <div class="admin-trader-cell">
               <Avatar />
               <div>
-                <strong>{{ row.nameZh }} / {{ row.nameEn }}</strong>
+                <strong>{{ row.nameEn }}</strong>
                 <span>{{ row.description || '暂无说明' }}</span>
               </div>
             </div>
@@ -306,9 +299,6 @@ onMounted(() => loadTraders(1))
       >
         <el-form-item label="英文名" prop="nameEn">
           <el-input v-model="traderForm.nameEn" maxlength="80" show-word-limit />
-        </el-form-item>
-        <el-form-item label="中文名" prop="nameZh">
-          <el-input v-model="traderForm.nameZh" maxlength="80" show-word-limit />
         </el-form-item>
         <el-form-item label="解锁条件" prop="unlockCondition">
           <el-input v-model="traderForm.unlockCondition" maxlength="255" show-word-limit />

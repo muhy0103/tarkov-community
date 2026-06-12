@@ -1,6 +1,7 @@
 <script setup>
 import { computed, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import { ElMessage } from 'element-plus'
 import {
   ArrowLeft,
   ChatLineRound,
@@ -10,7 +11,12 @@ import {
   User,
   View,
 } from '@element-plus/icons-vue'
-import { fetchPublicUserPosts, fetchPublicUserProfile } from '../api/userPublicApi'
+import {
+  fetchPublicUserPosts,
+  fetchPublicUserProfile,
+  followPublicUser,
+  unfollowPublicUser,
+} from '../api/userPublicApi'
 import { useUserStore } from '../stores/userStore'
 
 const route = useRoute()
@@ -19,6 +25,7 @@ const userStore = useUserStore()
 
 const loading = ref(false)
 const postsLoading = ref(false)
+const followLoading = ref(false)
 const errorMessage = ref('')
 const profile = ref(null)
 const postsPage = ref(pageState())
@@ -26,12 +33,23 @@ const postsPage = ref(pageState())
 const userId = computed(() => Number(route.params.id))
 const displayName = computed(() => profile.value?.nickname || profile.value?.username || '玩家档案')
 const userInitial = computed(() => displayName.value.slice(0, 1).toUpperCase())
-const isOwnProfile = computed(() => Number(userStore.userInfo?.id) === userId.value)
+const isOwnProfile = computed(
+  () => profile.value?.ownProfile || Number(userStore.userInfo?.id) === userId.value,
+)
+const isLoggedIn = computed(() => userStore.isLoggedIn)
 
 const stats = computed(() => [
   { label: '贡献值', value: profile.value?.contribution || 0, icon: User },
   { label: '公开帖子', value: profile.value?.postCount || 0, icon: ChatLineRound },
   { label: '参与评论', value: profile.value?.commentCount || 0, icon: Collection },
+  { label: '关注者', value: profile.value?.followerCount || 0, icon: Collection },
+  { label: '正在关注', value: profile.value?.followingCount || 0, icon: User },
+])
+
+const profileTags = computed(() => [
+  { label: '常玩地图', value: profile.value?.favoriteMaps || '暂未填写' },
+  { label: '打法偏好', value: profile.value?.playStyle || '暂未填写' },
+  { label: '服务器区域', value: profile.value?.serverRegion || '暂未填写' },
 ])
 
 const postTypeOptions = {
@@ -115,6 +133,40 @@ async function loadPosts(page = postsPage.value.page) {
   }
 }
 
+async function handleFollowToggle() {
+  if (!isLoggedIn.value) {
+    router.push({
+      name: 'login',
+      query: {
+        redirect: route.fullPath,
+      },
+    })
+    return
+  }
+
+  if (!profile.value || isOwnProfile.value) {
+    return
+  }
+
+  followLoading.value = true
+
+  try {
+    const action = profile.value.followedByMe ? unfollowPublicUser : followPublicUser
+    const result = await action(userId.value)
+    profile.value = {
+      ...profile.value,
+      followedByMe: result.followed,
+      followerCount: result.followerCount,
+      followingCount: result.followingCount ?? profile.value.followingCount,
+    }
+    ElMessage.success(result.followed ? '已关注该玩家' : '已取消关注')
+  } catch (error) {
+    ElMessage.error(resolveError(error, '关注操作暂时无法完成'))
+  } finally {
+    followLoading.value = false
+  }
+}
+
 watch(
   () => route.params.id,
   () => loadProfile()
@@ -157,12 +209,34 @@ onMounted(loadProfile)
           <el-button v-if="isOwnProfile" :icon="User" @click="router.push({ name: 'user-center' })">
             回到用户中心
           </el-button>
+          <el-button
+            v-else
+            :type="profile.followedByMe ? 'default' : 'primary'"
+            :icon="Collection"
+            :loading="followLoading"
+            @click="handleFollowToggle"
+          >
+            {{ isLoggedIn ? (profile.followedByMe ? '已关注' : '关注玩家') : '登录后关注' }}
+          </el-button>
           <el-button type="primary" :icon="EditPen" @click="router.push({ name: 'post-create' })">
             发布情报
           </el-button>
           <el-button :icon="Refresh" :loading="loading" @click="loadProfile">
             刷新
           </el-button>
+        </div>
+      </section>
+
+      <section class="public-profile-info">
+        <div class="profile-intro">
+          <span>玩家简介</span>
+          <p>{{ profile.bio || '这个玩家暂时没有填写简介。' }}</p>
+        </div>
+        <div class="public-profile-tags">
+          <article v-for="item in profileTags" :key="item.label">
+            <span>{{ item.label }}</span>
+            <strong>{{ item.value }}</strong>
+          </article>
         </div>
       </section>
 

@@ -115,7 +115,7 @@ const quickCatalogGroups = computed(() => [
     icon: Collection,
     items: catalog.value.traders.map((item) => ({
       id: item.id,
-      name: item.nameZh,
+      name: item.nameEn,
       meta: item.unlockCondition || item.nameEn,
     })),
   },
@@ -141,7 +141,7 @@ const quickCatalogGroups = computed(() => [
     items: [
       ...catalog.value.bosses.map((item) => ({
         id: `boss-${item.id}`,
-        name: item.nameZh,
+        name: item.nameEn,
         meta: 'Boss 情报',
       })),
       ...catalog.value.hideoutStations.map((item) => ({

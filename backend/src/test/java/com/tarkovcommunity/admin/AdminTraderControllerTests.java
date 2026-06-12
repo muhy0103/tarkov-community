@@ -49,14 +49,14 @@ class AdminTraderControllerTests {
                 .andExpect(jsonPath("$.code").value(200))
                 .andExpect(jsonPath("$.data.total").value(1))
                 .andExpect(jsonPath("$.data.records[0].nameEn").value("Prapor"))
-                .andExpect(jsonPath("$.data.records[0].nameZh").value("普拉波"));
+                .andExpect(jsonPath("$.data.records[0].nameZh").doesNotExist());
     }
 
     @Test
     void updatesTrader() throws Exception {
         AdminTraderUpdateRequest request = new AdminTraderUpdateRequest(
                 "Prapor",
-                "普拉波",
+                null,
                 "早期任务和基础武器来源。",
                 "默认解锁",
                 "https://example.com/prapor.png",
@@ -66,7 +66,7 @@ class AdminTraderControllerTests {
                 .willReturn(new AdminTraderResponse(
                         1L,
                         "Prapor",
-                        "普拉波",
+                        null,
                         "早期任务和基础武器来源。",
                         "默认解锁",
                         "https://example.com/prapor.png",
@@ -86,7 +86,7 @@ class AdminTraderControllerTests {
     void rejectsInvalidTraderUpdate() throws Exception {
         AdminTraderUpdateRequest request = new AdminTraderUpdateRequest(
                 "",
-                "",
+                null,
                 "说明",
                 "默认解锁",
                 "https://example.com/avatar.png",
@@ -104,7 +104,7 @@ class AdminTraderControllerTests {
         return new AdminTraderResponse(
                 1L,
                 "Prapor",
-                "普拉波",
+                null,
                 "早期任务和基础武器来源。",
                 "默认解锁",
                 "https://example.com/prapor.png",

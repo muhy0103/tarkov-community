@@ -58,8 +58,9 @@ public class AdminTraderServiceImpl implements AdminTraderService {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "商人不存在");
         }
 
-        trader.setNameEn(request.nameEn().trim());
-        trader.setNameZh(request.nameZh().trim());
+        String nameEn = request.nameEn().trim();
+        trader.setNameEn(nameEn);
+        trader.setNameZh(nameEn);
         trader.setDescription(normalizeNullable(request.description()));
         trader.setUnlockCondition(normalizeNullable(request.unlockCondition()));
         trader.setAvatar(normalizeNullable(request.avatar()));
@@ -79,7 +80,7 @@ public class AdminTraderServiceImpl implements AdminTraderService {
         return new AdminTraderResponse(
                 trader.getId(),
                 trader.getNameEn(),
-                trader.getNameZh(),
+                null,
                 trader.getDescription(),
                 trader.getUnlockCondition(),
                 trader.getAvatar(),

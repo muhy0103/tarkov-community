@@ -9,9 +9,14 @@ import com.tarkovcommunity.forum.mapper.PostCommentMapper;
 import com.tarkovcommunity.forum.mapper.PostMapper;
 import com.tarkovcommunity.meta.entity.Category;
 import com.tarkovcommunity.meta.mapper.CategoryMapper;
+import com.tarkovcommunity.user.dto.FollowActionResponse;
 import com.tarkovcommunity.user.dto.PublicUserProfileResponse;
 import com.tarkovcommunity.user.entity.SysUser;
+import com.tarkovcommunity.user.entity.UserFollow;
+import com.tarkovcommunity.user.entity.UserProfile;
 import com.tarkovcommunity.user.mapper.SysUserMapper;
+import com.tarkovcommunity.user.mapper.UserFollowMapper;
+import com.tarkovcommunity.user.mapper.UserProfileMapper;
 import com.tarkovcommunity.user.service.UserPublicService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -36,14 +41,25 @@ public class UserPublicServiceImpl implements UserPublicService {
     private final PostMapper postMapper;
     private final PostCommentMapper postCommentMapper;
     private final CategoryMapper categoryMapper;
+    private final UserProfileMapper userProfileMapper;
+    private final UserFollowMapper userFollowMapper;
 
     @Override
-    public PublicUserProfileResponse getProfile(Long userId) {
+    public PublicUserProfileResponse getProfile(Long userId, SysUser viewer) {
         SysUser user = requireNormalUser(userId);
         Long postCount = postMapper.selectCount(new LambdaQueryWrapper<Post>()
                 .eq(Post::getUserId, user.getId())
                 .eq(Post::getStatus, "NORMAL"));
         Long commentCount = postCommentMapper.selectVisiblePostCommentCount(user.getId());
+        UserProfile profile = userProfileMapper.selectOne(new LambdaQueryWrapper<UserProfile>()
+                .eq(UserProfile::getUserId, user.getId()));
+        Long followerCount = followerCount(user.getId());
+        Long followingCount = followingCount(user.getId());
+        boolean ownProfile = isOwnProfile(user, viewer);
+        boolean followedByMe = viewer != null
+                && viewer.getId() != null
+                && !ownProfile
+                && hasFollowed(viewer.getId(), user.getId());
 
         return new PublicUserProfileResponse(
                 user.getId(),
@@ -54,8 +70,45 @@ public class UserPublicServiceImpl implements UserPublicService {
                 valueOrZero(user.getContribution()),
                 postCount,
                 commentCount,
+                profile == null ? null : profile.getBio(),
+                profile == null ? null : profile.getFavoriteMaps(),
+                profile == null ? null : profile.getPlayStyle(),
+                profile == null ? null : profile.getServerRegion(),
+                followerCount,
+                followingCount,
+                followedByMe,
+                ownProfile,
                 user.getCreatedAt()
         );
+    }
+
+    @Override
+    public FollowActionResponse followUser(Long targetUserId, SysUser viewer) {
+        requireViewer(viewer);
+        rejectSelfFollow(targetUserId, viewer);
+        SysUser target = requireNormalUser(targetUserId);
+
+        if (!hasFollowed(viewer.getId(), target.getId())) {
+            UserFollow follow = new UserFollow();
+            follow.setUserId(viewer.getId());
+            follow.setFollowedUserId(target.getId());
+            userFollowMapper.insert(follow);
+        }
+
+        return followResponse(target.getId(), viewer.getId(), true);
+    }
+
+    @Override
+    public FollowActionResponse unfollowUser(Long targetUserId, SysUser viewer) {
+        requireViewer(viewer);
+        rejectSelfFollow(targetUserId, viewer);
+        SysUser target = requireNormalUser(targetUserId);
+
+        userFollowMapper.delete(new LambdaQueryWrapper<UserFollow>()
+                .eq(UserFollow::getUserId, viewer.getId())
+                .eq(UserFollow::getFollowedUserId, target.getId()));
+
+        return followResponse(target.getId(), viewer.getId(), false);
     }
 
     @Override
@@ -86,6 +139,48 @@ public class UserPublicServiceImpl implements UserPublicService {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "玩家不存在");
         }
         return user;
+    }
+
+    private void requireViewer(SysUser viewer) {
+        if (viewer == null || viewer.getId() == null) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "请先登录");
+        }
+    }
+
+    private void rejectSelfFollow(Long targetUserId, SysUser viewer) {
+        if (Objects.equals(targetUserId, viewer.getId())) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "不能关注自己");
+        }
+    }
+
+    private FollowActionResponse followResponse(Long targetUserId, Long viewerId, boolean followed) {
+        return new FollowActionResponse(
+                targetUserId,
+                viewerId,
+                followed,
+                followerCount(targetUserId),
+                followingCount(viewerId)
+        );
+    }
+
+    private Long followerCount(Long userId) {
+        return userFollowMapper.selectCount(new LambdaQueryWrapper<UserFollow>()
+                .eq(UserFollow::getFollowedUserId, userId));
+    }
+
+    private Long followingCount(Long userId) {
+        return userFollowMapper.selectCount(new LambdaQueryWrapper<UserFollow>()
+                .eq(UserFollow::getUserId, userId));
+    }
+
+    private boolean hasFollowed(Long viewerId, Long targetUserId) {
+        return userFollowMapper.selectCount(new LambdaQueryWrapper<UserFollow>()
+                .eq(UserFollow::getUserId, viewerId)
+                .eq(UserFollow::getFollowedUserId, targetUserId)) > 0;
+    }
+
+    private static boolean isOwnProfile(SysUser user, SysUser viewer) {
+        return viewer != null && Objects.equals(viewer.getId(), user.getId());
     }
 
     private List<PostSummaryResponse> toPostSummaries(List<Post> posts) {

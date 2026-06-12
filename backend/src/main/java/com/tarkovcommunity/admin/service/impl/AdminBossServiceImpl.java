@@ -81,7 +81,7 @@ public class AdminBossServiceImpl implements AdminBossService {
         }
 
         boss.setNameEn(request.nameEn().trim());
-        boss.setNameZh(normalizeNullable(request.nameZh()));
+        boss.setNameZh(null);
         boss.setMapId(request.mapId());
         boss.setDescription(normalizeNullable(request.description()));
         boss.setEquipmentSummary(normalizeNullable(request.equipmentSummary()));
@@ -107,7 +107,7 @@ public class AdminBossServiceImpl implements AdminBossService {
         return new AdminBossResponse(
                 boss.getId(),
                 boss.getNameEn(),
-                boss.getNameZh(),
+                null,
                 boss.getMapId(),
                 displayName(map == null ? null : map.getNameZh(), map == null ? null : map.getNameEn()),
                 boss.getDescription(),

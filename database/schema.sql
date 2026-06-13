@@ -337,7 +337,7 @@ CREATE TABLE IF NOT EXISTS post_catalog_relation (
   KEY idx_post_catalog_relation_catalog (catalog_type, catalog_id, created_at),
   KEY idx_post_catalog_relation_post (post_id),
   CONSTRAINT fk_post_catalog_relation_post FOREIGN KEY (post_id) REFERENCES post (id)
-);
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 CREATE TABLE IF NOT EXISTS post_tag (
   id BIGINT PRIMARY KEY AUTO_INCREMENT,

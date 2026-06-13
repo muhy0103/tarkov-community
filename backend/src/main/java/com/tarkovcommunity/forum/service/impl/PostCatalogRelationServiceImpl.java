@@ -39,12 +39,14 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
 public class PostCatalogRelationServiceImpl implements PostCatalogRelationService {
 
     private static final int MAX_RELATIONS = 6;
+    private static final int MAX_PAGE_SIZE = 50;
     private static final String ENABLED = "ENABLED";
     private static final String CATALOG_NOT_FOUND_MESSAGE = "关联资料不存在或已停用";
 
@@ -98,13 +100,14 @@ public class PostCatalogRelationServiceImpl implements PostCatalogRelationServic
             return Collections.emptyMap();
         }
 
+        Map<String, Map<Long, CatalogSummary>> catalogSummaries = loadCatalogSummaries(relations);
         Map<Long, List<RelatedCatalogResponse>> groupedRelations = new LinkedHashMap<>();
         for (PostCatalogRelation relation : relations) {
             if (relation == null || relation.getPostId() == null) {
                 continue;
             }
             groupedRelations.computeIfAbsent(relation.getPostId(), ignored -> new ArrayList<>())
-                    .add(toResponse(relation));
+                    .add(toResponse(relation, catalogSummaries));
         }
         return groupedRelations;
     }
@@ -112,7 +115,9 @@ public class PostCatalogRelationServiceImpl implements PostCatalogRelationServic
     @Override
     public Page<Post> selectRelatedPostsPage(String catalogType, Long catalogId, int page, int size) {
         CatalogSummary catalog = requireCatalog(catalogType, catalogId);
-        return relationMapper.selectRelatedPostsPage(new Page<>(page, size), catalog.catalogType(), catalog.catalogId());
+        int safePage = Math.max(page, 1);
+        int safeSize = Math.max(1, Math.min(size, MAX_PAGE_SIZE));
+        return relationMapper.selectRelatedPostsPage(new Page<>(safePage, safeSize), catalog.catalogType(), catalog.catalogId());
     }
 
     private List<NormalizedRelationRequest> normalizeRequests(List<PostCatalogRelationRequest> requests) {
@@ -243,12 +248,175 @@ public class PostCatalogRelationServiceImpl implements PostCatalogRelationServic
                         "hideout"
                 );
             }
-            default -> throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "不支持的资料类型");
+            default -> throw unsupportedCatalogType();
         };
     }
 
-    private RelatedCatalogResponse toResponse(PostCatalogRelation relation) {
-        CatalogSummary summary = requireCatalog(relation.getCatalogType(), relation.getCatalogId());
+    private Map<String, Map<Long, CatalogSummary>> loadCatalogSummaries(List<PostCatalogRelation> relations) {
+        Map<String, List<Long>> idsByType = new LinkedHashMap<>();
+        for (PostCatalogRelation relation : relations) {
+            if (relation == null || relation.getPostId() == null) {
+                continue;
+            }
+            String catalogType = normalizeCatalogType(relation.getCatalogType());
+            if (relation.getCatalogId() == null) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "资料 ID 不能为空");
+            }
+            if (!isSupportedCatalogType(catalogType)) {
+                throw unsupportedCatalogType();
+            }
+            idsByType.computeIfAbsent(catalogType, ignored -> new ArrayList<>())
+                    .add(relation.getCatalogId());
+        }
+
+        Map<String, Map<Long, CatalogSummary>> summariesByType = new LinkedHashMap<>();
+        for (Map.Entry<String, List<Long>> entry : idsByType.entrySet()) {
+            summariesByType.put(entry.getKey(), loadCatalogSummaries(entry.getKey(), entry.getValue()));
+        }
+        return summariesByType;
+    }
+
+    private Map<Long, CatalogSummary> loadCatalogSummaries(String catalogType, List<Long> catalogIds) {
+        List<Long> distinctCatalogIds = catalogIds.stream().distinct().toList();
+        return switch (catalogType) {
+            case "MAP" -> toSummaryMap(
+                    mapMapper.selectBatchIds(distinctCatalogIds),
+                    TarkovMap::getStatus,
+                    map -> new CatalogSummary(
+                            catalogType,
+                            map.getId(),
+                            displayName(map.getNameZh(), map.getNameEn()),
+                            normalizeNullable(map.getDifficulty()),
+                            normalizeNullable(map.getImageUrl()),
+                            "maps"
+                    )
+            );
+            case "TRADER" -> toSummaryMap(
+                    traderMapper.selectBatchIds(distinctCatalogIds),
+                    TarkovTrader::getStatus,
+                    trader -> new CatalogSummary(
+                            catalogType,
+                            trader.getId(),
+                            displayName(trader.getNameZh(), trader.getNameEn()),
+                            normalizeNullable(trader.getUnlockCondition()),
+                            normalizeNullable(trader.getAvatar()),
+                            "traders"
+                    )
+            );
+            case "QUEST" -> toSummaryMap(
+                    questMapper.selectBatchIds(distinctCatalogIds),
+                    TarkovQuest::getStatus,
+                    quest -> new CatalogSummary(
+                            catalogType,
+                            quest.getId(),
+                            displayName(quest.getNameZh(), quest.getNameEn()),
+                            normalizeNullable(quest.getQuestType()),
+                            null,
+                            "quests"
+                    )
+            );
+            case "ITEM" -> toSummaryMap(
+                    itemMapper.selectBatchIds(distinctCatalogIds),
+                    TarkovItem::getStatus,
+                    item -> new CatalogSummary(
+                            catalogType,
+                            item.getId(),
+                            displayName(item.getNameZh(), item.getNameEn()),
+                            compactText(item.getItemType(), item.getRarity()),
+                            null,
+                            "items"
+                    )
+            );
+            case "WEAPON" -> toSummaryMap(
+                    weaponMapper.selectBatchIds(distinctCatalogIds),
+                    TarkovWeapon::getStatus,
+                    weapon -> new CatalogSummary(
+                            catalogType,
+                            weapon.getId(),
+                            displayName(weapon.getNameZh(), weapon.getNameEn()),
+                            compactText(weapon.getWeaponType(), weapon.getCaliber()),
+                            normalizeNullable(weapon.getImageUrl()),
+                            "weapons"
+                    )
+            );
+            case "AMMO" -> toSummaryMap(
+                    ammoMapper.selectBatchIds(distinctCatalogIds),
+                    TarkovAmmo::getStatus,
+                    ammo -> {
+                        String penetration = ammo.getPenetration() == null ? null : "Pen " + ammo.getPenetration();
+                        return new CatalogSummary(
+                                catalogType,
+                                ammo.getId(),
+                                displayName(ammo.getNameZh(), ammo.getNameEn()),
+                                compactText(ammo.getCaliber(), penetration),
+                                normalizeNullable(ammo.getImageUrl()),
+                                "ammo"
+                        );
+                    }
+            );
+            case "BOSS" -> toSummaryMap(
+                    bossMapper.selectBatchIds(distinctCatalogIds),
+                    Boss::getStatus,
+                    boss -> new CatalogSummary(
+                            catalogType,
+                            boss.getId(),
+                            displayName(boss.getNameZh(), boss.getNameEn()),
+                            normalizeNullable(boss.getEquipmentSummary()),
+                            normalizeNullable(boss.getImageUrl()),
+                            "bosses"
+                    )
+            );
+            case "HIDEOUT" -> toSummaryMap(
+                    hideoutStationMapper.selectBatchIds(distinctCatalogIds),
+                    HideoutStation::getStatus,
+                    station -> new CatalogSummary(
+                            catalogType,
+                            station.getId(),
+                            displayName(station.getNameZh(), station.getNameEn()),
+                            "Hideout station",
+                            null,
+                            "hideout"
+                    )
+            );
+            default -> throw unsupportedCatalogType();
+        };
+    }
+
+    private static <T> Map<Long, CatalogSummary> toSummaryMap(
+            List<T> records,
+            Function<T, String> statusGetter,
+            Function<T, CatalogSummary> summaryMapper
+    ) {
+        if (records == null || records.isEmpty()) {
+            return Collections.emptyMap();
+        }
+        return records.stream()
+                .map(record -> summaryMapper.apply(requireCatalogRecord(record, statusGetter)))
+                .collect(Collectors.toMap(
+                        CatalogSummary::catalogId,
+                        Function.identity(),
+                        (existing, ignored) -> existing
+                ));
+    }
+
+    private RelatedCatalogResponse toResponse(
+            PostCatalogRelation relation,
+            Map<String, Map<Long, CatalogSummary>> catalogSummaries
+    ) {
+        String catalogType = normalizeCatalogType(relation.getCatalogType());
+        if (relation.getCatalogId() == null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "资料 ID 不能为空");
+        }
+        if (!isSupportedCatalogType(catalogType)) {
+            throw unsupportedCatalogType();
+        }
+
+        CatalogSummary summary = catalogSummaries
+                .getOrDefault(catalogType, Collections.emptyMap())
+                .get(relation.getCatalogId());
+        if (summary == null) {
+            throw catalogNotFound();
+        }
         return new RelatedCatalogResponse(
                 summary.catalogType(),
                 summary.catalogId(),
@@ -262,11 +430,17 @@ public class PostCatalogRelationServiceImpl implements PostCatalogRelationServic
 
     private static <T> T requireCatalogRecord(T record, Function<T, String> statusGetter) {
         if (record == null) {
-            requireEnabled(null);
             throw catalogNotFound();
         }
         requireEnabled(statusGetter.apply(record));
         return record;
+    }
+
+    private static boolean isSupportedCatalogType(String catalogType) {
+        return switch (catalogType) {
+            case "MAP", "TRADER", "QUEST", "ITEM", "WEAPON", "AMMO", "BOSS", "HIDEOUT" -> true;
+            default -> false;
+        };
     }
 
     private static void requireEnabled(String status) {
@@ -304,7 +478,11 @@ public class PostCatalogRelationServiceImpl implements PostCatalogRelationServic
     }
 
     private static ResponseStatusException catalogNotFound() {
-        return new ResponseStatusException(HttpStatus.NOT_FOUND, CATALOG_NOT_FOUND_MESSAGE);
+        return new ResponseStatusException(HttpStatus.BAD_REQUEST, CATALOG_NOT_FOUND_MESSAGE);
+    }
+
+    private static ResponseStatusException unsupportedCatalogType() {
+        return new ResponseStatusException(HttpStatus.BAD_REQUEST, "不支持的资料类型");
     }
 
     private record NormalizedRelationRequest(String catalogType, Long catalogId, String relationNote) {

@@ -1,7 +1,9 @@
 package com.tarkovcommunity.forum;
 
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.tarkovcommunity.forum.dto.PostCatalogRelationRequest;
 import com.tarkovcommunity.forum.dto.RelatedCatalogResponse;
+import com.tarkovcommunity.forum.entity.Post;
 import com.tarkovcommunity.forum.entity.PostCatalogRelation;
 import com.tarkovcommunity.forum.mapper.PostCatalogRelationMapper;
 import com.tarkovcommunity.forum.service.impl.PostCatalogRelationServiceImpl;
@@ -20,6 +22,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
@@ -29,7 +32,9 @@ import java.util.stream.LongStream;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 
 @ExtendWith(MockitoExtension.class)
@@ -103,8 +108,12 @@ class PostCatalogRelationServiceImplTests {
                 10L,
                 List.of(new PostCatalogRelationRequest("WEAPON", 404L, null))
         ))
-                .isInstanceOf(ResponseStatusException.class)
+                .isInstanceOfSatisfying(ResponseStatusException.class,
+                        exception -> assertThat(exception.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST))
                 .hasMessageContaining("关联资料不存在或已停用");
+
+        verify(relationMapper, never()).delete(any());
+        verify(relationMapper, never()).insert(any(PostCatalogRelation.class));
     }
 
     @Test
@@ -117,7 +126,7 @@ class PostCatalogRelationServiceImplTests {
         relation.setCatalogId(1L);
         relation.setRelationNote("主武器");
         given(relationMapper.selectList(any())).willReturn(List.of(relation));
-        given(weaponMapper.selectById(1L)).willReturn(enabledWeapon());
+        given(weaponMapper.selectBatchIds(List.of(1L))).willReturn(List.of(enabledWeapon()));
 
         Map<Long, List<RelatedCatalogResponse>> responses = service.findRelationsByPostIds(List.of(10L));
 
@@ -133,6 +142,42 @@ class PostCatalogRelationServiceImplTests {
         assertThat(response.relationNote()).isEqualTo("主武器");
     }
 
+    @Test
+    void hydratesDuplicateCatalogItemsWithOneBatchLookup() {
+        PostCatalogRelationServiceImpl service = service();
+        PostCatalogRelation firstRelation = relation(1L, 10L, "WEAPON", 1L, "first");
+        PostCatalogRelation secondRelation = relation(2L, 11L, "WEAPON", 1L, "second");
+        given(relationMapper.selectList(any())).willReturn(List.of(firstRelation, secondRelation));
+        given(weaponMapper.selectBatchIds(List.of(1L))).willReturn(List.of(enabledWeapon()));
+
+        Map<Long, List<RelatedCatalogResponse>> responses = service.findRelationsByPostIds(List.of(10L, 11L));
+
+        assertThat(responses.keySet()).containsExactly(10L, 11L);
+        assertThat(responses.get(10L).get(0).catalogId()).isEqualTo(1L);
+        assertThat(responses.get(10L).get(0).relationNote()).isEqualTo("first");
+        assertThat(responses.get(11L).get(0).catalogId()).isEqualTo(1L);
+        assertThat(responses.get(11L).get(0).relationNote()).isEqualTo("second");
+        verify(weaponMapper).selectBatchIds(List.of(1L));
+        verify(weaponMapper, never()).selectById(1L);
+    }
+
+    @Test
+    void clampsRelatedPostsPageArguments() {
+        PostCatalogRelationServiceImpl service = service();
+        Page<Post> selectedPage = new Page<>(1, 50);
+        given(weaponMapper.selectById(1L)).willReturn(enabledWeapon());
+        given(relationMapper.selectRelatedPostsPage(any(), eq("WEAPON"), eq(1L))).willReturn(selectedPage);
+
+        Page<Post> result = service.selectRelatedPostsPage("weapon", 1L, 0, 100);
+
+        assertThat(result).isSameAs(selectedPage);
+        @SuppressWarnings("unchecked")
+        ArgumentCaptor<Page<Post>> pageCaptor = ArgumentCaptor.forClass(Page.class);
+        verify(relationMapper).selectRelatedPostsPage(pageCaptor.capture(), eq("WEAPON"), eq(1L));
+        assertThat(pageCaptor.getValue().getCurrent()).isEqualTo(1);
+        assertThat(pageCaptor.getValue().getSize()).isEqualTo(50);
+    }
+
     private PostCatalogRelationServiceImpl service() {
         return new PostCatalogRelationServiceImpl(
                 relationMapper,
@@ -145,6 +190,16 @@ class PostCatalogRelationServiceImplTests {
                 bossMapper,
                 hideoutStationMapper
         );
+    }
+
+    private static PostCatalogRelation relation(Long id, Long postId, String catalogType, Long catalogId, String relationNote) {
+        PostCatalogRelation relation = new PostCatalogRelation();
+        relation.setId(id);
+        relation.setPostId(postId);
+        relation.setCatalogType(catalogType);
+        relation.setCatalogId(catalogId);
+        relation.setRelationNote(relationNote);
+        return relation;
     }
 
     private static TarkovMap enabledMap() {

@@ -16,6 +16,8 @@ public interface ForumPostService {
             String postType,
             Boolean recommended,
             String sort,
+            String catalogType,
+            Long catalogId,
             int page,
             int size
     );

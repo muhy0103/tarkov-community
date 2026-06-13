@@ -42,6 +42,8 @@ public class ForumPostController {
             @RequestParam(required = false) String postType,
             @RequestParam(required = false) Boolean recommended,
             @RequestParam(defaultValue = "LATEST") String sort,
+            @RequestParam(required = false) String catalogType,
+            @RequestParam(required = false) Long catalogId,
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "10") int size
     ) {
@@ -51,6 +53,8 @@ public class ForumPostController {
                 postType,
                 recommended,
                 sort,
+                catalogType,
+                catalogId,
                 page,
                 size
         ));

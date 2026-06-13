@@ -1,6 +1,7 @@
 package com.tarkovcommunity.forum.dto;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 public record PostSummaryResponse(
         Long id,
@@ -15,6 +16,7 @@ public record PostSummaryResponse(
         Integer viewCount,
         Integer likeCount,
         Integer commentCount,
-        LocalDateTime createdAt
+        LocalDateTime createdAt,
+        List<RelatedCatalogResponse> relations
 ) {
 }

@@ -275,7 +275,8 @@ class UserCenterControllerTests {
                 12,
                 3,
                 1,
-                LocalDateTime.of(2026, 6, 4, 21, 45)
+                LocalDateTime.of(2026, 6, 4, 21, 45),
+                List.of()
         );
     }
 

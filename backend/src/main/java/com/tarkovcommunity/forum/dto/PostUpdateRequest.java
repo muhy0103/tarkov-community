@@ -4,6 +4,8 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 
+import java.util.List;
+
 public record PostUpdateRequest(
         @NotNull(message = "分区不能为空")
         Long categoryId,
@@ -21,6 +23,9 @@ public record PostUpdateRequest(
         String postType,
 
         @Size(max = 500, message = "封面图地址不能超过500个字符")
-        String coverImage
+        String coverImage,
+
+        @Size(max = 6, message = "最多关联 6 个资料")
+        List<PostCatalogRelationRequest> relations
 ) {
 }

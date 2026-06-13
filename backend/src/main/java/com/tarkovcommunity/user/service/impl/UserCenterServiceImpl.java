@@ -345,7 +345,8 @@ public class UserCenterServiceImpl implements UserCenterService {
                             valueOrZero(post.getViewCount()),
                             valueOrZero(post.getLikeCount()),
                             valueOrZero(post.getCommentCount()),
-                            post.getCreatedAt()
+                            post.getCreatedAt(),
+                            List.of()
                     );
                 })
                 .toList();

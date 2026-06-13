@@ -1,6 +1,7 @@
 package com.tarkovcommunity.forum.dto;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 public record PostDetailResponse(
         Long id,
@@ -19,6 +20,7 @@ public record PostDetailResponse(
         LocalDateTime createdAt,
         Integer favoriteCount,
         Boolean likedByCurrentUser,
-        Boolean favoritedByCurrentUser
+        Boolean favoritedByCurrentUser,
+        List<RelatedCatalogResponse> relations
 ) {
 }

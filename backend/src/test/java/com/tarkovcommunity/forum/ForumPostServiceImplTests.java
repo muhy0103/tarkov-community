@@ -1,12 +1,19 @@
 package com.tarkovcommunity.forum;
 
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.tarkovcommunity.common.PageResponse;
+import com.tarkovcommunity.forum.dto.PostCatalogRelationRequest;
+import com.tarkovcommunity.forum.dto.PostCreateRequest;
 import com.tarkovcommunity.forum.dto.PostDetailResponse;
 import com.tarkovcommunity.forum.dto.PostCreatedResponse;
+import com.tarkovcommunity.forum.dto.PostSummaryResponse;
 import com.tarkovcommunity.forum.dto.PostUpdateRequest;
+import com.tarkovcommunity.forum.dto.RelatedCatalogResponse;
 import com.tarkovcommunity.forum.entity.Post;
 import com.tarkovcommunity.forum.mapper.FavoriteMapper;
 import com.tarkovcommunity.forum.mapper.PostLikeMapper;
 import com.tarkovcommunity.forum.mapper.PostMapper;
+import com.tarkovcommunity.forum.service.PostCatalogRelationService;
 import com.tarkovcommunity.forum.service.impl.ForumPostServiceImpl;
 import com.tarkovcommunity.meta.entity.Category;
 import com.tarkovcommunity.meta.mapper.CategoryMapper;
@@ -20,9 +27,13 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.util.List;
+import java.util.Map;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.verify;
 
@@ -43,6 +54,77 @@ class ForumPostServiceImplTests {
 
     @Mock
     private FavoriteMapper favoriteMapper;
+
+    @Mock
+    private PostCatalogRelationService postCatalogRelationService;
+
+    @Test
+    void createPostSavesCatalogRelations() {
+        ForumPostServiceImpl service = service();
+        SysUser author = owner();
+        PostCreateRequest request = new PostCreateRequest(
+                author.getId(),
+                2L,
+                "Customs route guide",
+                "Use this route to cross Customs safely.",
+                "GUIDE",
+                null,
+                List.of(new PostCatalogRelationRequest("MAP", 1L, "主要地图"))
+        );
+        given(categoryMapper.selectById(2L)).willReturn(enabledCategory(2L));
+        given(postMapper.insert(any(Post.class))).willAnswer(invocation -> {
+            Post insertedPost = invocation.getArgument(0);
+            insertedPost.setId(10L);
+            return 1;
+        });
+
+        PostCreatedResponse response = service.createPost(request, author);
+
+        ArgumentCaptor<Post> postCaptor = ArgumentCaptor.forClass(Post.class);
+        verify(postMapper).insert(postCaptor.capture());
+        Post insertedPost = postCaptor.getValue();
+        assertThat(insertedPost.getUserId()).isEqualTo(author.getId());
+        assertThat(insertedPost.getCategoryId()).isEqualTo(2L);
+        assertThat(response.id()).isEqualTo(10L);
+        verify(postCatalogRelationService).replaceRelations(eq(10L), eq(request.relations()));
+    }
+
+    @Test
+    void listPostsCanFilterByCatalogRelation() {
+        ForumPostServiceImpl service = service();
+        Post post = post();
+        Page<Post> selectedPage = new Page<>(1, 10);
+        selectedPage.setRecords(List.of(post));
+        selectedPage.setTotal(1);
+        RelatedCatalogResponse relation = new RelatedCatalogResponse(
+                "MAP",
+                1L,
+                "Customs",
+                "Normal",
+                null,
+                "maps",
+                "主要地图"
+        );
+        given(postCatalogRelationService.selectRelatedPostsPage("MAP", 1L, 1, 10)).willReturn(selectedPage);
+        given(categoryMapper.selectBatchIds(List.of(2L))).willReturn(List.of(enabledCategory(2L)));
+        given(sysUserMapper.selectBatchIds(List.of(7L))).willReturn(List.of(owner()));
+        given(postCatalogRelationService.findRelationsByPostIds(List.of(9L))).willReturn(Map.of(9L, List.of(relation)));
+
+        PageResponse<PostSummaryResponse> response = service.listPosts(
+                null,
+                null,
+                null,
+                null,
+                "LATEST",
+                "MAP",
+                1L,
+                1,
+                10
+        );
+
+        assertThat(response.records()).hasSize(1);
+        assertThat(response.records().get(0).relations()).containsExactly(relation);
+    }
 
     @Test
     void incrementsViewCountWhenGettingDetail() {
@@ -95,7 +177,8 @@ class ForumPostServiceImplTests {
                 " 海岸线任务路线更新版 ",
                 " 补充了疗养院外圈和发电站附近的绕行方案，适合低等级玩家参考。 ",
                 " GUIDE ",
-                "  "
+                "  ",
+                null
         ), owner());
 
         ArgumentCaptor<Post> postCaptor = ArgumentCaptor.forClass(Post.class);
@@ -159,7 +242,14 @@ class ForumPostServiceImplTests {
     }
 
     private ForumPostServiceImpl service() {
-        return new ForumPostServiceImpl(postMapper, categoryMapper, sysUserMapper, postLikeMapper, favoriteMapper);
+        return new ForumPostServiceImpl(
+                postMapper,
+                categoryMapper,
+                sysUserMapper,
+                postLikeMapper,
+                favoriteMapper,
+                postCatalogRelationService
+        );
     }
 
     private static PostUpdateRequest request() {
@@ -168,6 +258,7 @@ class ForumPostServiceImplTests {
                 "海岸线任务路线更新版",
                 "补充了疗养院外圈和发电站附近的绕行方案，适合低等级玩家参考。",
                 "GUIDE",
+                null,
                 null
         );
     }
@@ -185,8 +276,12 @@ class ForumPostServiceImplTests {
     }
 
     private static Category enabledCategory() {
+        return enabledCategory(3L);
+    }
+
+    private static Category enabledCategory(Long id) {
         Category category = new Category();
-        category.setId(3L);
+        category.setId(id);
         category.setName("任务攻略");
         category.setCode("quests");
         category.setStatus("ENABLED");

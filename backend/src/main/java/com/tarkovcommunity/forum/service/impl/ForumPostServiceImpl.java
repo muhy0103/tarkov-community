@@ -8,6 +8,7 @@ import com.tarkovcommunity.forum.dto.PostCreatedResponse;
 import com.tarkovcommunity.forum.dto.PostDetailResponse;
 import com.tarkovcommunity.forum.dto.PostSummaryResponse;
 import com.tarkovcommunity.forum.dto.PostUpdateRequest;
+import com.tarkovcommunity.forum.dto.RelatedCatalogResponse;
 import com.tarkovcommunity.forum.entity.Favorite;
 import com.tarkovcommunity.forum.entity.Post;
 import com.tarkovcommunity.forum.entity.PostLike;
@@ -15,6 +16,7 @@ import com.tarkovcommunity.forum.mapper.FavoriteMapper;
 import com.tarkovcommunity.forum.mapper.PostLikeMapper;
 import com.tarkovcommunity.forum.mapper.PostMapper;
 import com.tarkovcommunity.forum.service.ForumPostService;
+import com.tarkovcommunity.forum.service.PostCatalogRelationService;
 import com.tarkovcommunity.meta.entity.Category;
 import com.tarkovcommunity.meta.mapper.CategoryMapper;
 import com.tarkovcommunity.user.entity.SysUser;
@@ -43,6 +45,7 @@ public class ForumPostServiceImpl implements ForumPostService {
     private final SysUserMapper sysUserMapper;
     private final PostLikeMapper postLikeMapper;
     private final FavoriteMapper favoriteMapper;
+    private final PostCatalogRelationService postCatalogRelationService;
 
     @Override
     public PageResponse<PostSummaryResponse> listPosts(
@@ -51,6 +54,8 @@ public class ForumPostServiceImpl implements ForumPostService {
             String postType,
             Boolean recommended,
             String sort,
+            String catalogType,
+            Long catalogId,
             int page,
             int size
     ) {
@@ -85,9 +90,13 @@ public class ForumPostServiceImpl implements ForumPostService {
             query.eq(Post::getRecommended, recommended ? 1 : 0);
         }
 
-        applySort(query, sort);
-
-        Page<Post> postPage = postMapper.selectPage(new Page<>(safePage, safeSize), query);
+        Page<Post> postPage;
+        if (StringUtils.hasText(catalogType) && catalogId != null) {
+            postPage = postCatalogRelationService.selectRelatedPostsPage(catalogType, catalogId, safePage, safeSize);
+        } else {
+            applySort(query, sort);
+            postPage = postMapper.selectPage(new Page<>(safePage, safeSize), query);
+        }
         List<PostSummaryResponse> records = toSummaries(postPage.getRecords());
         return PageResponse.of(safePage, safeSize, postPage.getTotal(), records);
     }
@@ -107,6 +116,11 @@ public class ForumPostServiceImpl implements ForumPostService {
 
         Category category = categoryMapper.selectById(post.getCategoryId());
         SysUser author = sysUserMapper.selectById(post.getUserId());
+        Map<Long, List<RelatedCatalogResponse>> relationMap = postCatalogRelationService
+                .findRelationsByPostIds(List.of(post.getId()));
+        List<RelatedCatalogResponse> relations = relationMap == null
+                ? List.of()
+                : relationMap.getOrDefault(post.getId(), List.of());
 
         return new PostDetailResponse(
                 post.getId(),
@@ -125,7 +139,8 @@ public class ForumPostServiceImpl implements ForumPostService {
                 post.getCreatedAt(),
                 valueOrZero(post.getFavoriteCount()),
                 hasPostLike(post.getId(), viewer),
-                hasFavorite(post.getId(), viewer)
+                hasFavorite(post.getId(), viewer),
+                relations
         );
     }
 
@@ -152,6 +167,7 @@ public class ForumPostServiceImpl implements ForumPostService {
         post.setCommentCount(0);
 
         postMapper.insert(post);
+        postCatalogRelationService.replaceRelations(post.getId(), request.relations());
         return new PostCreatedResponse(post.getId());
     }
 
@@ -170,6 +186,7 @@ public class ForumPostServiceImpl implements ForumPostService {
         post.setPostType(request.postType().trim());
         post.setCoverImage(StringUtils.hasText(request.coverImage()) ? request.coverImage().trim() : null);
         postMapper.updateById(post);
+        postCatalogRelationService.replaceRelations(post.getId(), request.relations());
         return new PostCreatedResponse(post.getId());
     }
 
@@ -207,6 +224,10 @@ public class ForumPostServiceImpl implements ForumPostService {
                 sysUserMapper::selectBatchIds,
                 SysUser::getId
         );
+        Map<Long, List<RelatedCatalogResponse>> relationMap = postCatalogRelationService.findRelationsByPostIds(
+                posts.stream().map(Post::getId).filter(Objects::nonNull).toList()
+        );
+        Map<Long, List<RelatedCatalogResponse>> relations = relationMap == null ? Map.of() : relationMap;
 
         return posts.stream()
                 .map(post -> {
@@ -225,7 +246,8 @@ public class ForumPostServiceImpl implements ForumPostService {
                             valueOrZero(post.getViewCount()),
                             valueOrZero(post.getLikeCount()),
                             valueOrZero(post.getCommentCount()),
-                            post.getCreatedAt()
+                            post.getCreatedAt(),
+                            relations.getOrDefault(post.getId(), List.of())
                     );
                 })
                 .toList();

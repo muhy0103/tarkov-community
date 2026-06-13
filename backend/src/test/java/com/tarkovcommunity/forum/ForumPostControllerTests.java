@@ -9,6 +9,7 @@ import com.tarkovcommunity.forum.dto.PostCreatedResponse;
 import com.tarkovcommunity.forum.dto.PostDetailResponse;
 import com.tarkovcommunity.forum.dto.PostSummaryResponse;
 import com.tarkovcommunity.forum.dto.PostUpdateRequest;
+import com.tarkovcommunity.forum.dto.RelatedCatalogResponse;
 import com.tarkovcommunity.forum.service.ForumPostService;
 import com.tarkovcommunity.user.entity.SysUser;
 import org.junit.jupiter.api.Test;
@@ -27,6 +28,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.verify;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
@@ -53,6 +55,15 @@ class ForumPostControllerTests {
 
     @Test
     void listsPostsWithFilters() throws Exception {
+        RelatedCatalogResponse relation = new RelatedCatalogResponse(
+                "MAP",
+                1L,
+                "Customs",
+                "Normal",
+                null,
+                "maps",
+                "主要地图"
+        );
         PostSummaryResponse summary = new PostSummaryResponse(
                 1L,
                 "海关新手任务路线整理",
@@ -66,10 +77,11 @@ class ForumPostControllerTests {
                 23,
                 5,
                 2,
-                LocalDateTime.of(2026, 6, 4, 18, 0)
+                LocalDateTime.of(2026, 6, 4, 18, 0),
+                List.of(relation)
         );
 
-        given(forumPostService.listPosts("quests", "海关", "QUEST_GUIDE", true, "HOT", 1, 10))
+        given(forumPostService.listPosts("quests", "海关", "QUEST_GUIDE", true, "HOT", null, null, 1, 10))
                 .willReturn(PageResponse.of(1, 10, 1, List.of(summary)));
 
         mockMvc.perform(get("/api/posts")
@@ -84,12 +96,36 @@ class ForumPostControllerTests {
                 .andExpect(jsonPath("$.code").value(200))
                 .andExpect(jsonPath("$.data.total").value(1))
                 .andExpect(jsonPath("$.data.records[0].title").value("海关新手任务路线整理"))
-                .andExpect(jsonPath("$.data.records[0].categoryCode").value("quests"));
+                .andExpect(jsonPath("$.data.records[0].categoryCode").value("quests"))
+                .andExpect(jsonPath("$.data.records[0].relations[0].catalogType").value("MAP"))
+                .andExpect(jsonPath("$.data.records[0].relations[0].name").value("Customs"));
+    }
+
+    @Test
+    void listsPostsWithCatalogRelationFilters() throws Exception {
+        given(forumPostService.listPosts(null, null, null, null, "LATEST", "MAP", 1L, 1, 10))
+                .willReturn(PageResponse.of(1, 10, 0, List.of()));
+
+        mockMvc.perform(get("/api/posts")
+                        .param("catalogType", "MAP")
+                        .param("catalogId", "1"))
+                .andExpect(status().isOk());
+
+        verify(forumPostService).listPosts(null, null, null, null, "LATEST", "MAP", 1L, 1, 10);
     }
 
     @Test
     void getsPostDetail() throws Exception {
         SysUser user = normalUser();
+        RelatedCatalogResponse relation = new RelatedCatalogResponse(
+                "MAP",
+                1L,
+                "Factory",
+                "Hard",
+                null,
+                "maps",
+                "配装地图"
+        );
         given(authTokenService.resolveUser(eq("Bearer user-token"))).willReturn(Optional.of(user));
         given(forumPostService.getPost(eq(1L), eq(user)))
                 .willReturn(new PostDetailResponse(
@@ -109,7 +145,8 @@ class ForumPostControllerTests {
                         LocalDateTime.of(2026, 6, 4, 18, 5),
                         6,
                         true,
-                        true
+                        true,
+                        List.of(relation)
                 ));
 
         mockMvc.perform(get("/api/posts/1")
@@ -122,6 +159,8 @@ class ForumPostControllerTests {
                 .andExpect(jsonPath("$.data.favoriteCount").value(6))
                 .andExpect(jsonPath("$.data.likedByCurrentUser").value(true))
                 .andExpect(jsonPath("$.data.favoritedByCurrentUser").value(true))
+                .andExpect(jsonPath("$.data.relations[0].catalogType").value("MAP"))
+                .andExpect(jsonPath("$.data.relations[0].name").value("Factory"))
                 .andExpect(jsonPath("$.data.content").value("预算有限时可以优先保证耳机、护甲和高穿弹药。"));
     }
 
@@ -145,6 +184,7 @@ class ForumPostControllerTests {
                 "森林跑图避战路线",
                 "这条路线适合前期做任务，重点是避开伐木场高风险区域。",
                 "ROUTE_GUIDE",
+                null,
                 null
         );
 
@@ -170,6 +210,7 @@ class ForumPostControllerTests {
                 "",
                 "内容",
                 "ROUTE_GUIDE",
+                null,
                 null
         );
 
@@ -190,6 +231,7 @@ class ForumPostControllerTests {
                 "森林跑图避战路线",
                 "这条路线适合前期做任务，重点是避开伐木场高风险区域。",
                 "ROUTE_GUIDE",
+                null,
                 null
         );
 
@@ -208,6 +250,7 @@ class ForumPostControllerTests {
                 "海岸线任务路线更新版",
                 "补充了疗养院外圈和发电站附近的绕行方案，适合低等级玩家参考。",
                 "GUIDE",
+                null,
                 null
         );
 

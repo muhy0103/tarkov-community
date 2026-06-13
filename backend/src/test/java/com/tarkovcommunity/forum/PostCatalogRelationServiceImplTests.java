@@ -1,10 +1,12 @@
 package com.tarkovcommunity.forum;
 
 import com.tarkovcommunity.forum.dto.PostCatalogRelationRequest;
+import com.tarkovcommunity.forum.dto.RelatedCatalogResponse;
 import com.tarkovcommunity.forum.entity.PostCatalogRelation;
 import com.tarkovcommunity.forum.mapper.PostCatalogRelationMapper;
 import com.tarkovcommunity.forum.service.impl.PostCatalogRelationServiceImpl;
 import com.tarkovcommunity.tarkov.entity.TarkovMap;
+import com.tarkovcommunity.tarkov.entity.TarkovWeapon;
 import com.tarkovcommunity.tarkov.mapper.BossMapper;
 import com.tarkovcommunity.tarkov.mapper.HideoutStationMapper;
 import com.tarkovcommunity.tarkov.mapper.TarkovAmmoMapper;
@@ -21,6 +23,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
+import java.util.Map;
 import java.util.stream.LongStream;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -91,6 +94,45 @@ class PostCatalogRelationServiceImplTests {
                 .hasMessageContaining("6");
     }
 
+    @Test
+    void rejectsMissingCatalogRecord() {
+        PostCatalogRelationServiceImpl service = service();
+        given(weaponMapper.selectById(404L)).willReturn(null);
+
+        assertThatThrownBy(() -> service.replaceRelations(
+                10L,
+                List.of(new PostCatalogRelationRequest("WEAPON", 404L, null))
+        ))
+                .isInstanceOf(ResponseStatusException.class)
+                .hasMessageContaining("关联资料不存在或已停用");
+    }
+
+    @Test
+    void hydratesRelatedCatalogResponsesByPostId() {
+        PostCatalogRelationServiceImpl service = service();
+        PostCatalogRelation relation = new PostCatalogRelation();
+        relation.setId(1L);
+        relation.setPostId(10L);
+        relation.setCatalogType("WEAPON");
+        relation.setCatalogId(1L);
+        relation.setRelationNote("主武器");
+        given(relationMapper.selectList(any())).willReturn(List.of(relation));
+        given(weaponMapper.selectById(1L)).willReturn(enabledWeapon());
+
+        Map<Long, List<RelatedCatalogResponse>> responses = service.findRelationsByPostIds(List.of(10L));
+
+        assertThat(responses).containsOnlyKeys(10L);
+        assertThat(responses.get(10L)).hasSize(1);
+        RelatedCatalogResponse response = responses.get(10L).get(0);
+        assertThat(response.catalogType()).isEqualTo("WEAPON");
+        assertThat(response.catalogId()).isEqualTo(1L);
+        assertThat(response.name()).isEqualTo("AK-74N");
+        assertThat(response.subtitle()).isEqualTo("Assault rifle · 5.45x39");
+        assertThat(response.imageUrl()).isEqualTo("https://assets.example/ak-74n.png");
+        assertThat(response.routeKind()).isEqualTo("weapons");
+        assertThat(response.relationNote()).isEqualTo("主武器");
+    }
+
     private PostCatalogRelationServiceImpl service() {
         return new PostCatalogRelationServiceImpl(
                 relationMapper,
@@ -112,5 +154,17 @@ class PostCatalogRelationServiceImplTests {
         map.setNameZh("Customs");
         map.setStatus("ENABLED");
         return map;
+    }
+
+    private static TarkovWeapon enabledWeapon() {
+        TarkovWeapon weapon = new TarkovWeapon();
+        weapon.setId(1L);
+        weapon.setNameEn("AK-74N");
+        weapon.setNameZh("AK-74N");
+        weapon.setWeaponType("Assault rifle");
+        weapon.setCaliber("5.45x39");
+        weapon.setImageUrl("https://assets.example/ak-74n.png");
+        weapon.setStatus("ENABLED");
+        return weapon;
     }
 }

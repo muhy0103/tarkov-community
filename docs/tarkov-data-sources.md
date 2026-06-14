@@ -29,6 +29,14 @@
 - Boss: `Reshala`、`Tagilla`、`Glukhar`、`Shturman`、`Sanitar`、`Killa`、`Kaban`、`Kollontay`、`Zryachiy`、`Knight`、`Big Pipe`、`Birdeye`、`Partisan`。
 - 图片: 已为 13 张地图、11 名商人、13 个 Boss、8 把常用武器和 8 种常用弹药补充第一批图片链接。
 - 社区内容: 已补充帖子、评论、点赞、收藏、关注关系、公告和部分帖子类型扩展表数据。
+- 第二阶段资料样例: 已补充 `Customs`、`Factory`、`Woods`、`Reserve`、`Streets of Tarkov`、`Shoreline` 的常见撤离点，`Customs`、`Factory`、`Woods`、`Reserve`、`Streets of Tarkov`、`Shoreline`、`Interchange` 的典型资源点，以及工作台、医疗站、厕所、情报中心、营养部、射击场、比特币矿场的藏身处升级样例。
+- 任务链样例: 已增加 `Farming Part 2`、`The Tarkov Shooter Part 2`、`Operation Aquarius Part 2`、`Only Business`，并用 `quest_prerequisite` 补充若干前置关系，主要服务课程演示中的任务详情关联展示。
+
+## 第二阶段录入原则
+
+- 撤离点和资源点优先选取玩家讨论中最常见、最容易形成路线交流的区域，而不是完整列出每张地图的所有点位。
+- 藏身处升级要求采用“演示级简化文本”，保留核心材料和功能含义，避免把页面做成高密度百科表格。
+- 任务链只录入能和现有演示任务形成闭环的前置关系，后续可通过后台继续扩展。
 
 ## 外部链接
 

@@ -72,6 +72,61 @@ VALUES
   (13, 'Icebreaker', '破冰船', '待确认', 'tarkov.dev 当前地图数据中的区域，先作为资料扩展占位。', '待确认', 'ENABLED')
 ON DUPLICATE KEY UPDATE name_zh = VALUES(name_zh), difficulty = VALUES(difficulty), description = VALUES(description), recommended_level = VALUES(recommended_level), status = VALUES(status);
 
+INSERT INTO map_extract (id, map_id, name, faction_limit, condition_text, description, status)
+VALUES
+  (1, 1, 'Crossroads', 'PMC', '默认可用，实际以局内撤离列表为准', '海关西侧经典撤离点，适合 Trailer Park 与 Big Red 一侧出生后的保底路线。', 'ENABLED'),
+  (2, 1, 'Trailer Park', 'PMC', '默认可用，实际以局内撤离列表为准', '靠近拖车停车场的西侧撤离，适合从东侧穿越地图后的撤离规划。', 'ENABLED'),
+  (3, 1, 'ZB-1011', 'PMC', '默认可用，实际以局内撤离列表为准', '海关东侧地堡撤离点，常作为避开 Dorms 正面交火后的安全出口。', 'ENABLED'),
+  (4, 1, 'Dorms V-Ex', 'PMC', '车辆撤离，需卢布且每局可用性有限', '宿舍旁车辆撤离，速度快但容易吸引玩家注意。', 'ENABLED'),
+  (5, 1, 'Old Gas Station', 'PMC/Scav', '条件撤离，需确认信号或局内状态', '旧加油站附近条件撤离点，适合从中部转移时作为备选。', 'ENABLED'),
+  (6, 1, 'RUAF Roadblock', 'PMC/Scav', '条件撤离，需确认局内状态', '河道与道路交界附近撤离点，适合低风险绕边路线。', 'ENABLED'),
+  (7, 2, 'Gate 3', 'PMC', '默认可用，实际以局内撤离列表为准', '工厂最常见撤离门，交火频繁，撤离前需要清角。', 'ENABLED'),
+  (8, 2, 'Cellars', 'PMC', '需要 Factory emergency exit key', '地下撤离点，适合携带钥匙时避开 Gate 3 堵门风险。', 'ENABLED'),
+  (9, 2, 'Office Window', 'Scav', 'Scav 撤离点', '办公室区域撤离点，适合 Scav 快速离场。', 'ENABLED'),
+  (10, 2, 'Camera Bunker Door', 'Scav', 'Scav 撤离点', '靠近地下通道的 Scav 撤离点，适合低价值快速撤离。', 'ENABLED'),
+  (11, 3, 'Outskirts', 'PMC', '默认可用，实际以局内撤离列表为准', '森林西北侧常见撤离点，适合沿地图边缘低风险移动。', 'ENABLED'),
+  (12, 3, 'UN Roadblock', 'PMC/Scav', '默认或条件可用，实际以局内撤离列表为准', '森林东侧道路撤离点，新手路线中辨识度较高。', 'ENABLED'),
+  (13, 3, 'Northern UN Roadblock', 'PMC/Scav', '默认或条件可用，实际以局内撤离列表为准', '北侧道路撤离点，适合从伐木场绕北离场。', 'ENABLED'),
+  (14, 3, 'Bridge V-Ex', 'PMC', '车辆撤离，需卢布且每局可用性有限', '森林桥边车辆撤离点，路线短但暴露度高。', 'ENABLED'),
+  (15, 3, 'ZB-014', 'PMC', '通常需要钥匙并确认局内状态', '靠近地堡区域的撤离点，可作为 Outskirts 路线的补充。', 'ENABLED'),
+  (16, 4, 'D-2', 'PMC', '需要启动地下电源/机关路线', '储备站地下撤离点，路线复杂但可避开地表火力。', 'ENABLED'),
+  (17, 4, 'Armored Train', 'PMC/Scav', '列车到站后限时撤离', '装甲列车撤离，时间窗口明显但容易形成交火。', 'ENABLED'),
+  (18, 4, 'Cliff Descent', 'PMC', '需要特定装备条件', '悬崖撤离点，适合熟悉装备限制的玩家。', 'ENABLED'),
+  (19, 4, 'Sewer Manhole', 'PMC/Scav', '背包限制，实际以局内规则为准', '下水道撤离点，适合轻装快速撤离。', 'ENABLED'),
+  (20, 5, 'Courtyard', 'PMC/Scav', '条件撤离，需确认局内状态', '街区内部撤离点，适合从住宅与商业区转移。', 'ENABLED'),
+  (21, 5, 'Klimov Street', 'PMC', '需要信号弹提示与正确区域', '街区高风险撤离点，需确认信号区域和狙击边界。', 'ENABLED'),
+  (22, 5, 'Damaged House', 'PMC/Scav', '默认或条件可用，实际以局内撤离列表为准', '街区建筑边缘撤离点，适合沿外圈移动。', 'ENABLED'),
+  (23, 5, 'Sewer River', 'PMC/Scav', '默认或条件可用，实际以局内撤离列表为准', '河道方向撤离点，适合从南侧绕行离场。', 'ENABLED'),
+  (24, 6, 'Road to Customs', 'PMC', '默认可用，实际以局内撤离列表为准', '海岸线东侧道路撤离点，适合从疗养院外围转移。', 'ENABLED'),
+  (25, 6, 'Tunnel', 'PMC', '默认可用，实际以局内撤离列表为准', '海岸线西南侧撤离点，路线直观但容易被卡点。', 'ENABLED'),
+  (26, 6, 'Path to Lighthouse', 'PMC', '默认或条件可用，实际以局内撤离列表为准', '海岸线北侧撤离路线，适合避开海岸公路交火。', 'ENABLED'),
+  (27, 6, 'Pier Boat', 'PMC', '条件撤离，需确认局内状态', '码头船撤离点，路线短但码头区域暴露。', 'ENABLED')
+ON DUPLICATE KEY UPDATE map_id = VALUES(map_id), name = VALUES(name), faction_limit = VALUES(faction_limit), condition_text = VALUES(condition_text), description = VALUES(description), status = VALUES(status);
+
+INSERT INTO map_loot_area (id, map_id, name, loot_type, risk_level, description)
+VALUES
+  (1, 1, 'Dorms', '钥匙房、保险箱、任务点', '高', '海关核心冲突区，Boss、任务和高价值房间都可能把玩家吸引到这里。'),
+  (2, 1, 'Stronghold', '武器箱、医疗物资、技术物资', '高', '靠近中部转点，视野复杂，适合战局复盘和队伍推进讨论。'),
+  (3, 1, 'Crackhouse', '医疗物资、情报物资', '中', '医疗和文件类物资集中，常与 Stronghold 形成交火联动。'),
+  (4, 1, 'New Gas Station', 'Boss 点、收银机、补给', '高', 'Reshala 常见活动区域之一，推进前需要确认护卫与玩家动向。'),
+  (5, 2, 'Office Area', '保险箱、文件柜、任务点', '高', '工厂办公室是任务与击杀热点，楼梯和走廊需要重点清理。'),
+  (6, 2, 'Underground Tunnels', '工具箱、低价值补给', '中', '适合绕开地表交火，但转角较多，容易近距离遭遇。'),
+  (7, 3, 'Sawmill', 'Boss 点、木材区补给', '高', 'Shturman 活动核心区域，远距离威胁和第三方介入都很常见。'),
+  (8, 3, 'USEC Camp', '医疗、武器箱、技术物资', '中', '森林常见高价值路线之一，适合从北侧绕行搜索。'),
+  (9, 3, 'Emercom Camp', '医疗物资、食物、任务物品', '中', '医疗补给丰富，路线开阔，离场时需要注意远点视线。'),
+  (10, 4, 'D-2 Bunker', '军用物资、技术箱', '高', '地下路线收益高但交火和伏击密度大。'),
+  (11, 4, 'Black Bishop', '医疗物资、军用补给', '高', '储备站高价值建筑之一，窗线和楼梯都需要谨慎处理。'),
+  (12, 4, 'Knight Buildings', '武器箱、技术物资', '中', '适合跑商路线，但附近玩家转点频繁。'),
+  (13, 5, 'LexOs', 'Boss 点、军用物资、车辆周边补给', '高', '街区重点冲突区，Kaban 相关讨论常围绕这里展开。'),
+  (14, 5, 'Pinewood Hotel', '钥匙房、贵重物品、任务点', '高', '建筑层次复杂，适合整理分层路线和撤离衔接。'),
+  (15, 5, 'Chekannaya Apartments', '高价值房间、任务点', '高', '街区室内路线密集，适合做钥匙房和风险评估讨论。'),
+  (16, 6, 'Health Resort', '钥匙房、医疗物资、任务点', '高', '海岸线核心冲突区域，任务和高价值房间集中。'),
+  (17, 6, 'Pier', '保险箱、文件柜、任务点', '中', '码头区域路线短但撤离和转点都容易暴露。'),
+  (18, 6, 'Village', '夹克、工具箱、食物补给', '低', '适合低风险搜刮和新手任务路线。'),
+  (19, 7, 'Techlight / Texho / Rasmussen', '电子物资、显卡刷新点', '高', '立交桥技术商铺热点，开局冲点竞争激烈。'),
+  (20, 7, 'KIBA', '武器、配件、钥匙房', '高', '商场中部高价值区域，通常需要钥匙和电源条件。')
+ON DUPLICATE KEY UPDATE map_id = VALUES(map_id), name = VALUES(name), loot_type = VALUES(loot_type), risk_level = VALUES(risk_level), description = VALUES(description);
+
 INSERT INTO tarkov_trader (id, name_en, name_zh, description, unlock_condition, status)
 VALUES
   (1, 'Prapor', 'Prapor', '早期任务、俄系武器、基础弹药与保险服务相关。', 'Available from the start', 'ENABLED'),
@@ -102,6 +157,22 @@ VALUES
   (11, 8, 'The Tarkov Shooter Part 1', '塔科夫射手 Part 1', '击杀', NULL, '使用栓动步枪完成距离要求，适合讨论低成本狙击路线。', '经验、卢布、声望', 'The Tarkov Shooter Part 2', 'ENABLED'),
   (12, 2, 'Colleagues Part 1', '同事 Part 1', '地点调查', 6, '在海岸线调查多个医疗相关地点，适合整理安全路线。', '经验、卢布、声望', 'Colleagues Part 2', 'ENABLED')
 ON DUPLICATE KEY UPDATE name_zh = VALUES(name_zh), quest_type = VALUES(quest_type), map_id = VALUES(map_id), description = VALUES(description), rewards = VALUES(rewards), unlocks = VALUES(unlocks), status = VALUES(status);
+
+INSERT INTO tarkov_quest (id, trader_id, name_en, name_zh, quest_type, map_id, description, rewards, unlocks, status)
+VALUES
+  (13, 4, 'Farming Part 2', '农场 Part 2', '交付', NULL, '收集并交付电子类物资，适合连接工厂维修任务后的物资保留讨论。', '经验、声望、制作与电子物资认知', 'Farming 后续任务', 'ENABLED'),
+  (14, 8, 'The Tarkov Shooter Part 2', '塔科夫射手 Part 2', '击杀', NULL, '继续使用栓动步枪完成更细的击杀条件，适合讨论低预算栓动步枪路线。', '经验、卢布、声望', 'The Tarkov Shooter 后续任务', 'ENABLED'),
+  (15, 2, 'Operation Aquarius Part 2', '水瓶座行动 Part 2', '击杀', 1, '在海关延续水瓶座任务线，围绕 Scav 击杀和宿舍周边风险展开。', '经验、卢布、声望', 'Therapist 后续任务', 'ENABLED'),
+  (16, 5, 'Only Business', '只谈生意', '关系/解锁', NULL, '提升 Ragman 任务线关系的早期任务，作为 Big Sale 的前置演示数据。', '经验、声望', 'Big Sale', 'ENABLED')
+ON DUPLICATE KEY UPDATE name_zh = VALUES(name_zh), trader_id = VALUES(trader_id), quest_type = VALUES(quest_type), map_id = VALUES(map_id), description = VALUES(description), rewards = VALUES(rewards), unlocks = VALUES(unlocks), status = VALUES(status);
+
+INSERT INTO quest_prerequisite (id, quest_id, prerequisite_quest_id)
+VALUES
+  (1, 13, 10),
+  (2, 14, 11),
+  (3, 15, 6),
+  (4, 8, 16)
+ON DUPLICATE KEY UPDATE quest_id = VALUES(quest_id), prerequisite_quest_id = VALUES(prerequisite_quest_id);
 
 INSERT INTO tarkov_item (id, name_en, name_zh, item_type, rarity, grid_size, quest_needed, hideout_needed, keep_suggestion, description, status)
 VALUES
@@ -153,6 +224,24 @@ VALUES
   (6, 'Shooting Range', '射击场', '测试后坐力、弹道和配装手感。', 'ENABLED'),
   (7, 'Bitcoin Farm', '比特币矿场', '高成本经济收益模块，适合市场收益讨论。', 'ENABLED')
 ON DUPLICATE KEY UPDATE name_zh = VALUES(name_zh), description = VALUES(description);
+
+INSERT INTO hideout_upgrade (id, station_id, level, required_items, required_time, unlocks)
+VALUES
+  (1, 1, 1, 'Leatherman Multitool 1 个；Screw nuts 2 个；Bolts 2 个', '即时或短时间', '解锁基础武器改装与低级制作。'),
+  (2, 1, 2, 'Toolset 1 个；Electric drill 1 个；Bolts 5 个；Screw nuts 5 个', '约 2 小时', '扩展弹药、武器配件和任务物品制作。'),
+  (3, 1, 3, 'Pliers Elite 1 个；Screwdriver 1 个；高级电子/工具材料若干', '约 8 小时', '解锁更高级制作路线，适合配装和市场收益讨论。'),
+  (4, 2, 1, 'Disposable syringe 1 个；Pile of meds 1 个；Aseptic bandage 2 个', '即时或短时间', '解锁基础医疗物资制作。'),
+  (5, 2, 2, 'Medical bloodset 2 个；Salewa first aid kit 3 个；Powercord 1 个', '约 3 小时', '提高医疗制作能力，服务早期任务和战局补给。'),
+  (6, 2, 3, 'LEDX Skin Transilluminator 1 个；Ophthalmoscope 1 个；高级医疗材料若干', '约 12 小时', '解锁高级医疗制作，适合高价值医疗物资讨论。'),
+  (7, 3, 1, 'Toilet paper 1 个；Toothpaste 1 个；Soap 1 个', '即时或短时间', '解锁基础材料转换，适合低成本藏身处路线。'),
+  (8, 3, 2, 'Corrugated hose 3 个；Pack of screws 5 个；Screw nuts 5 个', '约 3 小时', '扩展生活材料转换和任务物品制作。'),
+  (9, 4, 1, 'Folder with intelligence 1 个；Secure Flash drive 1 个；Powercord 4 个', '约 4 小时', '降低 Scav 冷却并解锁情报类功能。'),
+  (10, 4, 2, 'Intelligence folder 3 个；Military cable 2 个；Virtex 相关电子材料若干', '约 12 小时', '扩展收益和高级情报功能，适合经济路线讨论。'),
+  (11, 5, 1, 'Can of white salt 1 个；Awl 1 个；Corrugated hose 1 个', '即时或短时间', '解锁基础食物与饮品制作。'),
+  (12, 5, 2, 'Phase control relay 2 个；Coffee Majaica 1 个；食物材料若干', '约 4 小时', '扩展补给制作，适合任务前补给规划。'),
+  (13, 6, 1, 'Illumination Level 2；Screw nuts 3 个；Bolts 3 个；Duct tape 1 个', '约 1 小时', '解锁武器测试区域，方便比较配装手感。'),
+  (14, 7, 1, 'Intelligence Center Level 2；Graphics card 若干；CPU Fan、Power supply 等电子材料', '约 24 小时', '开始生成经济收益，是市场讨论和显卡价值的重要支点。')
+ON DUPLICATE KEY UPDATE station_id = VALUES(station_id), level = VALUES(level), required_items = VALUES(required_items), required_time = VALUES(required_time), unlocks = VALUES(unlocks);
 
 INSERT INTO boss (id, name_en, name_zh, map_id, description, equipment_summary, status)
 VALUES

@@ -11,12 +11,32 @@ import {
   Refresh,
 } from '@element-plus/icons-vue'
 import { fetchCatalogDetail } from '../api/catalogApi'
+import { fetchPosts } from '../api/postApi'
 
 const route = useRoute()
 const router = useRouter()
 const loading = ref(false)
 const errorMessage = ref('')
 const detail = ref(null)
+const relatedPostsLoading = ref(false)
+const relatedPosts = ref({
+  page: 1,
+  size: 5,
+  total: 0,
+  pages: 0,
+  records: [],
+})
+
+const catalogTypeByKind = {
+  maps: 'MAP',
+  traders: 'TRADER',
+  quests: 'QUEST',
+  items: 'ITEM',
+  weapons: 'WEAPON',
+  ammo: 'AMMO',
+  bosses: 'BOSS',
+  hideout: 'HIDEOUT',
+}
 
 const catalogConfig = {
   maps: {
@@ -109,6 +129,7 @@ const catalogConfig = {
 }
 
 const config = computed(() => catalogConfig[route.params.kind] || null)
+const currentCatalogType = computed(() => catalogTypeByKind[route.params.kind] || '')
 const title = computed(() => detail.value?.nameZh || detail.value?.nameEn || config.value?.label || '资料详情')
 const subtitle = computed(() => detail.value?.nameEn || config.value?.label || 'Tarkov Catalog')
 const description = computed(() => detail.value?.description || detail.value?.equipmentSummary || '')
@@ -304,6 +325,7 @@ async function loadDetail() {
   if (!config.value) {
     detail.value = null
     errorMessage.value = '资料类型不存在'
+    relatedPosts.value = emptyRelatedPosts()
     return
   }
 
@@ -314,11 +336,45 @@ async function loadDetail() {
   try {
     mediaFailed.value = false
     detail.value = await fetchCatalogDetail(route.params.kind, route.params.id)
+    await loadRelatedPosts()
   } catch (error) {
     detail.value = null
     errorMessage.value = resolveError(error, '资料详情暂时无法加载')
+    relatedPosts.value = emptyRelatedPosts()
   } finally {
     loading.value = false
+  }
+}
+
+function emptyRelatedPosts() {
+  return {
+    page: 1,
+    size: 5,
+    total: 0,
+    pages: 0,
+    records: [],
+  }
+}
+
+async function loadRelatedPosts() {
+  if (!currentCatalogType.value || !route.params.id) {
+    relatedPosts.value = emptyRelatedPosts()
+    return
+  }
+
+  relatedPostsLoading.value = true
+  try {
+    relatedPosts.value = await fetchPosts({
+      page: 1,
+      size: 5,
+      catalogType: currentCatalogType.value,
+      catalogId: Number(route.params.id),
+      sort: 'LATEST',
+    })
+  } catch (error) {
+    relatedPosts.value = emptyRelatedPosts()
+  } finally {
+    relatedPostsLoading.value = false
   }
 }
 
@@ -429,6 +485,38 @@ onMounted(loadDetail)
           <p v-else class="detail-empty-text">{{ section.emptyText }}</p>
         </section>
       </div>
+
+      <section class="detail-related-discussions">
+        <div class="section-heading compact-heading">
+          <h3>相关讨论</h3>
+          <RouterLink
+            class="inline-action-link"
+            :to="{ name: 'post-board', query: { catalogType: currentCatalogType, catalogId: route.params.id } }"
+          >
+            查看更多
+          </RouterLink>
+        </div>
+
+        <el-skeleton v-if="relatedPostsLoading" :rows="3" animated />
+        <div v-else-if="relatedPosts.records.length" class="related-discussion-list">
+          <RouterLink
+            v-for="post in relatedPosts.records"
+            :key="post.id"
+            class="related-discussion-item"
+            :to="{ name: 'post-detail', params: { id: post.id } }"
+          >
+            <strong>{{ post.title }}</strong>
+            <span>{{ post.summary }}</span>
+            <small>浏览 {{ post.viewCount }} · 评论 {{ post.commentCount }}</small>
+          </RouterLink>
+        </div>
+        <div v-else class="post-empty compact-empty">
+          <div>
+            <h4>暂无相关讨论</h4>
+            <p>可以发布一条帖子，把这份资料和你的路线、配装或问题关联起来。</p>
+          </div>
+        </div>
+      </section>
 
       <div class="detail-actions">
         <el-button type="primary" @click="goDiscussion">

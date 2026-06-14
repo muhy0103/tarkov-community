@@ -2356,6 +2356,73 @@ a.detail-relation-item:hover {
   line-height: 1.6;
 }
 
+.detail-related-discussions {
+  display: grid;
+  gap: 12px;
+  margin-top: 4px;
+  padding-top: 16px;
+  border-top: 1px solid #edf2f2;
+}
+
+.compact-heading {
+  align-items: center;
+  margin-bottom: 0;
+}
+
+.compact-heading h3 {
+  margin: 0;
+}
+
+.related-discussion-list {
+  display: grid;
+  gap: 10px;
+}
+
+.related-discussion-item {
+  display: grid;
+  gap: 5px;
+  padding: 12px;
+  color: inherit;
+  text-decoration: none;
+  border: 1px solid #dbe7e6;
+  border-radius: 8px;
+  background: #ffffff;
+  transition: border-color 0.16s ease, box-shadow 0.16s ease;
+}
+
+.related-discussion-item:hover {
+  border-color: #99f6e4;
+  box-shadow: 0 10px 26px rgba(15, 118, 110, 0.1);
+}
+
+.related-discussion-item strong {
+  overflow: hidden;
+  color: #111827;
+  font-size: 14px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.related-discussion-item span {
+  display: -webkit-box;
+  overflow: hidden;
+  color: #52616d;
+  font-size: 13px;
+  line-height: 1.55;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+.related-discussion-item small {
+  color: #7b8794;
+  font-size: 12px;
+}
+
+.compact-empty {
+  grid-template-columns: minmax(0, 1fr);
+  padding: 14px;
+}
+
 .comments-card {
   display: grid;
   gap: 18px;

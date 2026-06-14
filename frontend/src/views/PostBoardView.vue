@@ -27,6 +27,8 @@ const filters = ref({
   postType: '',
   sort: 'LATEST',
   recommended: false,
+  catalogType: '',
+  catalogId: '',
 })
 const postsPage = ref({
   page: 1,
@@ -66,6 +68,8 @@ const queryParams = computed(() => ({
   postType: filters.value.postType || undefined,
   sort: filters.value.sort || 'LATEST',
   recommended: filters.value.recommended ? true : undefined,
+  catalogType: filters.value.catalogType || undefined,
+  catalogId: filters.value.catalogId || undefined,
 }))
 
 function resolveError(error, fallback) {
@@ -86,6 +90,8 @@ function applyRouteQuery() {
     postType: stringQueryValue(route.query.postType),
     sort: routeSortValues.has(sort) ? sort : 'LATEST',
     recommended: route.query.recommended === 'true',
+    catalogType: stringQueryValue(route.query.catalogType),
+    catalogId: stringQueryValue(route.query.catalogId),
   }
 }
 
@@ -129,6 +135,8 @@ function resetFilters() {
     postType: '',
     sort: 'LATEST',
     recommended: false,
+    catalogType: '',
+    catalogId: '',
   }
   if (Object.keys(route.query).length) {
     router.replace({ name: 'post-board' })
@@ -142,6 +150,19 @@ function goCreatePost() {
     ? { name: 'post-create' }
     : { name: 'login', query: { redirect: '/posts/new' } }
   )
+}
+
+function clearCatalogFilter() {
+  filters.value.catalogType = ''
+  filters.value.catalogId = ''
+  router.replace({
+    name: 'post-board',
+    query: {
+      ...route.query,
+      catalogType: undefined,
+      catalogId: undefined,
+    },
+  })
 }
 
 watch(
@@ -203,6 +224,20 @@ onMounted(() => {
         </el-button>
       </div>
     </section>
+
+    <el-alert
+      v-if="filters.catalogType && filters.catalogId"
+      title="当前正在查看指定资料的相关讨论"
+      type="success"
+      show-icon
+      class="home-alert"
+    >
+      <template #default>
+        <el-button size="small" @click="clearCatalogFilter">
+          清除资料筛选
+        </el-button>
+      </template>
+    </el-alert>
 
     <section class="board-toolbar">
       <div class="board-filter-grid">

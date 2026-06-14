@@ -8,6 +8,8 @@
 
 **Tech Stack:** Spring Boot, MyBatis-Plus, MySQL, JUnit 5, Mockito, Vue 3 JavaScript, Element Plus, Vite.
 
+**Execution Status (2026-06-14):** Tasks 1-8 have been implemented on `feature/catalog-discussion-relations` and pushed. Final verification covered backend tests, frontend build, catalog-to-discussion browser flow, post creation with catalog relation, mobile overflow checks, git status, and a focused sensitive-value scan.
+
 ---
 
 ## File Structure

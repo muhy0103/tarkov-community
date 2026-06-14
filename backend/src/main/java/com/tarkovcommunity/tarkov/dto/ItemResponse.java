@@ -7,6 +7,7 @@ public record ItemResponse(
         String itemType,
         Boolean questNeeded,
         Boolean hideoutNeeded,
-        Boolean keepSuggestion
+        Boolean keepSuggestion,
+        String description
 ) {
 }

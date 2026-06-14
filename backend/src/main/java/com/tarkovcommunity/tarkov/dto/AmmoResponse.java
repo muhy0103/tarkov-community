@@ -7,6 +7,7 @@ public record AmmoResponse(
         String caliber,
         Integer damage,
         Integer penetration,
+        String description,
         String imageUrl
 ) {
 }

@@ -5,6 +5,8 @@ public record BossResponse(
         String nameEn,
         String nameZh,
         Long mapId,
+        String description,
+        String equipmentSummary,
         String imageUrl
 ) {
 }

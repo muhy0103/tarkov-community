@@ -6,6 +6,7 @@ public record QuestResponse(
         String nameEn,
         String nameZh,
         String questType,
-        Long mapId
+        Long mapId,
+        String description
 ) {
 }

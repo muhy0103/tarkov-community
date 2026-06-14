@@ -91,7 +91,7 @@ public class TarkovCatalogServiceImpl implements TarkovCatalogService {
     public List<QuestResponse> listQuests() {
         return questMapper.selectList(enabled(TarkovQuest::getStatus).orderByAsc(TarkovQuest::getId))
                 .stream()
-                .map(quest -> new QuestResponse(quest.getId(), quest.getTraderId(), quest.getNameEn(), quest.getNameZh(), quest.getQuestType(), quest.getMapId()))
+                .map(this::toQuestResponse)
                 .toList();
     }
 
@@ -99,7 +99,7 @@ public class TarkovCatalogServiceImpl implements TarkovCatalogService {
     public List<ItemResponse> listItems() {
         return itemMapper.selectList(enabled(TarkovItem::getStatus).orderByAsc(TarkovItem::getId))
                 .stream()
-                .map(item -> new ItemResponse(item.getId(), item.getNameEn(), item.getNameZh(), item.getItemType(), item.getQuestNeeded(), item.getHideoutNeeded(), item.getKeepSuggestion()))
+                .map(this::toItemResponse)
                 .toList();
     }
 
@@ -123,7 +123,7 @@ public class TarkovCatalogServiceImpl implements TarkovCatalogService {
     public List<HideoutStationResponse> listHideoutStations() {
         return hideoutStationMapper.selectList(enabled(HideoutStation::getStatus).orderByAsc(HideoutStation::getId))
                 .stream()
-                .map(station -> new HideoutStationResponse(station.getId(), station.getNameEn(), station.getNameZh()))
+                .map(this::toHideoutStationResponse)
                 .toList();
     }
 
@@ -366,27 +366,35 @@ public class TarkovCatalogServiceImpl implements TarkovCatalogService {
     }
 
     private TarkovMapResponse toMapResponse(TarkovMap map) {
-        return new TarkovMapResponse(map.getId(), map.getNameEn(), map.getNameZh(), map.getDifficulty(), map.getRecommendedLevel(), map.getImageUrl());
+        return new TarkovMapResponse(map.getId(), map.getNameEn(), map.getNameZh(), map.getDifficulty(), map.getDescription(), map.getRecommendedLevel(), map.getImageUrl());
     }
 
     private TraderResponse toTraderResponse(TarkovTrader trader) {
-        return new TraderResponse(trader.getId(), trader.getNameEn(), null, trader.getUnlockCondition(), trader.getAvatar());
+        return new TraderResponse(trader.getId(), trader.getNameEn(), null, trader.getDescription(), trader.getUnlockCondition(), trader.getAvatar());
     }
 
     private QuestResponse toQuestResponse(TarkovQuest quest) {
-        return new QuestResponse(quest.getId(), quest.getTraderId(), quest.getNameEn(), quest.getNameZh(), quest.getQuestType(), quest.getMapId());
+        return new QuestResponse(quest.getId(), quest.getTraderId(), quest.getNameEn(), quest.getNameZh(), quest.getQuestType(), quest.getMapId(), quest.getDescription());
+    }
+
+    private ItemResponse toItemResponse(TarkovItem item) {
+        return new ItemResponse(item.getId(), item.getNameEn(), item.getNameZh(), item.getItemType(), item.getQuestNeeded(), item.getHideoutNeeded(), item.getKeepSuggestion(), item.getDescription());
     }
 
     private WeaponResponse toWeaponResponse(TarkovWeapon weapon) {
-        return new WeaponResponse(weapon.getId(), weapon.getNameEn(), weapon.getNameZh(), weapon.getWeaponType(), weapon.getCaliber(), weapon.getImageUrl());
+        return new WeaponResponse(weapon.getId(), weapon.getNameEn(), weapon.getNameZh(), weapon.getWeaponType(), weapon.getCaliber(), weapon.getDescription(), weapon.getImageUrl());
     }
 
     private AmmoResponse toAmmoResponse(TarkovAmmo ammo) {
-        return new AmmoResponse(ammo.getId(), ammo.getNameEn(), ammo.getNameZh(), ammo.getCaliber(), ammo.getDamage(), ammo.getPenetration(), ammo.getImageUrl());
+        return new AmmoResponse(ammo.getId(), ammo.getNameEn(), ammo.getNameZh(), ammo.getCaliber(), ammo.getDamage(), ammo.getPenetration(), ammo.getDescription(), ammo.getImageUrl());
     }
 
     private BossResponse toBossResponse(Boss boss) {
-        return new BossResponse(boss.getId(), boss.getNameEn(), null, boss.getMapId(), boss.getImageUrl());
+        return new BossResponse(boss.getId(), boss.getNameEn(), null, boss.getMapId(), boss.getDescription(), boss.getEquipmentSummary(), boss.getImageUrl());
+    }
+
+    private HideoutStationResponse toHideoutStationResponse(HideoutStation station) {
+        return new HideoutStationResponse(station.getId(), station.getNameEn(), station.getNameZh(), station.getDescription());
     }
 
     private MapExtractResponse toExtractResponse(MapExtract extract) {

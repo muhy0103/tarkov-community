@@ -10,10 +10,10 @@
 
 ## 图片与授权处理
 
-- 数据库只保存外部图片 URL，不把 Wiki 或第三方图片文件下载进项目仓库。
-- 地图图片优先使用 Official Escape from Tarkov Wiki 页面中对应地图的 showcase/preview 图片链接。
-- 商人、Boss、武器和弹药图片优先使用 `https://assets.tarkov.dev/` 提供的结构化资源链接。
-- 后续若图片失效，优先从 `tarkov.dev API` 或 Wiki 页面重新刷新 URL，而不是在代码中硬编码新的本地图片。
+- 第一批展示用图片保存到 `frontend/public/assets/catalog/`，数据库保存站内资源路径，避免课程演示时外链失效或被浏览器拦截。
+- 地图图片来源于 Official Escape from Tarkov Wiki 页面中对应地图的 showcase/preview 图片。
+- 武器图片来源于 `tarkov.dev API` 提供的结构化资源链接；为避免出现枪械机匣、枪管等零件图，展示图优先选择完整武器或预设整枪的 `imageLink`。
+- 商人、Boss 和弹药图片来源于 `https://assets.tarkov.dev/`，已同步保存为本地静态资源，便于离线演示和页面稳定加载。
 
 ## 命名规则
 

@@ -270,6 +270,40 @@ VALUES
   (10, 4, 2, 'Big Sale 商铺标记顺序建议', 'Interchange 做 Big Sale 时不要一进商场就冲中心区域。可以先从靠近出生点的一侧商铺开始，按外圈到中圈的顺序推进。电源开启后玩家路线会变化，听到电梯和地下枪声时建议暂缓标记。', 'GUIDE', NULL, 7, 5, 8, NULL, NULL, NULL, 'MEDIUM', 'VERIFIED', 86, 6, 2, 1, 'NORMAL', 0, 0, '2026-06-11 20:10:00')
 ON DUPLICATE KEY UPDATE title = VALUES(title), content = VALUES(content), post_type = VALUES(post_type), map_id = VALUES(map_id), trader_id = VALUES(trader_id), quest_id = VALUES(quest_id), item_id = VALUES(item_id), weapon_id = VALUES(weapon_id), ammo_id = VALUES(ammo_id), risk_level = VALUES(risk_level), intel_status = VALUES(intel_status), view_count = VALUES(view_count), like_count = VALUES(like_count), favorite_count = VALUES(favorite_count), comment_count = VALUES(comment_count), status = VALUES(status), pinned = VALUES(pinned), recommended = VALUES(recommended);
 
+INSERT INTO post_catalog_relation (post_id, catalog_type, catalog_id, relation_note)
+VALUES
+  (1, 'MAP', 1, '路线地图'),
+  (1, 'TRADER', 1, '相关任务商人'),
+  (1, 'QUEST', 1, '新手任务'),
+  (2, 'MAP', 1, '拿文件阶段'),
+  (2, 'TRADER', 1, '任务发布者'),
+  (2, 'QUEST', 2, '核心任务'),
+  (3, 'ITEM', 4, '高价值物品'),
+  (3, 'ITEM', 11, '市场讨论物资'),
+  (3, 'HIDEOUT', 4, '藏身处经济相关'),
+  (4, 'MAP', 10, '复盘地图'),
+  (4, 'ITEM', 12, '入场关键物品'),
+  (5, 'MAP', 3, '练习地图'),
+  (5, 'WEAPON', 6, '配装武器'),
+  (5, 'AMMO', 6, '弹药选择'),
+  (5, 'QUEST', 11, '任务目标'),
+  (6, 'MAP', 2, '遭遇地图'),
+  (6, 'BOSS', 2, '威胁目标'),
+  (6, 'WEAPON', 3, '应对武器'),
+  (6, 'AMMO', 7, '近战弹药'),
+  (7, 'ITEM', 7, '升级材料'),
+  (7, 'ITEM', 8, '升级材料'),
+  (7, 'HIDEOUT', 1, '升级模块'),
+  (8, 'MAP', 5, '路线地图'),
+  (8, 'BOSS', 7, '高风险区域'),
+  (9, 'MAP', 6, '组队地图'),
+  (9, 'TRADER', 2, '任务线相关'),
+  (9, 'QUEST', 12, '组队目标'),
+  (10, 'MAP', 7, '任务地图'),
+  (10, 'TRADER', 5, '任务发布者'),
+  (10, 'QUEST', 8, '核心任务')
+ON DUPLICATE KEY UPDATE relation_note = VALUES(relation_note);
+
 INSERT INTO post_task_detail (post_id, quest_id, trader_id, map_id, task_type, required_items, route_advice, risk_level, intel_status)
 VALUES
   (2, 2, 1, 1, '拾取/放置/撤离', '任务文件、基础医疗、闪光弹', 'Customs 拿文件和 Factory 放置分开做，减少连续失败成本。', 'MEDIUM', 'VERIFIED'),

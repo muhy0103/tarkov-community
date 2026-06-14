@@ -10,7 +10,7 @@ import {
   Star,
   View,
 } from '@element-plus/icons-vue'
-import { fetchCategories } from '../api/catalogApi'
+import { fetchCategories, routeKindForCatalogType } from '../api/catalogApi'
 import { fetchPosts } from '../api/postApi'
 import { useUserStore } from '../stores/userStore'
 
@@ -91,6 +91,16 @@ function applyRouteQuery() {
 
 function postTypeLabel(type) {
   return postTypeLabelMap[type] || type || '普通讨论'
+}
+
+function catalogRoute(relation) {
+  return {
+    name: 'catalog-detail',
+    params: {
+      kind: relation.routeKind || routeKindForCatalogType(relation.catalogType),
+      id: relation.catalogId,
+    },
+  }
 }
 
 async function loadBoard(page = postsPage.value.page) {
@@ -282,6 +292,19 @@ onMounted(() => {
               </RouterLink>
               <span v-else>{{ post.authorNickname }}</span>
               <span>{{ postTypeLabel(post.postType) }}</span>
+            </div>
+            <div v-if="post.relations?.length" class="post-relation-tags">
+              <RouterLink
+                v-for="relation in post.relations.slice(0, 3)"
+                :key="`${post.id}-${relation.catalogType}-${relation.catalogId}`"
+                class="post-relation-tag"
+                :to="catalogRoute(relation)"
+              >
+                {{ relation.name }}
+              </RouterLink>
+              <span v-if="post.relations.length > 3" class="post-relation-more">
+                +{{ post.relations.length - 3 }}
+              </span>
             </div>
             <RouterLink
               class="post-title-link"

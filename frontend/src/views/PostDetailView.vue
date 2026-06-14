@@ -14,6 +14,7 @@ import {
   StarFilled,
   Warning,
 } from '@element-plus/icons-vue'
+import { routeKindForCatalogType } from '../api/catalogApi'
 import {
   createReport,
   createPostComment,
@@ -138,6 +139,16 @@ function resolveError(error, fallback) {
 
 function postTypeLabel(type) {
   return postTypeOptions[type] || type || '普通讨论'
+}
+
+function catalogRoute(relation) {
+  return {
+    name: 'catalog-detail',
+    params: {
+      kind: relation.routeKind || routeKindForCatalogType(relation.catalogType),
+      id: relation.catalogId,
+    },
+  }
 }
 
 function requireLogin() {
@@ -564,6 +575,25 @@ onMounted(loadDetail)
           <span>浏览 {{ post.viewCount }}</span>
           <span>评论 {{ post.commentCount }}</span>
         </div>
+
+        <section v-if="post.relations?.length" class="post-related-catalogs">
+          <h3>关联资料</h3>
+          <div class="post-related-grid">
+            <RouterLink
+              v-for="relation in post.relations"
+              :key="`${relation.catalogType}-${relation.catalogId}`"
+              class="post-related-card"
+              :to="catalogRoute(relation)"
+            >
+              <img v-if="relation.imageUrl" :src="relation.imageUrl" :alt="relation.name" loading="lazy" />
+              <span v-else class="post-related-card-placeholder">{{ relation.catalogType?.slice(0, 1) || '?' }}</span>
+              <span>
+                <strong>{{ relation.name }}</strong>
+                <small>{{ relation.subtitle || relation.catalogType }}</small>
+              </span>
+            </RouterLink>
+          </div>
+        </section>
 
         <p class="detail-content">{{ post.content }}</p>
 

@@ -57,6 +57,28 @@ export const fetchBosses = () => request.get('/tarkov/bosses').then(unwrapList)
 
 export const fetchBossDetail = (id) => request.get(`/tarkov/bosses/${id}`).then((response) => response?.data)
 
+export const catalogTypeOptions = [
+  { label: '地图', type: 'MAP', kind: 'maps', fetcher: fetchMaps },
+  { label: '商人', type: 'TRADER', kind: 'traders', fetcher: fetchTraders },
+  { label: '任务', type: 'QUEST', kind: 'quests', fetcher: fetchQuests },
+  { label: '物品', type: 'ITEM', kind: 'items', fetcher: fetchItems },
+  { label: '武器', type: 'WEAPON', kind: 'weapons', fetcher: fetchWeapons },
+  { label: '弹药', type: 'AMMO', kind: 'ammo', fetcher: fetchAmmo },
+  { label: 'Boss', type: 'BOSS', kind: 'bosses', fetcher: fetchBosses },
+  { label: '藏身处', type: 'HIDEOUT', kind: 'hideout', fetcher: fetchHideoutStations },
+]
+
+export function routeKindForCatalogType(type) {
+  return catalogTypeOptions.find((option) => option.type === type)?.kind || ''
+}
+
+export async function fetchCatalogCollections() {
+  return Promise.all(catalogTypeOptions.map(async (option) => ({
+    ...option,
+    items: await option.fetcher(),
+  })))
+}
+
 export function fetchCatalogDetail(kind, id) {
   const fetchers = {
     maps: fetchMapDetail,

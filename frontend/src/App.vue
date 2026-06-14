@@ -77,6 +77,7 @@ watch(
       </div>
       <nav class="app-nav" aria-label="主导航">
         <RouterLink to="/">社区概览</RouterLink>
+        <RouterLink to="/catalog">资料中心</RouterLink>
         <RouterLink to="/posts">情报广场</RouterLink>
         <RouterLink v-if="userStore.isLoggedIn" to="/me">用户中心</RouterLink>
         <RouterLink

@@ -2,8 +2,8 @@
 import { computed, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
-import { ArrowLeft, EditPen } from '@element-plus/icons-vue'
-import { fetchCategories } from '../api/catalogApi'
+import { ArrowLeft, Close, EditPen, Plus } from '@element-plus/icons-vue'
+import { catalogTypeOptions, fetchCatalogCollections, fetchCategories, routeKindForCatalogType } from '../api/catalogApi'
 import { createPost, fetchPostDetail, updatePost } from '../api/postApi'
 import { useUserStore } from '../stores/userStore'
 
@@ -17,11 +17,17 @@ const errorMessage = ref('')
 const draftReady = ref(false)
 const draftSavedAt = ref('')
 const categories = ref([])
+const catalogCollections = ref([])
+const relationPicker = ref({
+  catalogType: 'MAP',
+  catalogId: null,
+})
 const form = ref({
   categoryId: null,
   postType: 'ROUTE',
   title: '',
   content: '',
+  relations: [],
 })
 const editPostId = computed(() => Number(route.params.id))
 const isEditMode = computed(() => route.name === 'post-edit' && Number.isFinite(editPostId.value))
@@ -86,6 +92,14 @@ const postTypeGuides = {
 }
 
 const currentPostGuide = computed(() => postTypeGuides[form.value.postType] || postTypeGuides.ROUTE)
+const activeRelationCollection = computed(() => (
+  catalogCollections.value.find((item) => item.type === relationPicker.value.catalogType)
+))
+const selectedRelationIds = computed(() => new Set(
+  form.value.relations
+    .filter((item) => item.catalogType === relationPicker.value.catalogType)
+    .map((item) => item.catalogId)
+))
 
 const canSubmit = computed(() => {
   return (
@@ -97,7 +111,9 @@ const canSubmit = computed(() => {
   )
 })
 const hasDraftContent = computed(() => (
-  form.value.title.trim().length > 0 || form.value.content.trim().length > 0
+  form.value.title.trim().length > 0 ||
+  form.value.content.trim().length > 0 ||
+  form.value.relations.length > 0
 ))
 
 function resolveError(error, fallback) {
@@ -109,18 +125,21 @@ async function loadCategories() {
   errorMessage.value = ''
 
   try {
-    const [categoryData, postData] = await Promise.all([
+    const [categoryData, catalogData, postData] = await Promise.all([
       fetchCategories(),
+      fetchCatalogCollections(),
       isEditMode.value ? fetchPostDetail(editPostId.value) : Promise.resolve(null),
     ])
 
     categories.value = categoryData
+    catalogCollections.value = catalogData
     if (postData) {
       form.value = {
         categoryId: postData.categoryId,
         postType: postData.postType,
         title: postData.title,
         content: postData.content,
+        relations: normalizeStoredRelations(postData.relations),
       }
     } else {
       form.value.categoryId = categories.value[0]?.id ?? null
@@ -153,6 +172,7 @@ function restoreDraft() {
       postType: draft.postType || 'ROUTE',
       title: draft.title || '',
       content: draft.content || '',
+      relations: normalizeStoredRelations(draft.relations),
     }
     draftSavedAt.value = draft.savedAt || ''
   } catch (error) {
@@ -171,6 +191,7 @@ function saveDraft(showMessage = false) {
     postType: form.value.postType,
     title: form.value.title,
     content: form.value.content,
+    relations: form.value.relations,
     savedAt,
   }))
   draftSavedAt.value = savedAt
@@ -203,6 +224,78 @@ function formatDraftTime(value) {
   })
 }
 
+function relationName(item, collection = activeRelationCollection.value) {
+  if (collection?.kind === 'traders' || collection?.kind === 'bosses') {
+    return item.nameEn || item.name || 'Unnamed'
+  }
+
+  return item.nameZh || item.nameEn || item.name || '未命名资料'
+}
+
+function relationSubtitle(item, collection = activeRelationCollection.value) {
+  const values = []
+  if (collection?.kind !== 'traders' && collection?.kind !== 'bosses') {
+    values.push(item.nameEn)
+  }
+  values.push(
+    item.weaponType,
+    item.caliber,
+    item.difficulty,
+    item.unlockCondition,
+    item.itemType,
+    item.questType
+  )
+  return values.filter(Boolean).join(' · ')
+}
+
+function normalizeStoredRelations(relations = []) {
+  if (!Array.isArray(relations)) {
+    return []
+  }
+
+  return relations
+    .filter((relation) => relation?.catalogType && relation?.catalogId)
+    .slice(0, 6)
+    .map((relation) => ({
+      catalogType: relation.catalogType,
+      catalogId: relation.catalogId,
+      relationNote: relation.relationNote || '',
+      name: relation.name || '未命名资料',
+      subtitle: relation.subtitle || '',
+      imageUrl: relation.imageUrl || '',
+      routeKind: relation.routeKind || routeKindForCatalogType(relation.catalogType),
+    }))
+}
+
+function addRelation() {
+  const collection = activeRelationCollection.value
+  const item = collection?.items.find((entry) => entry.id === relationPicker.value.catalogId)
+
+  if (!item || form.value.relations.length >= 6) {
+    return
+  }
+  if (form.value.relations.some((relation) => (
+    relation.catalogType === collection.type && relation.catalogId === item.id
+  ))) {
+    return
+  }
+
+  form.value.relations.push({
+    catalogType: collection.type,
+    catalogId: item.id,
+    relationNote: '',
+    name: relationName(item, collection),
+    subtitle: relationSubtitle(item, collection),
+    imageUrl: item.imageUrl || item.avatar || '',
+    routeKind: collection.kind,
+  })
+  relationPicker.value.catalogId = null
+}
+
+function removeRelation(index) {
+  form.value.relations.splice(index, 1)
+}
+
 async function submitPost() {
   if (!userStore.isLoggedIn) {
     ElMessage.warning('请先登录后再发布情报')
@@ -224,6 +317,11 @@ async function submitPost() {
       content: form.value.content.trim(),
       postType: form.value.postType,
       coverImage: null,
+      relations: form.value.relations.map((relation) => ({
+        catalogType: relation.catalogType,
+        catalogId: relation.catalogId,
+        relationNote: relation.relationNote || null,
+      })),
     }
     const result = isEditMode.value
       ? await updatePost(editPostId.value, payload)
@@ -244,6 +342,13 @@ watch(
   form,
   () => saveDraft(false),
   { deep: true }
+)
+
+watch(
+  () => relationPicker.value.catalogType,
+  () => {
+    relationPicker.value.catalogId = null
+  }
 )
 
 onMounted(loadCategories)
@@ -320,6 +425,67 @@ onMounted(loadCategories)
               </el-select>
             </el-form-item>
           </div>
+
+          <el-form-item label="关联资料">
+            <div class="post-relation-panel">
+              <div class="relation-picker-row">
+                <el-select
+                  v-model="relationPicker.catalogType"
+                  placeholder="资料类型"
+                  :disabled="!userStore.isLoggedIn"
+                >
+                  <el-option
+                    v-for="option in catalogTypeOptions"
+                    :key="option.type"
+                    :label="option.label"
+                    :value="option.type"
+                  />
+                </el-select>
+                <el-select
+                  v-model="relationPicker.catalogId"
+                  placeholder="选择关联资料"
+                  :disabled="!userStore.isLoggedIn"
+                  filterable
+                  clearable
+                >
+                  <el-option
+                    v-for="item in activeRelationCollection?.items || []"
+                    :key="item.id"
+                    :label="relationName(item)"
+                    :value="item.id"
+                    :disabled="selectedRelationIds.has(item.id)"
+                  >
+                    <span class="relation-option">
+                      <span>{{ relationName(item) }}</span>
+                      <small>{{ relationSubtitle(item) }}</small>
+                    </span>
+                  </el-option>
+                </el-select>
+                <el-button
+                  :icon="Plus"
+                  :disabled="!relationPicker.catalogId || form.relations.length >= 6"
+                  @click="addRelation"
+                >
+                  添加
+                </el-button>
+              </div>
+
+              <div v-if="form.relations.length" class="relation-chip-list">
+                <span
+                  v-for="(relation, index) in form.relations"
+                  :key="`${relation.catalogType}-${relation.catalogId}`"
+                  class="relation-chip"
+                >
+                  <img v-if="relation.imageUrl" :src="relation.imageUrl" :alt="relation.name" />
+                  <span>{{ relation.name }}</span>
+                  <small v-if="relation.subtitle">{{ relation.subtitle }}</small>
+                  <button type="button" aria-label="移除关联资料" @click="removeRelation(index)">
+                    <Close />
+                  </button>
+                </span>
+              </div>
+            </div>
+          </el-form-item>
 
           <el-form-item label="标题">
             <el-input

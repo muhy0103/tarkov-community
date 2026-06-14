@@ -1,8 +1,11 @@
 <script setup>
-import { computed, onMounted, ref } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 import { Refresh, Search } from '@element-plus/icons-vue'
 import { fetchCatalogCollections } from '../api/catalogApi'
 
+const route = useRoute()
+const router = useRouter()
 const loading = ref(false)
 const errorMessage = ref('')
 const activeKind = ref('maps')
@@ -80,20 +83,67 @@ function resolveError(error) {
   return error?.response?.data?.message || error?.message || '资料中心暂时无法加载'
 }
 
+function routeTabKind() {
+  const tab = Array.isArray(route.query.tab) ? route.query.tab[0] : route.query.tab
+  return typeof tab === 'string' ? tab : ''
+}
+
+function hasCollectionKind(kind) {
+  return Boolean(kind) && collections.value.some((collection) => collection.kind === kind)
+}
+
+function syncRouteTab(kind) {
+  if (!kind || routeTabKind() === kind) {
+    return
+  }
+
+  router.replace({
+    query: {
+      ...route.query,
+      tab: kind,
+    },
+  })
+}
+
+function applyRouteTab() {
+  const tabKind = routeTabKind()
+  if (hasCollectionKind(tabKind)) {
+    activeKind.value = tabKind
+    return
+  }
+
+  if (!hasCollectionKind(activeKind.value)) {
+    activeKind.value = collections.value[0]?.kind || 'maps'
+  }
+
+  syncRouteTab(activeKind.value)
+}
+
 async function loadCatalogCenter() {
   loading.value = true
   errorMessage.value = ''
   try {
     collections.value = await fetchCatalogCollections()
-    if (!collections.value.some((collection) => collection.kind === activeKind.value)) {
-      activeKind.value = collections.value[0]?.kind || 'maps'
-    }
+    applyRouteTab()
   } catch (error) {
     errorMessage.value = resolveError(error)
   } finally {
     loading.value = false
   }
 }
+
+watch(() => route.query.tab, () => {
+  if (collections.value.length) {
+    applyRouteTab()
+  }
+})
+
+watch(activeKind, (kind) => {
+  if (collections.value.length) {
+    keyword.value = ''
+    syncRouteTab(kind)
+  }
+})
 
 onMounted(loadCatalogCenter)
 </script>

@@ -103,6 +103,7 @@ const stats = computed(() => [
 const quickCatalogGroups = computed(() => [
   {
     title: '地图情报',
+    targetKind: 'maps',
     icon: MapLocation,
     items: catalog.value.maps.map((item) => ({
       key: `map-${item.id}`,
@@ -115,6 +116,7 @@ const quickCatalogGroups = computed(() => [
   },
   {
     title: '商人任务线',
+    targetKind: 'traders',
     icon: Collection,
     items: catalog.value.traders.map((item) => ({
       key: `trader-${item.id}`,
@@ -127,6 +129,7 @@ const quickCatalogGroups = computed(() => [
   },
   {
     title: '装备与弹药',
+    targetKind: 'weapons',
     icon: DataAnalysis,
     items: [
       ...catalog.value.weapons.map((item) => ({
@@ -149,6 +152,7 @@ const quickCatalogGroups = computed(() => [
   },
   {
     title: '威胁与藏身处',
+    targetKind: 'bosses',
     icon: Connection,
     items: [
       ...catalog.value.bosses.map((item) => ({
@@ -377,12 +381,19 @@ onMounted(loadCatalog)
             :key="group.title"
             class="catalog-column"
           >
-            <div class="column-title">
-              <component :is="group.icon" />
-              <h4>{{ group.title }}</h4>
-            </div>
+            <RouterLink
+              class="column-title column-title-link"
+              :to="{ name: 'catalog-center', query: { tab: group.targetKind } }"
+              :aria-label="`查看全部${group.title}`"
+            >
+              <span class="column-title-main">
+                <component :is="group.icon" />
+                <h4>{{ group.title }}</h4>
+              </span>
+              <span class="column-title-action">查看全部</span>
+            </RouterLink>
             <ul>
-              <li v-for="item in group.items.slice(0, 4)" :key="item.key">
+              <li v-for="item in group.items" :key="item.key">
                 <RouterLink
                   class="catalog-item-link"
                   :to="{ name: 'catalog-detail', params: { kind: item.kind, id: item.id } }"

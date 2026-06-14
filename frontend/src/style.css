@@ -2836,6 +2836,9 @@ a.detail-relation-item:hover {
 }
 
 .catalog-column {
+  display: flex;
+  min-height: 374px;
+  flex-direction: column;
   padding: 18px;
   border: 1px solid #dbe7e6;
   border-radius: 8px;
@@ -2845,12 +2848,43 @@ a.detail-relation-item:hover {
 .column-title {
   display: flex;
   align-items: center;
+  justify-content: space-between;
   gap: 10px;
   padding-bottom: 14px;
   border-bottom: 1px solid #edf2f2;
 }
 
+.column-title-link {
+  color: inherit;
+  text-decoration: none;
+  transition: color 0.16s ease, border-color 0.16s ease;
+}
+
+.column-title-link:hover {
+  border-color: #ccfbf1;
+}
+
+.column-title-link:hover h4,
+.column-title-link:hover .column-title-action {
+  color: #0f766e;
+}
+
+.column-title-main {
+  display: inline-flex;
+  min-width: 0;
+  align-items: center;
+  gap: 10px;
+}
+
+.column-title-action {
+  flex: 0 0 auto;
+  color: #0f766e;
+  font-size: 12px;
+  font-weight: 800;
+}
+
 .column-title svg {
+  flex: 0 0 auto;
   width: 22px;
   height: 22px;
   color: #0f766e;
@@ -2859,8 +2893,11 @@ a.detail-relation-item:hover {
 .catalog-column ul {
   display: grid;
   gap: 10px;
+  overflow-y: auto;
+  max-height: 296px;
   padding: 0;
-  margin: 14px 0 0;
+  padding-right: 4px;
+  margin: 14px -4px 0 0;
   list-style: none;
 }
 

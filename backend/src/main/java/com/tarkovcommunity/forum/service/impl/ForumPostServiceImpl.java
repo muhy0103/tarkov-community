@@ -24,6 +24,7 @@ import com.tarkovcommunity.user.mapper.SysUserMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -116,11 +117,7 @@ public class ForumPostServiceImpl implements ForumPostService {
 
         Category category = categoryMapper.selectById(post.getCategoryId());
         SysUser author = sysUserMapper.selectById(post.getUserId());
-        Map<Long, List<RelatedCatalogResponse>> relationMap = postCatalogRelationService
-                .findRelationsByPostIds(List.of(post.getId()));
-        List<RelatedCatalogResponse> relations = relationMap == null
-                ? List.of()
-                : relationMap.getOrDefault(post.getId(), List.of());
+        List<RelatedCatalogResponse> relations = relationsForPost(post.getId());
 
         return new PostDetailResponse(
                 post.getId(),
@@ -145,6 +142,7 @@ public class ForumPostServiceImpl implements ForumPostService {
     }
 
     @Override
+    @Transactional
     public PostCreatedResponse createPost(PostCreateRequest request, SysUser author) {
         Category category = categoryMapper.selectById(request.categoryId());
         if (category == null || !"ENABLED".equals(category.getStatus())) {
@@ -172,6 +170,7 @@ public class ForumPostServiceImpl implements ForumPostService {
     }
 
     @Override
+    @Transactional
     public PostCreatedResponse updatePost(Long id, PostUpdateRequest request, SysUser currentUser) {
         Post post = requireOwnedNormalPost(id, currentUser, "只能编辑自己发布的帖子");
 
@@ -207,6 +206,15 @@ public class ForumPostServiceImpl implements ForumPostService {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, forbiddenMessage);
         }
         return post;
+    }
+
+    private List<RelatedCatalogResponse> relationsForPost(Long postId) {
+        if (postId == null) {
+            return List.of();
+        }
+        Map<Long, List<RelatedCatalogResponse>> relationMap = postCatalogRelationService
+                .findRelationsByPostIds(List.of(postId));
+        return relationMap == null ? List.of() : relationMap.getOrDefault(postId, List.of());
     }
 
     private List<PostSummaryResponse> toSummaries(List<Post> posts) {

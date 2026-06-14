@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.tarkovcommunity.auth.service.AuthTokenService;
 import com.tarkovcommunity.common.PageResponse;
 import com.tarkovcommunity.forum.controller.ForumPostController;
+import com.tarkovcommunity.forum.dto.PostCatalogRelationRequest;
 import com.tarkovcommunity.forum.dto.PostCreateRequest;
 import com.tarkovcommunity.forum.dto.PostCreatedResponse;
 import com.tarkovcommunity.forum.dto.PostDetailResponse;
@@ -212,6 +213,28 @@ class ForumPostControllerTests {
                 "ROUTE_GUIDE",
                 null,
                 null
+        );
+
+        mockMvc.perform(post("/api/posts")
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer user-token")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value(400))
+                .andExpect(jsonPath("$.message").exists());
+    }
+
+    @Test
+    void rejectsInvalidNestedCatalogRelationOnCreate() throws Exception {
+        given(authTokenService.resolveUser(eq("Bearer user-token"))).willReturn(Optional.of(normalUser()));
+        PostCreateRequest request = new PostCreateRequest(
+                null,
+                2L,
+                "Customs route guide",
+                "This route has enough detail for request validation.",
+                "ROUTE_GUIDE",
+                null,
+                List.of(new PostCatalogRelationRequest("BAD_TYPE", 1L, null))
         );
 
         mockMvc.perform(post("/api/posts")

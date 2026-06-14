@@ -25,8 +25,10 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.lang.reflect.Method;
 import java.util.List;
 import java.util.Map;
 
@@ -35,6 +37,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.BDDMockito.willThrow;
 import static org.mockito.Mockito.verify;
 
 @ExtendWith(MockitoExtension.class)
@@ -87,6 +90,46 @@ class ForumPostServiceImplTests {
         assertThat(insertedPost.getCategoryId()).isEqualTo(2L);
         assertThat(response.id()).isEqualTo(10L);
         verify(postCatalogRelationService).replaceRelations(eq(10L), eq(request.relations()));
+    }
+
+    @Test
+    void createPostPropagatesRelationFailureInsideTransaction() {
+        ForumPostServiceImpl service = service();
+        SysUser author = owner();
+        PostCreateRequest request = new PostCreateRequest(
+                author.getId(),
+                2L,
+                "Customs route guide",
+                "Use this route to cross Customs safely.",
+                "GUIDE",
+                null,
+                List.of(new PostCatalogRelationRequest("MAP", 1L, "main map"))
+        );
+        given(categoryMapper.selectById(2L)).willReturn(enabledCategory(2L));
+        given(postMapper.insert(any(Post.class))).willAnswer(invocation -> {
+            Post insertedPost = invocation.getArgument(0);
+            insertedPost.setId(10L);
+            return 1;
+        });
+        willThrow(new ResponseStatusException(HttpStatus.BAD_REQUEST, "invalid relation"))
+                .given(postCatalogRelationService)
+                .replaceRelations(eq(10L), eq(request.relations()));
+
+        assertThatThrownBy(() -> service.createPost(request, author))
+                .isInstanceOf(ResponseStatusException.class)
+                .satisfies(error -> assertThat(((ResponseStatusException) error).getStatusCode())
+                        .isEqualTo(HttpStatus.BAD_REQUEST));
+
+        verify(postMapper).insert(any(Post.class));
+    }
+
+    @Test
+    void postWriteMethodsAreTransactional() throws Exception {
+        Method createPost = ForumPostServiceImpl.class.getMethod("createPost", PostCreateRequest.class, SysUser.class);
+        Method updatePost = ForumPostServiceImpl.class.getMethod("updatePost", Long.class, PostUpdateRequest.class, SysUser.class);
+
+        assertThat(createPost.getAnnotation(Transactional.class)).isNotNull();
+        assertThat(updatePost.getAnnotation(Transactional.class)).isNotNull();
     }
 
     @Test
@@ -190,6 +233,32 @@ class ForumPostServiceImplTests {
         assertThat(savedPost.getPostType()).isEqualTo("GUIDE");
         assertThat(savedPost.getCoverImage()).isNull();
         assertThat(response.id()).isEqualTo(9L);
+    }
+
+    @Test
+    void updatePostPropagatesRelationFailureInsideTransaction() {
+        ForumPostServiceImpl service = service();
+        List<PostCatalogRelationRequest> relations = List.of(new PostCatalogRelationRequest("MAP", 1L, "main map"));
+        PostUpdateRequest updateRequest = new PostUpdateRequest(
+                3L,
+                "Customs route update",
+                "This update keeps the route notes long enough for validation.",
+                "GUIDE",
+                null,
+                relations
+        );
+        given(postMapper.selectById(9L)).willReturn(post());
+        given(categoryMapper.selectById(3L)).willReturn(enabledCategory());
+        willThrow(new ResponseStatusException(HttpStatus.BAD_REQUEST, "invalid relation"))
+                .given(postCatalogRelationService)
+                .replaceRelations(eq(9L), eq(relations));
+
+        assertThatThrownBy(() -> service.updatePost(9L, updateRequest, owner()))
+                .isInstanceOf(ResponseStatusException.class)
+                .satisfies(error -> assertThat(((ResponseStatusException) error).getStatusCode())
+                        .isEqualTo(HttpStatus.BAD_REQUEST));
+
+        verify(postMapper).updateById(any(Post.class));
     }
 
     @Test

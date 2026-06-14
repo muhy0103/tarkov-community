@@ -1,5 +1,6 @@
 package com.tarkovcommunity.forum.dto;
 
+import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
@@ -28,6 +29,7 @@ public record PostCreateRequest(
         String coverImage,
 
         @Size(max = 6, message = "最多关联 6 个资料")
+        @Valid
         List<PostCatalogRelationRequest> relations
 ) {
 }
